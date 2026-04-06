@@ -1,0 +1,42 @@
+{
+  "name": "chem-ag",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Language-agnostic Chem architecture toolkit — analyze, scaffold, and validate chemistry-inspired software architectures",
+  "main": "dist/src/cli.js",
+  "bin": {
+    "chem-ag": "dist/src/cli.js"
+  },
+  "files": [
+    "dist/src/**/*.js",
+    "dist/src/**/*.d.ts",
+    "dist/plugins/**/*.js",
+    "dist/plugins/**/*.d.ts",
+    "dist/plugins/python/parse_imports.py"
+  ],
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json && cp plugins/python/parse_imports.py dist/plugins/python/parse_imports.py",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "architecture",
+    "chem",
+    "analyzer",
+    "typescript",
+    "python",
+    "scaffolding"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.2",
+    "ts-morph": "^25.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.1.0"
+  }
+}
