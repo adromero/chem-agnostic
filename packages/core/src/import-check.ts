@@ -1,7 +1,19 @@
 import * as path from "node:path";
-import type { Workspace, LoadedCompound, Diagnostic } from "./types.js";
+import type { Workspace, LoadedCompound, Diagnostic, ParsedImport } from "./types.js";
 import type { LanguagePlugin } from "./plugin-interface.js";
 import { tr } from "./vocabulary/index.js";
+
+/**
+ * Optional hook the CLI passes when it has a cache layer. The hook is
+ * invoked once with the full file list; if it returns a non-null map,
+ * the plugin's `parseImportsBatch` is bypassed for those entries.
+ *
+ * The CLI wraps the plugin call so cached entries are returned from disk
+ * and missing entries are parsed once and persisted.
+ */
+export interface CheckImportsHooks {
+  parseImportsBatch?: (filePaths: string[], plugin: LanguagePlugin) => Map<string, ParsedImport[]>;
+}
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -18,6 +30,7 @@ export function checkImports(
   workspace: Workspace,
   compounds: LoadedCompound[],
   plugin: LanguagePlugin,
+  hooks: CheckImportsHooks = {},
 ): Diagnostic[] {
   const diags: Diagnostic[] = [];
 
@@ -56,9 +69,12 @@ export function checkImports(
 
   if (filesToAnalyze.length === 0) return diags;
 
-  // Batch-parse all imports via the language plugin
+  // Batch-parse all imports via the language plugin (or the cache-aware
+  // hook supplied by the CLI).
   const allFilePaths = filesToAnalyze.map((f) => f.abs);
-  const batchResult = plugin.parseImportsBatch(allFilePaths);
+  const batchResult = hooks.parseImportsBatch
+    ? hooks.parseImportsBatch(allFilePaths, plugin)
+    : plugin.parseImportsBatch(allFilePaths);
 
   // Analyze each file's imports
   for (const { abs, compound: srcCompound } of filesToAnalyze) {

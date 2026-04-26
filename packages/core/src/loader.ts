@@ -33,9 +33,24 @@ export function loadWorkspace(workspacePath: string): Workspace {
   return ws;
 }
 
-export function discoverCompounds(workspace: Workspace, workspaceDir: string): LoadedCompound[] {
+/**
+ * Optional hook used by the cache layer to interpose on the per-compound
+ * load step. When provided, `discoverCompounds` consults
+ * `hooks.loadCompound` for every candidate manifest path it finds. The
+ * default implementation reads + parses the YAML directly.
+ */
+export interface DiscoverCompoundsHooks {
+  loadCompound?: (manifestPath: string) => LoadedCompound;
+}
+
+export function discoverCompounds(
+  workspace: Workspace,
+  workspaceDir: string,
+  hooks: DiscoverCompoundsHooks = {},
+): LoadedCompound[] {
   const manifestFilename = workspace.rules?.manifest_filename ?? "compound.yaml";
   const compounds: LoadedCompound[] = [];
+  const load = hooks.loadCompound ?? loadCompound;
 
   // Standard compound directories (each subdirectory is a compound)
   const scanDirs: string[] = [workspace.paths.compounds];
@@ -51,7 +66,7 @@ export function discoverCompounds(workspace: Workspace, workspaceDir: string): L
       if (!entry.isDirectory()) continue;
       const manifestPath = path.join(absDir, entry.name, manifestFilename);
       if (fs.existsSync(manifestPath)) {
-        compounds.push(loadCompound(manifestPath));
+        compounds.push(load(manifestPath));
       }
     }
   }
@@ -61,14 +76,20 @@ export function discoverCompounds(workspace: Workspace, workspaceDir: string): L
     const catalystDir = path.resolve(workspaceDir, workspace.paths.catalyst);
     const manifestPath = path.join(catalystDir, manifestFilename);
     if (fs.existsSync(manifestPath)) {
-      compounds.push(loadCompound(manifestPath));
+      compounds.push(load(manifestPath));
     }
   }
 
   return compounds;
 }
 
-function loadCompound(manifestPath: string): LoadedCompound {
+/**
+ * Default loader for a single compound manifest. Exported so the CLI cache
+ * layer can wrap it (read once, hash, decide to use cache or fall through
+ * to this implementation). No public surface change for non-cache callers
+ * — they continue to call `discoverCompounds` and never see this.
+ */
+export function loadCompound(manifestPath: string): LoadedCompound {
   const content = fs.readFileSync(manifestPath, "utf-8");
   const manifest = parseYaml(content) as Compound;
 
