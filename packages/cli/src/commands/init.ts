@@ -84,6 +84,23 @@ function buildDefaultWorkspace(name: string, language: string, publicSurface: st
   };
 }
 
+/**
+ * True if the existing .gitignore content already excludes `.chemag/cache/`.
+ * Matches the exact entry plus the broader `.chemag/` form (with or without
+ * trailing slash) so we don't add duplicate lines on re-runs.
+ */
+function gitignoreCovers(content: string, entry: string): boolean {
+  const trimmedEntry = entry.replace(/\/+$/, "");
+  for (const rawLine of content.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (line === "" || line.startsWith("#")) continue;
+    const stripped = line.replace(/\/+$/, "");
+    if (stripped === trimmedEntry) return true;
+    if (stripped === ".chemag") return true;
+  }
+  return false;
+}
+
 export function checkPython3Available(): boolean {
   try {
     execSync("python3 --version", { stdio: "pipe" });
@@ -159,6 +176,24 @@ export function cmdInit(argv: string[]): void {
     fs.mkdirSync(abs, { recursive: true });
     const rel = path.relative(baseDir, abs);
     console.log(`  ${GRN}+${R}  ${rel}/`);
+  }
+
+  // Ensure .gitignore exists and excludes the cache directory. Idempotent:
+  // if a .gitignore is already present we append the entry only when it
+  // isn't already listed (matching either ".chemag/cache/" or
+  // ".chemag/cache" or the parent ".chemag/" wildcards).
+  const gitignorePath = path.join(baseDir, ".gitignore");
+  const cacheEntry = ".chemag/cache/";
+  if (fs.existsSync(gitignorePath)) {
+    const existing = fs.readFileSync(gitignorePath, "utf-8");
+    if (!gitignoreCovers(existing, cacheEntry)) {
+      const sep = existing.length > 0 && !existing.endsWith("\n") ? "\n" : "";
+      fs.writeFileSync(gitignorePath, `${existing}${sep}${cacheEntry}\n`, "utf-8");
+      console.log(`  ${GRN}~${R}  .gitignore (added ${cacheEntry})`);
+    }
+  } else {
+    fs.writeFileSync(gitignorePath, `${cacheEntry}\n`, "utf-8");
+    console.log(`  ${GRN}+${R}  .gitignore`);
   }
 
   console.log();

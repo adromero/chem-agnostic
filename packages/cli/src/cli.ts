@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { resolveCliVocabulary, setVocabulary, tr } from "@chemag/core/vocabulary";
+import { setCacheEnabled } from "./cache/cache-state.js";
 import { cmdCheck } from "./commands/check.js";
 import { cmdAnalyze } from "./commands/analyze.js";
 import { cmdScaffold } from "./commands/scaffold.js";
@@ -57,6 +58,13 @@ export function runCli(argv: string[]): void {
   const { name, source } = resolveCliVocabulary(argv, process.env);
   setVocabulary(name, source);
 
+  // Phase 1.5 — resolve --no-cache. The flag only ever toggles caching
+  // off; default state (enabled) is preserved when the flag is absent.
+  // Mirrors the `--vocabulary` shape (resolve early, strip before dispatch).
+  if (argv.includes("--no-cache")) {
+    setCacheEnabled(false);
+  }
+
   if (argv.includes("--version") || argv.includes("-v")) {
     console.log(getVersion());
     process.exit(0);
@@ -67,10 +75,10 @@ export function runCli(argv: string[]): void {
     process.exit(0);
   }
 
-  // Strip --vocabulary <value> / --vocabulary=<value> from the command argv
-  // so command parsers don't treat them as positionals. Phase 1 already
-  // captured them.
-  const dispatchArgs = stripVocabularyFlag(argv);
+  // Strip --vocabulary <value> / --vocabulary=<value> and --no-cache from
+  // the command argv so command parsers don't treat them as positionals.
+  // Phase 1 / 1.5 already captured them.
+  const dispatchArgs = stripCacheFlag(stripVocabularyFlag(argv));
   const command = dispatchArgs[0];
   const commandArgs = dispatchArgs.slice(1);
 
@@ -119,6 +127,17 @@ function stripVocabularyFlag(argv: string[]): string[] {
     out.push(a);
   }
   return out;
+}
+
+/**
+ * Remove the boolean --no-cache token from argv before dispatch. Phase-1.5
+ * resolution already toggled the cache-state module flag. `--no-cache` takes
+ * no value so this is a single-token filter.
+ *
+ * Exported (named, not via `export`) for unit tests; plain function suffices.
+ */
+export function stripCacheFlag(argv: string[]): string[] {
+  return argv.filter((a) => a !== "--no-cache");
 }
 
 // Note: this module no longer auto-runs the CLI on import. The bin shim

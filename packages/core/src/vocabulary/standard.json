@@ -49,7 +49,8 @@
   "cli.help.intro": "chemag v{version} — language-agnostic module architecture toolkit",
   "cli.help.usage": "Usage: chemag [options] [command]\n       chem-ag [options] [command]   (alias)",
   "cli.help.commands": "Commands:\n  init         Bootstrap a new workspace\n  add          Add a module or unit\n  check        Validate manifests and file structure\n  analyze      Check real imports against dependency rules\n  scaffold     Generate stub files from manifests\n  graph        Output Mermaid dependency diagram\n  sync         Generate manifests from existing code",
-  "cli.help.options": "Options:\n  --version          Show version number\n  --help             Show this help text\n  --vocabulary <v>   standard (default) or chemistry",
+  "cli.help.options": "Options:\n  --version          Show version number\n  --help             Show this help text\n  --vocabulary <v>   standard (default) or chemistry\n  --no-cache         Disable the manifest/imports cache for this run",
+  "cli.help.no_cache": "--no-cache         Disable the on-disk manifest/imports cache for this run",
 
   "cli.command.init": "init — bootstrap a new workspace.\nUsage: chemag init <name> [--path <dir>] [--language typescript|python]",
   "cli.command.add": "add — add a module or unit.\nUsage: chemag add module <name> [--type module|shared-kernel|infrastructure]\n       chemag add unit <module> <role> <name> [--export] [--implements <port>]",

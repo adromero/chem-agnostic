@@ -169,6 +169,44 @@ describe("cmdInit python3 availability check", () => {
   });
 });
 
+describe("cmdInit .gitignore handling", () => {
+  it("creates .gitignore listing .chemag/cache/ when none exists", () => {
+    runInit(["--language", "typescript"]);
+    const gi = path.join(tmpDir, ".gitignore");
+    expect(fs.existsSync(gi)).toBe(true);
+    expect(fs.readFileSync(gi, "utf-8")).toContain(".chemag/cache/");
+  });
+
+  it("appends .chemag/cache/ to an existing .gitignore", () => {
+    const giPath = path.join(tmpDir, ".gitignore");
+    fs.writeFileSync(giPath, "node_modules/\ndist/\n", "utf-8");
+    runInit(["--language", "typescript"]);
+    const content = fs.readFileSync(giPath, "utf-8");
+    expect(content).toContain("node_modules/");
+    expect(content).toContain("dist/");
+    expect(content).toContain(".chemag/cache/");
+  });
+
+  it("does not duplicate .chemag/cache/ on a re-run-style append", () => {
+    const giPath = path.join(tmpDir, ".gitignore");
+    fs.writeFileSync(giPath, ".chemag/cache/\n", "utf-8");
+    runInit(["--language", "typescript"]);
+    const content = fs.readFileSync(giPath, "utf-8");
+    const occurrences = content.split(".chemag/cache/").length - 1;
+    expect(occurrences).toBe(1);
+  });
+
+  it("recognises a broader .chemag entry as already covering the cache", () => {
+    const giPath = path.join(tmpDir, ".gitignore");
+    fs.writeFileSync(giPath, ".chemag/\n", "utf-8");
+    runInit(["--language", "typescript"]);
+    const content = fs.readFileSync(giPath, "utf-8");
+    // Must NOT add the more specific entry on top of the broader one.
+    expect(content).not.toContain(".chemag/cache/");
+    expect(content).toContain(".chemag/");
+  });
+});
+
 describe("cmdInit error cases", () => {
   it("fails if workspace.yaml already exists", () => {
     fs.writeFileSync(path.join(tmpDir, "workspace.yaml"), "existing", "utf-8");

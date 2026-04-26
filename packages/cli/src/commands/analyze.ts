@@ -1,8 +1,13 @@
 import * as path from "node:path";
-import { discoverCompounds, loadWorkspace } from "@chemag/core/loader";
+import { readFileSync } from "node:fs";
+import { discoverCompounds, loadCompound, loadWorkspace } from "@chemag/core/loader";
 import { checkImports } from "@chemag/core/import-check";
-import type { LoadedCompound, Workspace } from "@chemag/core/types";
+import type { LanguagePlugin } from "@chemag/core/plugin-interface";
+import type { LoadedCompound, ParsedImport, Workspace } from "@chemag/core/types";
 import { applyWorkspaceVocabulary, tr } from "@chemag/core/vocabulary";
+import { contentHash } from "../cache/content-hash.js";
+import { createImportCache } from "../cache/import-cache.js";
+import { createManifestCache } from "../cache/manifest-cache.js";
 import { loadPlugin } from "../plugin-loader.js";
 
 const R = "\x1b[0m";
@@ -29,10 +34,20 @@ export function cmdAnalyze(argv: string[]): void {
 
   const wsPath = path.resolve(wsArg);
   const wsDir = path.dirname(wsPath);
+  const manifestCache = createManifestCache(wsDir);
+  const importCache = createImportCache(wsDir);
 
   let ws: Workspace;
   try {
-    ws = loadWorkspace(wsPath);
+    const raw = readFileSync(wsPath, "utf-8");
+    const hash = contentHash(raw);
+    const cached = manifestCache.getWorkspace(wsPath, hash);
+    if (cached !== null) {
+      ws = cached;
+    } else {
+      ws = loadWorkspace(wsPath);
+      manifestCache.setWorkspace(wsPath, ws, hash);
+    }
   } catch (e: unknown) {
     console.error(`${RED}Failed to load workspace:${R} ${e instanceof Error ? e.message : e}`);
     process.exit(2);
@@ -44,7 +59,17 @@ export function cmdAnalyze(argv: string[]): void {
 
   let compounds: LoadedCompound[];
   try {
-    compounds = discoverCompounds(ws, wsDir);
+    compounds = discoverCompounds(ws, wsDir, {
+      loadCompound: (manifestPath: string): LoadedCompound => {
+        const raw = readFileSync(manifestPath, "utf-8");
+        const hash = contentHash(raw);
+        const cached = manifestCache.getCompound(manifestPath, hash);
+        if (cached !== null) return cached;
+        const parsed = loadCompound(manifestPath);
+        manifestCache.setCompound(manifestPath, parsed, hash);
+        return parsed;
+      },
+    });
   } catch (e: unknown) {
     console.error(`${RED}Failed to discover compounds:${R} ${e instanceof Error ? e.message : e}`);
     process.exit(2);
@@ -60,7 +85,40 @@ export function cmdAnalyze(argv: string[]): void {
     console.log(`${DIM}  Scanning ${totalFiles} source files (${plugin.name})${R}\n`);
   }
 
-  const diags = checkImports(ws, compounds, plugin);
+  const diags = checkImports(ws, compounds, plugin, {
+    parseImportsBatch: (filePaths: string[], p: LanguagePlugin) => {
+      const result = new Map<string, ParsedImport[]>();
+      const misses: { abs: string; hash: string }[] = [];
+
+      for (const abs of filePaths) {
+        let raw: string;
+        try {
+          raw = readFileSync(abs, "utf-8");
+        } catch {
+          // Source file unreadable — let the plugin try (it may fail gracefully).
+          continue;
+        }
+        const hash = contentHash(raw);
+        const cached = importCache.get(abs, hash);
+        if (cached !== null) {
+          result.set(abs, cached);
+        } else {
+          misses.push({ abs, hash });
+        }
+      }
+
+      if (misses.length > 0) {
+        const parsedMisses = p.parseImportsBatch(misses.map((m) => m.abs));
+        for (const { abs, hash } of misses) {
+          const parsed = parsedMisses.get(abs) ?? [];
+          importCache.set(abs, parsed, hash);
+          result.set(abs, parsed);
+        }
+      }
+
+      return result;
+    },
+  });
 
   const errors = diags.filter((d) => d.level === "error");
   const warnings = diags.filter((d) => d.level === "warning");

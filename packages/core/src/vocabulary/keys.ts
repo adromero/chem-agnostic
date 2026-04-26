@@ -68,6 +68,7 @@ export type TrKey =
   | "cli.help.usage"
   | "cli.help.commands"
   | "cli.help.options"
+  | "cli.help.no_cache"
   | "cli.command.init"
   | "cli.command.add"
   | "cli.command.check"
@@ -133,6 +134,7 @@ export const ALL_TR_KEYS: readonly TrKey[] = [
   "cli.help.usage",
   "cli.help.commands",
   "cli.help.options",
+  "cli.help.no_cache",
   "cli.command.init",
   "cli.command.add",
   "cli.command.check",
