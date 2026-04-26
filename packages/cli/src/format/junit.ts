@@ -34,7 +34,7 @@ export function formatJunit(diagnostics: Diagnostic[], context: FormatContext): 
   const cases = buildTestCases(diagnostics, context, suiteName);
 
   let totalFailures = 0;
-  let totalErrors = 0;
+  const totalErrors = 0;
   for (const c of cases) {
     if (c.failures.length > 0) totalFailures += c.failures.length;
   }
@@ -193,7 +193,9 @@ function renderTestCase(tc: TestCase, lines: string[]): void {
 // Escaping helpers
 // ---------------------------------------------------------------------------
 
-const ANSI_RE = /\x1b\[[0-9;]*m/g;
+// Strip ANSI escape sequences (`\x1b[…m`). Built via fromCharCode so biome's
+// `noControlCharactersInRegex` rule doesn't flag the literal escape.
+const ANSI_RE = new RegExp(`${String.fromCharCode(0x1b)}\\[[0-9;]*m`, "g");
 
 function stripAnsi(s: string): string {
   return s.replace(ANSI_RE, "");

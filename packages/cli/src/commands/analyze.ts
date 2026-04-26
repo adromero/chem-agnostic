@@ -24,7 +24,9 @@ export function cmdAnalyze(argv: string[]): void {
   if (argv.includes("-h") || argv.includes("--help")) {
     console.log(`\n\x1b[1m${tr("cli.command.analyze")}\x1b[0m\n`);
     console.log(
-      `\x1b[1mOptions:\x1b[0m\n  --format <fmt>   Output format: human|json|sarif|junit (default: human)\n  --json           DEPRECATED. Alias for --format json that preserves the legacy ad-hoc shape. Use --format json instead.\n`,
+      "\x1b[1mOptions:\x1b[0m\n" +
+        "  --format <fmt>   Output format: human|json|sarif|junit (default: human)\n" +
+        "  --json           DEPRECATED. Alias for --format json that preserves the legacy ad-hoc shape. Use --format json instead.\n",
     );
     process.exit(0);
   }

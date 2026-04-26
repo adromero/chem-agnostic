@@ -51,10 +51,7 @@ export const TOOL_INFORMATION_URI = "https://github.com/chemag-org/chemag";
 // ---------------------------------------------------------------------------
 
 /** Build the SARIF log object. Useful for tests; the formatter wraps it. */
-export function buildSarifLog(
-  diagnostics: Diagnostic[],
-  context: FormatContext,
-): SarifLog {
+export function buildSarifLog(diagnostics: Diagnostic[], context: FormatContext): SarifLog {
   return {
     $schema: SARIF_SCHEMA_URL,
     version: SARIF_VERSION,

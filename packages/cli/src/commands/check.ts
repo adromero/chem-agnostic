@@ -8,7 +8,12 @@ import { readFileSync } from "node:fs";
 import { createManifestCache } from "../cache/manifest-cache.js";
 import { contentHash } from "../cache/content-hash.js";
 import { loadPlugin } from "../plugin-loader.js";
-import { formatDiagnostics, isFormatName, type FormatContext, type FormatName } from "../format/index.js";
+import {
+  formatDiagnostics,
+  isFormatName,
+  type FormatContext,
+  type FormatName,
+} from "../format/index.js";
 import { VERSION } from "../version.js";
 
 const R = "\x1b[0m";
@@ -18,7 +23,12 @@ export function cmdCheck(argv: string[]): void {
   if (argv.includes("-h") || argv.includes("--help")) {
     console.log(`\n\x1b[1m${tr("cli.command.check")}\x1b[0m\n`);
     console.log(
-      `\x1b[1mOptions:\x1b[0m\n  --manifest-only       Skip filesystem checks\n  --verbose, -v         Show warning details\n  --format <fmt>        Output format: human|json|sarif|junit (default: human)\n  --json                DEPRECATED. Alias for --format json that preserves the legacy ad-hoc shape. Use --format json instead.\n  --explain CHEM-XXX-NNN  Print metadata for a diagnostic code and exit\n`,
+      "\x1b[1mOptions:\x1b[0m\n" +
+        "  --manifest-only       Skip filesystem checks\n" +
+        "  --verbose, -v         Show warning details\n" +
+        "  --format <fmt>        Output format: human|json|sarif|junit (default: human)\n" +
+        "  --json                DEPRECATED. Alias for --format json that preserves the legacy ad-hoc shape. Use --format json instead.\n" +
+        "  --explain CHEM-XXX-NNN  Print metadata for a diagnostic code and exit\n",
     );
     process.exit(0);
   }

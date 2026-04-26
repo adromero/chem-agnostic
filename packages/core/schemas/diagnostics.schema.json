@@ -30,7 +30,10 @@
       "additionalProperties": false,
       "properties": {
         "name": { "type": "string" },
-        "path": { "type": "string", "description": "Absolute path to the workspace directory (the parent of workspace.yaml)." }
+        "path": {
+          "type": "string",
+          "description": "Absolute path to the workspace directory (the parent of workspace.yaml)."
+        }
       }
     },
     "summary": {

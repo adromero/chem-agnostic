@@ -12,10 +12,7 @@
 
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, isAbsolute, resolve } from "node:path";
-import {
-  runCheckEdit,
-  type CheckEditResult,
-} from "@chemag/core/check-edit";
+import { runCheckEdit, type CheckEditResult } from "@chemag/core/check-edit";
 import { discoverCompounds, loadCompound, loadWorkspace } from "@chemag/core/loader";
 import type { LoadedCompound, ParsedImport, Workspace } from "@chemag/core/types";
 import { applyWorkspaceVocabulary, tr } from "@chemag/core/vocabulary";
@@ -24,7 +21,12 @@ import { contentHash } from "../cache/content-hash.js";
 import { createImportCache } from "../cache/import-cache.js";
 import { createManifestCache } from "../cache/manifest-cache.js";
 import { loadPlugin } from "../plugin-loader.js";
-import { formatDiagnostics, isFormatName, type FormatContext, type FormatName } from "../format/index.js";
+import {
+  formatDiagnostics,
+  isFormatName,
+  type FormatContext,
+  type FormatName,
+} from "../format/index.js";
 import { VERSION } from "../version.js";
 
 // Test-overridable stdin reader. Production reads file-descriptor 0 via

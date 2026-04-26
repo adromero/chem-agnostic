@@ -25,7 +25,10 @@ export interface DiagnosticsReport {
 }
 
 /** Build the structured report (without serialising). Useful for tests. */
-export function buildJsonReport(diagnostics: Diagnostic[], context: FormatContext): DiagnosticsReport {
+export function buildJsonReport(
+  diagnostics: Diagnostic[],
+  context: FormatContext,
+): DiagnosticsReport {
   const errors = diagnostics.filter((d) => d.level === "error").length;
   const warnings = diagnostics.filter((d) => d.level === "warning").length;
 
