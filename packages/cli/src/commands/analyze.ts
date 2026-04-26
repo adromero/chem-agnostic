@@ -9,30 +9,54 @@ import { contentHash } from "../cache/content-hash.js";
 import { createImportCache } from "../cache/import-cache.js";
 import { createManifestCache } from "../cache/manifest-cache.js";
 import { loadPlugin } from "../plugin-loader.js";
+import {
+  formatDiagnostics,
+  isFormatName,
+  type FormatContext,
+  type FormatName,
+} from "../format/index.js";
+import { VERSION } from "../version.js";
 
 const R = "\x1b[0m";
 const RED = "\x1b[31m";
-const GRN = "\x1b[32m";
-const YEL = "\x1b[33m";
-const DIM = "\x1b[2m";
-const BLD = "\x1b[1m";
 
 export function cmdAnalyze(argv: string[]): void {
   if (argv.includes("-h") || argv.includes("--help")) {
-    console.log(`\n${BLD}${tr("cli.command.analyze")}${R}\n`);
-    console.log(`${BLD}Options:${R}\n  --json   Machine-readable output\n`);
+    console.log(`\n\x1b[1m${tr("cli.command.analyze")}\x1b[0m\n`);
+    console.log(
+      `\x1b[1mOptions:\x1b[0m\n  --format <fmt>   Output format: human|json|sarif|junit (default: human)\n  --json           DEPRECATED. Alias for --format json that preserves the legacy ad-hoc shape. Use --format json instead.\n`,
+    );
     process.exit(0);
   }
 
-  const json = argv.includes("--json");
-  const wsArg = argv.find((a) => !a.startsWith("-"));
+  const legacyJson = argv.includes("--json");
 
-  if (!wsArg) {
+  const format = parseFormatFlag(argv);
+  if (format !== null && legacyJson) {
+    console.error(
+      `${RED}--json and --format are mutually exclusive; --json is deprecated, use --format${R}`,
+    );
+    process.exit(2);
+  }
+  if (format === "__invalid__") {
+    console.error(`${RED}Invalid --format value. Expected one of: human, json, sarif, junit${R}`);
+    process.exit(2);
+  }
+  const resolvedFormat: FormatName = format ?? "human";
+
+  if (legacyJson) {
+    console.error(
+      "warning: --json is deprecated; use --format json. Note: --json continues to emit the legacy ad-hoc shape for backward compatibility.",
+    );
+  }
+
+  const positional = stripFlags(argv).find((a) => !a.startsWith("-"));
+  if (!positional) {
     console.error(`${RED}No workspace file specified.${R}`);
     process.exit(2);
   }
 
-  const wsPath = path.resolve(wsArg);
+  const wsPath = path.resolve(positional);
   const wsDir = path.dirname(wsPath);
   const manifestCache = createManifestCache(wsDir);
   const importCache = createImportCache(wsDir);
@@ -79,12 +103,6 @@ export function cmdAnalyze(argv: string[]): void {
 
   const totalFiles = compounds.reduce((n, c) => n + (c.manifest.units?.length ?? 0), 0);
 
-  if (!json) {
-    console.log(`\n${BLD}chemtest analyze${R}\n`);
-    console.log(`${BLD}Workspace:${R} ${ws.workspace}`);
-    console.log(`${DIM}  Scanning ${totalFiles} source files (${plugin.name})${R}\n`);
-  }
-
   const diags = checkImports(ws, compounds, plugin, {
     parseImportsBatch: (filePaths: string[], p: LanguagePlugin) => {
       const result = new Map<string, ParsedImport[]>();
@@ -123,7 +141,7 @@ export function cmdAnalyze(argv: string[]): void {
   const errors = diags.filter((d) => d.level === "error");
   const warnings = diags.filter((d) => d.level === "warning");
 
-  if (json) {
+  if (legacyJson) {
     console.log(
       JSON.stringify(
         {
@@ -135,45 +153,53 @@ export function cmdAnalyze(argv: string[]): void {
         2,
       ),
     );
-  } else {
-    // Group by check
-    const byCheck = new Map<string, typeof diags>();
-    for (const d of diags) {
-      if (!byCheck.has(d.check)) byCheck.set(d.check, []);
-      byCheck.get(d.check)!.push(d);
-    }
-
-    const checkNames = ["import-bonds", "import-bypass", "import-undeclared"];
-
-    for (const name of checkNames) {
-      const group = byCheck.get(name) ?? [];
-      const errs = group.filter((d) => d.level === "error");
-
-      if (errs.length > 0) {
-        console.log(`  ${RED}✗${R}  ${name} ${DIM}— ${errs.length} violation(s)${R}`);
-        for (const d of errs) {
-          const pfx = d.compound ? `${DIM}${d.compound}${R} > ` : "";
-          console.log(`     ${RED}error${R}: ${pfx}${d.message}`);
-          if (d.hint) console.log(`     ${DIM}${d.hint}${R}`);
-        }
-        console.log();
-      } else {
-        console.log(`  ${GRN}✓${R}  ${name}`);
-      }
-    }
-
-    console.log();
-    if (errors.length === 0) {
-      const w = warnings.length
-        ? ` ${YEL}(${warnings.length} warning${warnings.length !== 1 ? "s" : ""})${R}`
-        : "";
-      console.log(`${GRN}${BLD}All imports valid${R}${w}\n`);
-    } else {
-      console.log(
-        `${RED}${BLD}${errors.length} import violation${errors.length !== 1 ? "s" : ""} found${R}\n`,
-      );
-    }
+    process.exit(errors.length > 0 ? 1 : 0);
   }
 
+  const ctx: FormatContext = {
+    workspaceName: ws.workspace,
+    workspacePath: wsDir,
+    command: "analyze",
+    toolVersion: VERSION,
+    totals: { units: totalFiles },
+  };
+
+  const out = formatDiagnostics(diags, resolvedFormat, ctx);
+  console.log(out.endsWith("\n") ? out.slice(0, -1) : out);
   process.exit(errors.length > 0 ? 1 : 0);
+}
+
+// ---------------------------------------------------------------------------
+// Argument helpers
+// ---------------------------------------------------------------------------
+
+function parseFormatFlag(argv: string[]): FormatName | "__invalid__" | null {
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "--format") {
+      const v = argv[i + 1];
+      if (v === undefined || v.startsWith("-")) return "__invalid__";
+      return isFormatName(v) ? v : "__invalid__";
+    }
+    if (a.startsWith("--format=")) {
+      const v = a.slice("--format=".length);
+      return isFormatName(v) ? v : "__invalid__";
+    }
+  }
+  return null;
+}
+
+function stripFlags(argv: string[]): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "--format") {
+      i++;
+      continue;
+    }
+    if (a.startsWith("--format=")) continue;
+    if (a === "--json") continue;
+    out.push(a);
+  }
+  return out;
 }

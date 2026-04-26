@@ -8,19 +8,17 @@ import { readFileSync } from "node:fs";
 import { createManifestCache } from "../cache/manifest-cache.js";
 import { contentHash } from "../cache/content-hash.js";
 import { loadPlugin } from "../plugin-loader.js";
+import { formatDiagnostics, isFormatName, type FormatContext, type FormatName } from "../format/index.js";
+import { VERSION } from "../version.js";
 
 const R = "\x1b[0m";
 const RED = "\x1b[31m";
-const GRN = "\x1b[32m";
-const YEL = "\x1b[33m";
-const DIM = "\x1b[2m";
-const BLD = "\x1b[1m";
 
 export function cmdCheck(argv: string[]): void {
   if (argv.includes("-h") || argv.includes("--help")) {
-    console.log(`\n${BLD}${tr("cli.command.check")}${R}\n`);
+    console.log(`\n\x1b[1m${tr("cli.command.check")}\x1b[0m\n`);
     console.log(
-      `${BLD}Options:${R}\n  --manifest-only       Skip filesystem checks\n  --verbose, -v         Show warning details\n  --json                Machine-readable output\n  --explain CHEM-XXX-NNN  Print metadata for a diagnostic code and exit\n`,
+      `\x1b[1mOptions:\x1b[0m\n  --manifest-only       Skip filesystem checks\n  --verbose, -v         Show warning details\n  --format <fmt>        Output format: human|json|sarif|junit (default: human)\n  --json                DEPRECATED. Alias for --format json that preserves the legacy ad-hoc shape. Use --format json instead.\n  --explain CHEM-XXX-NNN  Print metadata for a diagnostic code and exit\n`,
     );
     process.exit(0);
   }
@@ -46,16 +44,37 @@ export function cmdCheck(argv: string[]): void {
   }
 
   const verbose = argv.includes("--verbose") || argv.includes("-v");
-  const json = argv.includes("--json");
+  const legacyJson = argv.includes("--json");
   const manifestOnly = argv.includes("--manifest-only");
-  const wsArg = argv.find((a) => !a.startsWith("-"));
 
-  if (!wsArg) {
+  // Resolve --format (mutually exclusive with --json).
+  const format = parseFormatFlag(argv);
+  if (format !== null && legacyJson) {
+    console.error(
+      `${RED}--json and --format are mutually exclusive; --json is deprecated, use --format${R}`,
+    );
+    process.exit(2);
+  }
+  if (format === "__invalid__") {
+    console.error(`${RED}Invalid --format value. Expected one of: human, json, sarif, junit${R}`);
+    process.exit(2);
+  }
+  const resolvedFormat: FormatName = format ?? "human";
+
+  if (legacyJson) {
+    console.error(
+      "warning: --json is deprecated; use --format json. Note: --json continues to emit the legacy ad-hoc shape for backward compatibility.",
+    );
+  }
+
+  // Strip flags before searching for the positional workspace argument.
+  const positional = stripFlags(argv).find((a) => !a.startsWith("-"));
+  if (!positional) {
     console.error(`${RED}No workspace file specified.${R}`);
     process.exit(2);
   }
 
-  const wsPath = path.resolve(wsArg);
+  const wsPath = path.resolve(positional);
   const wsDir = path.dirname(wsPath);
   const cache = createManifestCache(wsDir);
 
@@ -109,16 +128,6 @@ export function cmdCheck(argv: string[]): void {
   const totalUnits = compounds.reduce((n, c) => n + (c.manifest.units?.length ?? 0), 0);
   const totalAssays = compounds.reduce((n, c) => n + (c.manifest.assays?.length ?? 0), 0);
 
-  if (!json) {
-    console.log(`\n${BLD}chemtest check${R}\n`);
-    console.log(`${BLD}Workspace:${R} ${ws.workspace}`);
-    const parts = Object.entries(byType).map(([t, n]) => `${t}: ${n}`);
-    console.log(`${DIM}  ${parts.join(" | ")}${R}`);
-    console.log(`${DIM}  Units: ${totalUnits} | Assays: ${totalAssays}${R}`);
-    if (manifestOnly) console.log(`${DIM}  Mode: manifest-only${R}`);
-    console.log();
-  }
-
   // Run checks with plugin's default public surface
   const opts: CheckOptions = {
     manifestOnly,
@@ -129,10 +138,12 @@ export function cmdCheck(argv: string[]): void {
   let passed = 0;
   let failed = 0;
   const results: { check: string; diagnostics: Diagnostic[] }[] = [];
+  const allDiags: Diagnostic[] = [];
 
   for (const { name, fn } of allChecks) {
     const diags = fn(ws, compounds, opts);
     results.push({ check: name, diagnostics: diags });
+    allDiags.push(...diags);
 
     const errors = diags.filter((d) => d.level === "error");
     const warnings = diags.filter((d) => d.level === "warning");
@@ -144,36 +155,11 @@ export function cmdCheck(argv: string[]): void {
     } else {
       passed++;
     }
-
-    if (!json) {
-      if (errors.length > 0) {
-        const ws = warnings.length ? `, ${warnings.length} warning(s)` : "";
-        console.log(`  ${RED}\u2717${R}  ${name} ${DIM}\u2014 ${errors.length} error(s)${ws}${R}`);
-        for (const d of diags) {
-          const color = d.level === "error" ? RED : YEL;
-          const pfx = d.compound ? `${DIM}${d.compound}${R} > ` : "";
-          console.log(`     ${color}${d.level}${R}: ${pfx}${d.message}`);
-          if (d.hint) console.log(`     ${DIM}${d.hint}${R}`);
-        }
-        console.log();
-      } else if (warnings.length > 0) {
-        console.log(`  ${YEL}~${R}  ${name} ${DIM}\u2014 ${warnings.length} warning(s)${R}`);
-        if (verbose) {
-          for (const d of warnings) {
-            const pfx = d.compound ? `${DIM}${d.compound}${R} > ` : "";
-            console.log(`     ${YEL}warn${R}: ${pfx}${d.message}`);
-            if (d.hint) console.log(`     ${DIM}${d.hint}${R}`);
-          }
-          console.log();
-        }
-      } else {
-        console.log(`  ${GRN}\u2713${R}  ${name}`);
-      }
-    }
   }
 
-  // Summary
-  if (json) {
+  // Legacy --json emits the EXISTING ad-hoc shape for backward compatibility.
+  // The new schema-validated shape is only emitted under --format json.
+  if (legacyJson) {
     console.log(
       JSON.stringify(
         {
@@ -193,20 +179,78 @@ export function cmdCheck(argv: string[]): void {
         2,
       ),
     );
-  } else {
-    console.log();
-    if (totalErrors === 0) {
-      const w = totalWarnings
-        ? ` ${YEL}(${totalWarnings} warning${totalWarnings !== 1 ? "s" : ""})${R}`
-        : "";
-      console.log(`${GRN}${BLD}All ${passed} checks passed${R}${w}\n`);
-    } else {
-      const w = totalWarnings ? `, ${totalWarnings} warning${totalWarnings !== 1 ? "s" : ""}` : "";
-      console.log(
-        `${RED}${BLD}${failed} check${failed !== 1 ? "s" : ""} failed${R} \u2014 ${totalErrors} error${totalErrors !== 1 ? "s" : ""}${w} | ${GRN}${passed} passed${R}\n`,
-      );
-    }
+    process.exit(totalErrors > 0 ? 1 : 0);
   }
 
+  // Modern path — dispatch through formatDiagnostics.
+  const ctx: FormatContext = {
+    workspaceName: ws.workspace,
+    workspacePath: wsDir,
+    command: "check",
+    toolVersion: VERSION,
+    totals: {
+      compounds: compounds.length,
+      units: totalUnits,
+      assays: totalAssays,
+      passed,
+      failed,
+    },
+    checks: results,
+    verbose,
+    manifestOnly,
+  };
+
+  // Use console.log so existing tests (which spy on it) still capture
+  // output. The formatter strings end with a trailing newline; trim it
+  // since console.log appends its own.
+  const out = formatDiagnostics(allDiags, resolvedFormat, ctx);
+  console.log(out.endsWith("\n") ? out.slice(0, -1) : out);
   process.exit(totalErrors > 0 ? 1 : 0);
+}
+
+// ---------------------------------------------------------------------------
+// Argument helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Parse `--format <name>` / `--format=<name>`. Returns the resolved
+ * FormatName, the literal `"__invalid__"` if a value was passed but is not
+ * one of human/json/sarif/junit, or null if the flag was absent.
+ */
+function parseFormatFlag(argv: string[]): FormatName | "__invalid__" | null {
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "--format") {
+      const v = argv[i + 1];
+      if (v === undefined || v.startsWith("-")) return "__invalid__";
+      return isFormatName(v) ? v : "__invalid__";
+    }
+    if (a.startsWith("--format=")) {
+      const v = a.slice("--format=".length);
+      return isFormatName(v) ? v : "__invalid__";
+    }
+  }
+  return null;
+}
+
+/**
+ * Strip --format / --format=<v> / --json / --verbose / --manifest-only /
+ * --explain (and its value) from argv so the remaining tokens contain only
+ * the positional workspace argument.
+ */
+function stripFlags(argv: string[]): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "--format" || a === "--explain") {
+      i++; // skip value too
+      continue;
+    }
+    if (a.startsWith("--format=")) continue;
+    if (a === "--json") continue;
+    if (a === "--verbose" || a === "-v") continue;
+    if (a === "--manifest-only") continue;
+    out.push(a);
+  }
+  return out;
 }

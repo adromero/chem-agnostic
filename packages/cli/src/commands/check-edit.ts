@@ -14,7 +14,6 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, isAbsolute, resolve } from "node:path";
 import {
   runCheckEdit,
-  type CheckEditDiagnostic,
   type CheckEditResult,
 } from "@chemag/core/check-edit";
 import { discoverCompounds, loadCompound, loadWorkspace } from "@chemag/core/loader";
@@ -25,6 +24,8 @@ import { contentHash } from "../cache/content-hash.js";
 import { createImportCache } from "../cache/import-cache.js";
 import { createManifestCache } from "../cache/manifest-cache.js";
 import { loadPlugin } from "../plugin-loader.js";
+import { formatDiagnostics, isFormatName, type FormatContext, type FormatName } from "../format/index.js";
+import { VERSION } from "../version.js";
 
 // Test-overridable stdin reader. Production reads file-descriptor 0 via
 // fs.readFileSync(0). Tests inject a fake by calling __setStdinReader().
@@ -38,8 +39,6 @@ export function __resetStdinReaderForTesting(): void {
 
 const R = "\x1b[0m";
 const RED = "\x1b[31m";
-const GRN = "\x1b[32m";
-const YEL = "\x1b[33m";
 const DIM = "\x1b[2m";
 const BLD = "\x1b[1m";
 
@@ -47,7 +46,9 @@ interface ParsedArgs {
   file?: string;
   content?: string; // "-" → read stdin (resolved later)
   workspace?: string;
-  format: "human" | "json";
+  format: FormatName;
+  /** True if the user passed an unrecognised --format value. */
+  formatInvalid?: boolean;
   proposedRole?: string;
   proposedCompound?: string;
   help: boolean;
@@ -59,6 +60,11 @@ export function cmdCheckEdit(argv: string[]): void {
   if (args.help) {
     printHelp();
     process.exit(0);
+  }
+
+  if (args.formatInvalid) {
+    console.error(`${RED}Invalid --format value. Expected one of: human, json, sarif, junit${R}`);
+    process.exit(2);
   }
 
   if (!args.file) {
@@ -199,7 +205,7 @@ export function cmdCheckEdit(argv: string[]): void {
     process.exit(2);
   }
 
-  emitResult(result, args.format);
+  emitResult(result, args.format, wsDir, ws.workspace);
 
   const hasError = result.diagnostics.some((d) => d.level === "error");
   process.exit(hasError ? 1 : 0);
@@ -209,50 +215,42 @@ export function cmdCheckEdit(argv: string[]): void {
 // Output formatting
 // ---------------------------------------------------------------------------
 
-function emitResult(result: CheckEditResult, format: "human" | "json"): void {
+/**
+ * `check-edit --format json` retains the wp-004 single-file shape (which is
+ * what the `check-edit-result.schema.json` documents). Other formats route
+ * through the shared dispatcher.
+ *
+ * The wp-004 JSON shape is canonical for check-edit because consumers
+ * (editor hooks, MCP tools) depend on the file/compound/role envelope.
+ * The new schema-validated diagnostics envelope from wp-005 covers
+ * workspace-level outputs (check, analyze) — for check-edit it would
+ * lose information.
+ */
+function emitResult(
+  result: CheckEditResult,
+  format: FormatName,
+  workspaceDir: string,
+  workspaceName: string,
+): void {
   if (format === "json") {
     console.log(JSON.stringify(result, null, 2));
     return;
   }
 
-  // Human format mirrors `chem check`.
-  console.log(`\n${BLD}chemag check-edit${R}\n`);
-  console.log(`${BLD}File:${R} ${result.file}`);
-  if (result.compound) console.log(`${BLD}Compound:${R} ${result.compound}`);
-  if (result.role) console.log(`${BLD}Role:${R} ${result.role}`);
-  console.log();
+  const ctx: FormatContext = {
+    workspaceName,
+    workspacePath: workspaceDir,
+    command: "check-edit",
+    toolVersion: VERSION,
+    fileContext: {
+      file: result.file,
+      compound: result.compound,
+      role: result.role,
+    },
+  };
 
-  const errors = result.diagnostics.filter((d) => d.level === "error");
-  const warnings = result.diagnostics.filter((d) => d.level === "warning");
-
-  if (result.diagnostics.length === 0) {
-    console.log(`  ${GRN}✓${R}  no diagnostics\n`);
-    return;
-  }
-
-  for (const d of result.diagnostics) {
-    formatDiagnostic(d);
-  }
-
-  console.log();
-  if (errors.length > 0) {
-    const w = warnings.length ? `, ${warnings.length} warning(s)` : "";
-    console.log(`${RED}${BLD}${errors.length} error${errors.length !== 1 ? "s" : ""}${w}${R}\n`);
-  } else {
-    console.log(`${YEL}${BLD}${warnings.length} warning${warnings.length !== 1 ? "s" : ""}${R}\n`);
-  }
-}
-
-function formatDiagnostic(d: CheckEditDiagnostic): void {
-  const color = d.level === "error" ? RED : YEL;
-  console.log(`  ${color}${d.level}${R} ${DIM}[${d.code}]${R} ${d.message}`);
-  if (d.imported_module) {
-    console.log(`    ${DIM}imports ${d.imported_module}${R}`);
-  }
-  if (d.hint) console.log(`    ${DIM}${d.hint}${R}`);
-  if (d.remediation) {
-    console.log(`    ${DIM}remediation: ${d.remediation.kind}${R}`);
-  }
+  const out = formatDiagnostics(result.diagnostics, format, ctx);
+  console.log(out.endsWith("\n") ? out.slice(0, -1) : out);
 }
 
 // ---------------------------------------------------------------------------
@@ -261,6 +259,18 @@ function formatDiagnostic(d: CheckEditDiagnostic): void {
 
 function parseArgs(argv: string[]): ParsedArgs {
   const out: ParsedArgs = { format: "human", help: false };
+
+  const setFormat = (v: string | undefined): void => {
+    if (v === undefined) {
+      out.formatInvalid = true;
+      return;
+    }
+    if (isFormatName(v)) {
+      out.format = v;
+    } else {
+      out.formatInvalid = true;
+    }
+  };
 
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -276,7 +286,7 @@ function parseArgs(argv: string[]): ParsedArgs {
         out.workspace = argv[++i];
         break;
       case "--format":
-        out.format = argv[++i] === "json" ? "json" : "human";
+        setFormat(argv[++i]);
         break;
       case "--proposed-role":
         out.proposedRole = argv[++i];
@@ -290,8 +300,7 @@ function parseArgs(argv: string[]): ParsedArgs {
         } else if (a.startsWith("--workspace=")) {
           out.workspace = a.slice("--workspace=".length);
         } else if (a.startsWith("--format=")) {
-          const v = a.slice("--format=".length);
-          out.format = v === "json" ? "json" : "human";
+          setFormat(a.slice("--format=".length));
         } else if (a.startsWith("--proposed-role=")) {
           out.proposedRole = a.slice("--proposed-role=".length);
         } else if (a.startsWith("--proposed-compound=")) {
@@ -344,13 +353,13 @@ function printHelp(): void {
   console.log(`\n${BLD}check-edit — validate a single file edit${R}\n`);
   console.log(`${BLD}Usage:${R}`);
   console.log("  chemag check-edit <file> [--content <string|->] [--workspace <path>]");
-  console.log("                     [--format json|human]");
+  console.log("                     [--format human|json|sarif|junit]");
   console.log("                     [--proposed-role <role>] [--proposed-compound <name>]");
   console.log();
   console.log(`${BLD}Options:${R}`);
   console.log("  --content <s|->        Hypothetical new content. Use '-' to read stdin.");
   console.log("  --workspace <path>     Explicit workspace.yaml path (default: auto-discover).");
-  console.log("  --format json|human    Output format. Default: human.");
+  console.log("  --format <fmt>         Output format: human|json|sarif|junit. Default: human.");
   console.log("  --proposed-role <r>    Role to assume for files not yet in any manifest.");
   console.log("  --proposed-compound <n>  Compound to assume.");
   console.log();
