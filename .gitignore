@@ -1,5 +1,13 @@
 node_modules/
+**/node_modules/
 dist/
+**/dist/
 .cache/
+.turbo/
+**/.turbo/
 *.tsbuildinfo
 .env
+.env.local
+coverage/
+**/coverage/
+.DS_Store

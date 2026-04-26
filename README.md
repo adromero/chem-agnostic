@@ -1,8 +1,8 @@
-# chem-ag
+# chemag
 
 Language-agnostic architecture enforcement for chemistry-inspired software design.
 
-`chem-ag` extracts the core architectural engine from [chem](https://github.com/adromero/chem) (TypeScript-only) into a plugin-based system that supports multiple languages. It ships with built-in TypeScript and Python plugins.
+`chemag` (binary: `chemag`, alias `chem-ag`) extracts the core architectural engine from [chem](https://github.com/adromero/chem) (TypeScript-only) into a plugin-based system that supports multiple languages. It ships with built-in TypeScript and Python plugins.
 
 ## What is Chem?
 
@@ -22,17 +22,19 @@ These rules are declared in YAML manifests and enforced by analyzing real source
 ## Install
 
 ```bash
-npm install -g chem-ag
+npm install -g @chemag/cli
 ```
+
+The package installs two binaries: `chemag` (canonical) and `chem-ag` (alias for backwards compatibility).
 
 Or from source:
 
 ```bash
 git clone https://github.com/adromero/chem-agnostic.git
 cd chem-agnostic
-npm install
-npm run build
-npm link
+pnpm install
+pnpm build
+pnpm --filter @chemag/cli link --global
 ```
 
 ## Usage
@@ -40,56 +42,58 @@ npm link
 ### Initialize a workspace
 
 ```bash
-chem-ag init myapp                        # TypeScript (default)
-chem-ag init myapp --language python      # Python
+chemag init myapp                        # TypeScript (default)
+chemag init myapp --language python      # Python
 ```
 
 ### Add compounds and units
 
 ```bash
-chem-ag add compound orders
-chem-ag add unit orders element OrderId --export
-chem-ag add unit orders molecule Order --export
-chem-ag add unit orders interface OrderRepo --export
-chem-ag add unit orders adapter PgOrderRepo --implements OrderRepo
-chem-ag add unit orders reaction createOrder --export
+chemag add compound orders
+chemag add unit orders element OrderId --export
+chemag add unit orders molecule Order --export
+chemag add unit orders interface OrderRepo --export
+chemag add unit orders adapter PgOrderRepo --implements OrderRepo
+chemag add unit orders reaction createOrder --export
 ```
 
 ### Validate and analyze
 
 ```bash
-chem-ag check workspace.yaml      # Validate manifests and file structure
-chem-ag analyze workspace.yaml    # Check real imports against bond rules
-chem-ag scaffold workspace.yaml   # Generate stub files from manifests
-chem-ag graph workspace.yaml      # Output Mermaid dependency diagram
-chem-ag sync workspace.yaml       # Generate manifests from existing code
+chemag check workspace.yaml      # Validate manifests and file structure
+chemag analyze workspace.yaml    # Check real imports against bond rules
+chemag scaffold workspace.yaml   # Generate stub files from manifests
+chemag graph workspace.yaml      # Output Mermaid dependency diagram
+chemag sync workspace.yaml       # Generate manifests from existing code
 ```
+
+The `chem-ag` alias works for every command — call it with whichever name you prefer.
 
 ## Plugin System
 
-`chem-ag` uses a 16-member `LanguagePlugin` interface covering:
+`chemag` uses a 16-member `LanguagePlugin` interface covering:
 
-- **Import parsing** — ts-morph for TypeScript, `ast.parse()` via subprocess for Python
+- **Import parsing** — ts-morph for TypeScript, a hand-rolled tokenizer for Python (no subprocess required)
 - **Stub generation** — language-idiomatic templates for all 6 roles
 - **Public surface** — `public.ts` (TS) or `__init__.py` (Python)
 - **Module resolution** — filesystem-based path resolution per language
 - **File naming** — PascalCase for TS, snake_case for Python
 - **CLAUDE.md generation** — language-specific architecture docs for AI assistants
 
-### TypeScript Plugin
+### TypeScript Plugin (`@chemag/plugin-typescript`)
 
 - Uses ts-morph for AST-based import analysis
 - Generates classes, interfaces, and functions per role
 - Barrel file (`public.ts`) with `export type` for interfaces
 
-### Python Plugin
+### Python Plugin (`@chemag/plugin-python`)
 
-- Uses `ast.parse()` via a bundled Python script (stdlib only, no pip deps)
+- Pure-TypeScript Python import parser (no Python subprocess at runtime)
 - Generates `@dataclass`, `ABC`, and `async def` stubs per role
 - `__init__.py` with re-exports as public surface
 - Django-style snake_case file naming (`HTTPServer` -> `http_server.py`)
 - `TYPE_CHECKING` guard detection
-- Requires Python 3.10+
+- The `inferImplements` helper still shells out to `python3` to inspect class bases — this is the only remaining Python subprocess in the plugin and is opt-in (controlled by the `CHEM_PYTHON` env var).
 
 ## Configuration
 
@@ -111,10 +115,33 @@ compounds:
 ## Development
 
 ```bash
-npm test          # Run all 208 tests
-npm run check     # Type-check without emitting
-npm run build     # Compile to dist/
+pnpm install           # Install workspace dependencies
+pnpm typecheck         # Run tsc --noEmit across every package
+pnpm test              # Run vitest across every package + the root structure tests
+pnpm build             # Compile every package to its dist/
+pnpm lint              # Biome lint + format check
+pnpm format            # Biome format --write
 ```
+
+## Repository layout
+
+This repo is a pnpm + Turborepo monorepo:
+
+```
+packages/
+  cli/                 @chemag/cli — the chemag binary
+  core/                @chemag/core — shared engine (types, loader, checks, ...)
+  plugin-typescript/   @chemag/plugin-typescript
+  plugin-python/       @chemag/plugin-python
+  telemetry/           @chemag/telemetry (placeholder; WP-006)
+docs/
+  master-plan/         Implementation roadmap (60 work packages)
+  adrs/                Architecture decision records
+scripts/
+  check-prereqs.ts     CI gate for operator-provisioned external services
+```
+
+See `docs/adrs/0001-monorepo-toolchain.md` for the full toolchain rationale.
 
 ## License
 

@@ -1,0 +1,46 @@
+{
+  "name": "@chemag/cli",
+  "version": "0.1.0",
+  "description": "Language-agnostic Chem architecture toolkit — analyze, scaffold, and validate chemistry-inspired software architectures.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/cli.js",
+  "types": "./dist/cli.d.ts",
+  "bin": {
+    "chemag": "./bin/chem-ag",
+    "chem-ag": "./bin/chem-ag"
+  },
+  "files": [
+    "bin",
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map",
+    "dist/**/*.js.map"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "prepublishOnly": "pnpm run build"
+  },
+  "keywords": [
+    "architecture",
+    "chem",
+    "chemag",
+    "analyzer",
+    "typescript",
+    "python",
+    "scaffolding"
+  ],
+  "dependencies": {
+    "@chemag/core": "workspace:*",
+    "@chemag/plugin-python": "workspace:*",
+    "@chemag/plugin-typescript": "workspace:*",
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.1.0"
+  }
+}

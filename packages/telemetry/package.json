@@ -1,0 +1,24 @@
+{
+  "name": "@chemag/telemetry",
+  "version": "0.0.0",
+  "description": "Opt-in usage analytics for the Chem toolkit. Implementation lands in WP-006; this package is pre-registered as a workspace member during WP-001 so consumers can wire the dependency in earlier WPs without touching pnpm-workspace.yaml again.",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.1.0"
+  }
+}
