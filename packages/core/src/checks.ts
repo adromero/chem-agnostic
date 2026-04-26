@@ -1,6 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import type { Workspace, LoadedCompound, Diagnostic, CheckFn } from "./types.js";
+import { tr } from "./vocabulary/index.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -51,7 +52,7 @@ const checkNoDuplicates: CheckFn = (_ws, compounds) => {
         level: "error",
         check: "no-duplicates",
         compound: name,
-        message: `Duplicate compound name "${name}"`,
+        message: tr("diagnostic.duplicate_compound", { name }),
         hint: `Also defined in: ${seen.get(name)}`,
       });
     } else {
@@ -75,7 +76,7 @@ const checkKnownRoles: CheckFn = (ws, compounds) => {
           level: "error",
           check: "known-roles",
           compound: c.manifest.compound,
-          message: `Unit "${u.name}" has unknown role "${u.role}"`,
+          message: tr("diagnostic.unknown_role", { unit: u.name, role: u.role }),
           hint: `Known roles: [${[...known].join(", ")}]`,
         });
       }
@@ -99,7 +100,7 @@ const checkFileExistence: CheckFn = (ws, compounds, opts) => {
           level: "error",
           check: "file-existence",
           compound: c.manifest.compound,
-          message: `Unit "${u.name}" — file not found: ${u.file}`,
+          message: tr("diagnostic.file_missing_unit", { unit: u.name, file: u.file }),
           hint: `Expected at ${abs}`,
         });
       }
@@ -111,7 +112,7 @@ const checkFileExistence: CheckFn = (ws, compounds, opts) => {
           level: "error",
           check: "file-existence",
           compound: c.manifest.compound,
-          message: `Assay "${a.name}" — file not found: ${a.file}`,
+          message: tr("diagnostic.file_missing_assay", { assay: a.name, file: a.file }),
           hint: `Expected at ${abs}`,
         });
       }
@@ -140,7 +141,7 @@ const checkPublicSurface: CheckFn = (ws, compounds, opts) => {
         level: "warning",
         check: "public-surface",
         compound: c.manifest.compound,
-        message: `Compound exports units but has no ${surfaceFile}`,
+        message: tr("diagnostic.public_surface_missing", { surface: surfaceFile }),
         hint: `Create ${abs}`,
       });
     }
@@ -171,7 +172,11 @@ const checkRoleFolders: CheckFn = (ws, compounds) => {
           level: "error",
           check: "role-folders",
           compound: c.manifest.compound,
-          message: `Unit "${u.name}" (${u.role}) path does not contain "${expected}/"`,
+          message: tr("diagnostic.role_folder_mismatch", {
+            unit: u.name,
+            role: u.role,
+            expected,
+          }),
           hint: `File: ${u.file}`,
         });
       }
@@ -205,7 +210,7 @@ const checkExportConsistency: CheckFn = (_ws, compounds) => {
             level: "error",
             check: "export-consistency",
             compound: c.manifest.compound,
-            message: `Export "${name}" (${key}) has no matching unit with role "${role}"`,
+            message: tr("diagnostic.export_no_unit", { name, key, role }),
             hint: `Add a unit { role: "${role}", name: "${name}", ... } to the units list`,
           });
         }
@@ -229,7 +234,7 @@ const checkImportExistence: CheckFn = (_ws, compounds) => {
           level: "error",
           check: "import-existence",
           compound: c.manifest.compound,
-          message: `Imports "${imp.compound}" which does not exist`,
+          message: tr("diagnostic.import_existence", { compound: imp.compound }),
         });
       }
     }
@@ -257,7 +262,7 @@ const checkImportSpecificity: CheckFn = (_ws, compounds) => {
             level: "error",
             check: "import-specificity",
             compound: c.manifest.compound,
-            message: `Imports "${name}" from "${imp.compound}" but it is not exported`,
+            message: tr("diagnostic.import_specificity", { name, compound: imp.compound }),
           });
         }
       }
@@ -289,7 +294,12 @@ const checkCompoundTypeImports: CheckFn = (ws, compounds) => {
           level: "error",
           check: "compound-type-imports",
           compound: c.manifest.compound,
-          message: `Cannot import "${imp.compound}" (${targetType}) — ${selfType} may only import from [${allowed.join(", ")}]`,
+          message: tr("diagnostic.compound_type_cannot_import", {
+            target: imp.compound,
+            target_type: targetType,
+            self_type: selfType,
+            allowed: allowed.join(", "),
+          }),
         });
       }
 
@@ -300,14 +310,20 @@ const checkCompoundTypeImports: CheckFn = (ws, compounds) => {
           level: "error",
           check: "compound-type-imports",
           compound: c.manifest.compound,
-          message: `Cannot import "${imp.compound}" — ${targetType} compounds are not importable`,
+          message: tr("diagnostic.compound_type_target_uniport", {
+            target: imp.compound,
+            target_type: targetType,
+          }),
         });
       } else if (targetDef?.importable_by === "same_type" && selfType !== targetType) {
         diags.push({
           level: "error",
           check: "compound-type-imports",
           compound: c.manifest.compound,
-          message: `Cannot import "${imp.compound}" — ${targetType} compounds are only importable by other ${targetType} compounds`,
+          message: tr("diagnostic.compound_type_target_same_type", {
+            target: imp.compound,
+            target_type: targetType,
+          }),
         });
       }
     }
@@ -366,7 +382,7 @@ const checkBondRules: CheckFn = (ws, compounds) => {
             level: "error",
             check: "bond-rules",
             compound: c.manifest.compound,
-            message: `"${u.name}" depends on "${dep}" which cannot be resolved`,
+            message: tr("diagnostic.bond_unresolved", { src_name: u.name, dep }),
             hint: "Not a local unit, not in declared imports, and not in an implicit solvent",
           });
           continue;
@@ -377,7 +393,12 @@ const checkBondRules: CheckFn = (ws, compounds) => {
             level: "error",
             check: "bond-rules",
             compound: c.manifest.compound,
-            message: `"${u.name}" (${u.role}) depends on "${dep}" (${depRole}) — bond violation`,
+            message: tr("diagnostic.bond_violation", {
+              src_name: u.name,
+              src_role: u.role,
+              dep,
+              dep_role: depRole,
+            }),
             hint: `${u.role} may only depend on [${allowedRoles.join(", ")}]`,
           });
         }
@@ -406,7 +427,10 @@ const checkSignalConsistency: CheckFn = (_ws, compounds) => {
           level: "error",
           check: "signal-consistency",
           compound: c.manifest.compound,
-          message: `Signal "${em.signal}" references emitter "${em.emitted_by}" — not a reaction in this compound`,
+          message: tr("diagnostic.signal_emitter_not_reaction", {
+            signal: em.signal,
+            emitter: em.emitted_by,
+          }),
         });
       }
     }
@@ -417,7 +441,10 @@ const checkSignalConsistency: CheckFn = (_ws, compounds) => {
           level: "error",
           check: "signal-consistency",
           compound: c.manifest.compound,
-          message: `Signal listener for "${li.signal}" references handler "${li.handler}" — not a reaction in this compound`,
+          message: tr("diagnostic.signal_handler_not_reaction", {
+            signal: li.signal,
+            handler: li.handler,
+          }),
         });
       }
     }
@@ -431,7 +458,7 @@ const checkSignalConsistency: CheckFn = (_ws, compounds) => {
           level: "warning",
           check: "signal-consistency",
           compound: c.manifest.compound,
-          message: `Listening for signal "${li.signal}" but no compound emits it`,
+          message: tr("diagnostic.signal_orphaned_listener", { signal: li.signal }),
           hint: "Emitting compound may not be loaded, or signal name is misspelled",
         });
       }
@@ -457,7 +484,7 @@ const checkWiringValidity: CheckFn = (_ws, compounds) => {
           level: "error",
           check: "wiring-validity",
           compound: c.manifest.compound,
-          message: `Wiring references compound "${w.compound}" which does not exist`,
+          message: tr("diagnostic.wiring_compound_missing", { compound: w.compound }),
         });
         continue;
       }
@@ -471,7 +498,10 @@ const checkWiringValidity: CheckFn = (_ws, compounds) => {
           level: "error",
           check: "wiring-validity",
           compound: c.manifest.compound,
-          message: `Interface "${w.interface}" not found in compound "${w.compound}"`,
+          message: tr("diagnostic.wiring_interface_missing", {
+            iface: w.interface,
+            compound: w.compound,
+          }),
         });
       }
 
@@ -480,7 +510,10 @@ const checkWiringValidity: CheckFn = (_ws, compounds) => {
           level: "error",
           check: "wiring-validity",
           compound: c.manifest.compound,
-          message: `Adapter "${w.adapter}" not found in compound "${w.compound}"`,
+          message: tr("diagnostic.wiring_adapter_missing", {
+            adapter: w.adapter,
+            compound: w.compound,
+          }),
         });
       }
 
@@ -489,7 +522,11 @@ const checkWiringValidity: CheckFn = (_ws, compounds) => {
           level: "error",
           check: "wiring-validity",
           compound: c.manifest.compound,
-          message: `Adapter "${w.adapter}" does not declare that it implements "${w.interface}"`,
+          message: tr("diagnostic.wiring_adapter_no_implements", {
+            adapter: w.adapter,
+            iface: w.interface,
+            compound: w.compound,
+          }),
           hint: `Add "${w.interface}" to the implements list of "${w.adapter}" in compound "${w.compound}"`,
         });
       }
@@ -517,7 +554,11 @@ const checkSingletons: CheckFn = (ws, compounds) => {
       diags.push({
         level: "error",
         check: "singleton",
-        message: `Type "${type}" is singleton but has ${names.length} instances: [${names.join(", ")}]`,
+        message: tr("diagnostic.singleton_violated", {
+          type,
+          count: names.length,
+          names: names.join(", "),
+        }),
       });
     }
   }
@@ -541,7 +582,12 @@ const checkRoleRestrictions: CheckFn = (ws, compounds) => {
           level: "error",
           check: "role-restrictions",
           compound: c.manifest.compound,
-          message: `Unit "${u.name}" has role "${u.role}" but ${compoundType(c)} only allows [${allowed.join(", ")}]`,
+          message: tr("diagnostic.role_not_allowed_for_type", {
+            unit: u.name,
+            role: u.role,
+            type: compoundType(c),
+            allowed: allowed.join(", "),
+          }),
         });
       }
     }
@@ -568,7 +614,7 @@ const checkAssayReferences: CheckFn = (_ws, compounds) => {
             level: "warning",
             check: "assay-references",
             compound: c.manifest.compound,
-            message: `Assay "${a.name}" tests "${s}" which is not a unit in this compound`,
+            message: tr("diagnostic.assay_subject_unknown", { assay: a.name, subject: s }),
           });
         }
       }
@@ -578,7 +624,7 @@ const checkAssayReferences: CheckFn = (_ws, compounds) => {
             level: "warning",
             check: "assay-references",
             compound: c.manifest.compound,
-            message: `Assay "${a.name}" mocks "${m}" which is not an interface in this compound`,
+            message: tr("diagnostic.assay_mock_not_interface", { assay: a.name, mock: m }),
             hint: "Mocks should reference interfaces",
           });
         }

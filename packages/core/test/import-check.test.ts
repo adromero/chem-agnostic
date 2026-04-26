@@ -168,7 +168,7 @@ describe("checkImports", () => {
       const bondDiag = diags.find((d) => d.check === "import-bonds");
       expect(bondDiag).toBeDefined();
       expect(bondDiag!.level).toBe("error");
-      expect(bondDiag!.message).toContain("bond violation");
+      expect(bondDiag!.message).toMatch(/violation/);
     });
   });
 

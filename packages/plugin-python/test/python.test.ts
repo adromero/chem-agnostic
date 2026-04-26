@@ -455,10 +455,12 @@ describe("formatImportStatement", () => {
 // generateClaudeMd
 // ---------------------------------------------------------------------------
 
-describe("generateClaudeMd", () => {
-  it("generates CLAUDE.md with Python conventions", () => {
+describe("generateClaudeMd (Python-specific section only)", () => {
+  it("emits the Python language section without title", () => {
     const md = pythonPlugin.generateClaudeMd("my-project");
-    expect(md).toContain("my-project");
+    // The plugin output now contains only the Python-specific section. The
+    // core template (in @chemag/core) supplies the title, roles, bonds, etc.
+    expect(md).toContain("## Language: Python");
     expect(md).toContain("__init__.py");
     expect(md).toContain("dataclass");
     expect(md).toContain("ABC");

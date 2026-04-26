@@ -364,90 +364,35 @@ export function inferImplements(filePath: string): string[] {
 // CLAUDE.md generation
 // ---------------------------------------------------------------------------
 
-export function generateClaudeMd(workspaceName: string): string {
-  return `# ${workspaceName} — Chem Architecture
-
-This project uses **Chem**, a chemistry-inspired software architecture. Read this entire file before writing any code.
-
-## Core Concept
-
-Code is organized into **compounds** (feature modules). Each compound contains **units** — source files with assigned **roles**. Roles determine what a unit can depend on. These dependency rules are called **bonds**.
-
-Every compound has a manifest (\`compound.yaml\`) declaring its units, exports, and imports. The workspace config (\`workspace.yaml\`) defines the global rules.
-
-**Before writing any code**: read \`workspace.yaml\`, then the target compound's \`compound.yaml\`.
-
-## Language: Python
+/**
+ * Generate the language-specific CLAUDE.md sections for a Python workspace.
+ *
+ * The core template (`@chemag/core/template-claude-md`) emits the
+ * vocabulary-aware shared sections (intro, roles table, bond rules, etc.)
+ * — this function only adds the Python-specific section that the core
+ * template extracts and splices into the final document.
+ */
+export function generateClaudeMd(_workspaceName: string): string {
+  return `## Language: Python
 
 ### Conventions
 
 - **Naming**: All module files use \`snake_case.py\` (e.g., \`UserProfile\` → \`user_profile.py\`).
-- **Public surface**: Each compound exposes exports via \`__init__.py\` re-exports.
-- **Value objects**: Use \`@dataclass(frozen=True)\` from the \`dataclasses\` module for elements.
-- **Domain state**: Use \`@dataclass\` for molecules.
-- **Interfaces**: Use \`ABC\` and \`@abstractmethod\` from the \`abc\` module.
-- **Adapters**: Inherit from their interface class. Document with \`"""Implements: InterfaceName"""\`.
-- **Reactions**: Async functions (\`async def\`) that orchestrate domain logic.
-- **Buffers**: Decorator functions that wrap \`next_fn\` for cross-cutting concerns.
+- **Public surface**: Each module exposes exports via \`__init__.py\` re-exports.
+- **Value objects**: Use \`@dataclass(frozen=True)\` from the \`dataclasses\` module.
+- **Domain state**: Use \`@dataclass\` for entity/molecule roles.
+- **Ports / interfaces**: Use \`ABC\` and \`@abstractmethod\` from the \`abc\` module.
+- **Adapters**: Inherit from their port/interface class. Document with \`"""Implements: PortName"""\`.
+- **Use-cases / reactions**: Async functions (\`async def\`) that orchestrate domain logic.
+- **Middleware / buffers**: Decorator functions that wrap \`next_fn\` for cross-cutting concerns.
 - **Testing**: Use \`pytest\`. Test files follow the \`test_*.py\` pattern.
 
 ### Import Rules
 
-- Cross-compound imports go through \`__init__.py\` — never import internal modules directly.
-- Use relative imports within a compound (e.g., \`from .elements.user_id import UserId\`).
-- Reactions depend on interfaces, never on adapters.
-- Elements are pure — they depend only on other elements.
+- Cross-module imports go through \`__init__.py\` — never import internal modules directly.
+- Use relative imports within a module (e.g., \`from .elements.user_id import UserId\`).
+- Use-cases / reactions depend on ports / interfaces, never on adapters.
+- Value-objects / elements are pure — they depend only on other value-objects / elements.
 - Adapters are the only role that touches the outside world.
-
-## Roles — What Each Unit Type Means
-
-| Role | What it is | Python pattern |
-|------|-----------|----------------|
-| **element** | Immutable value object | \`@dataclass(frozen=True)\` |
-| **molecule** | Domain state | \`@dataclass\` |
-| **reaction** | Workflow / use case | \`async def reaction_name() -> None\` |
-| **interface** | Contract / port | \`class Name(ABC)\` with \`@abstractmethod\` |
-| **adapter** | Implementation of interface | \`class Name(InterfaceName)\` |
-| **buffer** | Middleware decorator | \`def name(next_fn) -> wrapped_fn\` |
-
-## Bond Rules — What Can Depend on What
-
-| Role | Can depend on |
-|------|--------------|
-| element | element |
-| molecule | element, molecule |
-| reaction | element, molecule, interface |
-| interface | element, molecule |
-| adapter | element, molecule, interface, adapter |
-| buffer | element, molecule, interface |
-
-## Workflow
-
-### Adding a new compound:
-\`\`\`bash
-chem add compound <name>
-chem add unit <name> element SomeId --export
-chem add unit <name> molecule SomeEntity --export
-chem add unit <name> interface SomeRepo --export
-chem add unit <name> adapter PgSomeRepo --implements SomeRepo
-chem add unit <name> reaction do_something --export
-\`\`\`
-
-### Validation:
-\`\`\`bash
-chem check workspace.yaml
-chem analyze workspace.yaml
-\`\`\`
-
-## Rules for AI Assistants
-
-1. **Read before write.** Always read \`workspace.yaml\` and the target \`compound.yaml\` before touching any code.
-2. **Use the tool.** Use \`chem add\` to create new compounds and units — don't create files manually.
-3. **Respect bonds.** Never import across role boundaries. If the analyzer fails, fix the violation.
-4. **Public surface only.** Cross-compound imports go through \`__init__.py\`. Never import internal files.
-5. **Validate after changes.** Run \`chem check workspace.yaml && chem analyze workspace.yaml\` after every meaningful change.
-6. **Adapters are leaf nodes.** They implement interfaces and are only instantiated in the catalyst.
-7. **Reactions are the entry points.** They orchestrate the domain logic. External callers invoke reactions, not molecules directly.
-8. **When in doubt, read the manifest.** The \`compound.yaml\` is the source of truth for what exists and how it connects.
 `;
 }

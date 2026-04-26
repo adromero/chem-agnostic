@@ -1,130 +1,50 @@
 import type { LanguagePlugin } from "./plugin-interface.js";
+import { tr } from "./vocabulary/index.js";
 
 // ---------------------------------------------------------------------------
-// Core sections (language-agnostic)
+// Core sections (language-agnostic, vocabulary-aware)
 // ---------------------------------------------------------------------------
 
 function coreIntro(name: string): string {
-  return `# ${name} — Chem Architecture
+  // intro key includes the leading H1; subsequent tables are H2 sections.
+  const decisionFlowchart = [
+    "## Decision Flowchart — Where Does New Code Go?",
+    "",
+    "When adding functionality, follow this decision tree:",
+    "",
+    `1. **Is it a primitive value with no dependencies?** → ${tr("role.element")}`,
+    `2. **Is it domain state composed of other values?** → ${tr("role.molecule")}`,
+    `3. **Is it a workflow that coordinates state changes?** → ${tr("role.reaction")}`,
+    `4. **Does it define a capability boundary (IO, external service)?** → ${tr("role.interface")}`,
+    `5. **Does it implement a port with real IO?** → ${tr("role.adapter")}`,
+    `6. **Does it wrap a use-case (auth, logging, validation)?** → ${tr("role.buffer")}`,
+    "",
+    "If you're unsure, start with the simplest role. You can promote later as complexity grows.",
+  ].join("\n");
 
-This project uses **Chem**, a chemistry-inspired software architecture. Read this entire file before writing any code.
-
-## Core Concept
-
-Code is organized into **compounds** (feature modules). Each compound contains **units** — source files with assigned **roles**. Roles determine what a unit can depend on. These dependency rules are called **bonds**.
-
-Every compound has a manifest (\`compound.yaml\`) declaring its units, exports, and imports. The workspace config (\`workspace.yaml\`) defines the global rules.
-
-**Before writing any code**: read \`workspace.yaml\`, then the target compound's \`compound.yaml\`.
-
-## Roles — What Each Unit Type Means
-
-| Role | What it is | Examples |
-|------|-----------|----------|
-| **element** | Immutable value object. The simplest building block. | \`UserId\`, \`Email\`, \`Money\`, \`DateRange\` |
-| **molecule** | Domain state composed of elements/molecules. | \`UserProfile\`, \`Order\`, \`ReportDocument\` |
-| **reaction** | Workflow or use case. Orchestrates state through interfaces. | \`createOrder\`, \`generateReport\`, \`processPayment\` |
-| **interface** | Contract / port. Defines a capability without implementation. | \`OrderRepository\`, \`PaymentGateway\`, \`EmailSender\` |
-| **adapter** | Concrete implementation of an interface. Touches the outside world. | \`PgOrderRepository\`, \`StripeGateway\`, \`SmtpEmailSender\` |
-| **buffer** | Middleware. Wraps reactions for cross-cutting concerns. | \`authGuard\`, \`rateLimiter\`, \`validateInput\` |
-
-## Decision Flowchart — Where Does New Code Go?
-
-When adding functionality, follow this decision tree:
-
-1. **Is it a primitive value with no dependencies?** → \`element\`
-2. **Is it domain state composed of other values?** → \`molecule\`
-3. **Is it a workflow that coordinates state changes?** → \`reaction\`
-4. **Does it define a capability boundary (IO, external service)?** → \`interface\`
-5. **Does it implement an interface with real IO?** → \`adapter\`
-6. **Does it wrap a reaction (auth, logging, validation)?** → \`buffer\`
-
-If you're unsure, start with the simplest role. You can promote later (element → molecule → reaction as complexity grows).
-
-## Bond Rules — What Can Depend on What
-
-This is the **most important constraint**. Violations are architectural errors.
-
-| Role | Can depend on |
-|------|--------------|
-| element | element |
-| molecule | element, molecule |
-| reaction | element, molecule, interface |
-| interface | element, molecule |
-| adapter | element, molecule, interface, adapter |
-| buffer | element, molecule, interface |
-
-**Key implications:**
-- Reactions NEVER depend on adapters — they depend on interfaces. Adapters are injected.
-- Elements are pure — they depend only on other elements.
-- Adapters are the only role that can touch the outside world (DB, HTTP, filesystem).
-
-## Compound Types
-
-| Type | Purpose | Import rules |
-|------|---------|-------------|
-| **compound** | Standard feature module | Can import other compounds + reagents |
-| **reagent** | Shared domain building blocks | Can only import other reagents. Available to all. |
-| **solvent** | Cross-cutting infrastructure (logging, config, auth) | Implicitly available everywhere. Can only import reagents. |
-| **catalyst** | Composition root. Wires adapters to interfaces. | Singleton. Cannot be imported. |
-`;
+  return [
+    tr("claude_md.intro", { name }),
+    "",
+    tr("claude_md.roles_table"),
+    "",
+    decisionFlowchart,
+    "",
+    tr("claude_md.bonds_table"),
+    "",
+    tr("claude_md.compound_types"),
+    "",
+  ].join("\n");
 }
 
 function coreWorkflow(): string {
-  return `## Workflow — How to Add a Feature
-
-### Adding a new feature compound:
-\`\`\`bash
-chem add compound <name>                    # creates dir + compound.yaml
-chem add unit <name> element SomeId --export
-chem add unit <name> molecule SomeEntity --export
-chem add unit <name> interface SomeRepo --export
-chem add unit <name> adapter PgSomeRepo --implements SomeRepo
-chem add unit <name> reaction doSomething --export
-\`\`\`
-
-Then implement each stub file. Run validation:
-\`\`\`bash
-chem check workspace.yaml      # manifest + filesystem checks
-chem analyze workspace.yaml    # verify real imports respect bonds
-\`\`\`
-
-### Adding a unit to an existing compound:
-\`\`\`bash
-chem add unit <compound> <role> <Name> --export
-# Implement the generated stub
-chem check workspace.yaml && chem analyze workspace.yaml
-\`\`\`
-
-### Modifying a unit:
-1. Read the compound's \`compound.yaml\` to understand the structure
-2. Read the unit's source file
-3. Make changes respecting bond rules
-4. Run \`chem analyze workspace.yaml\` to verify
-
-## Tool Reference
-
-| Command | Purpose |
-|---------|---------|
-| \`chem check <workspace.yaml>\` | Validate manifests and file structure |
-| \`chem scaffold <workspace.yaml>\` | Generate stub files from manifests |
-| \`chem analyze <workspace.yaml>\` | Check real imports against bonds |
-| \`chem graph <workspace.yaml>\` | Output Mermaid dependency diagram |
-| \`chem add compound <name>\` | Create a new compound |
-| \`chem add unit <compound> <role> <name>\` | Add a unit (flags: \`--export\`, \`--implements <iface>\`) |
-| \`chem sync <workspace.yaml>\` | Generate manifests from existing code |
-
-## Rules for AI Assistants
-
-1. **Read before write.** Always read \`workspace.yaml\` and the target \`compound.yaml\` before touching any code.
-2. **Use the tool.** Use \`chem add\` to create new compounds and units — don't create files manually.
-3. **Respect bonds.** Never import across role boundaries. If the analyzer fails, fix the violation.
-4. **Public surface only.** Cross-compound imports go through the public surface. Never import internal files.
-5. **Validate after changes.** Run \`chem check workspace.yaml && chem analyze workspace.yaml\` after every meaningful change.
-6. **Adapters are leaf nodes.** They implement interfaces and are only instantiated in the catalyst.
-7. **Reactions are the entry points.** They orchestrate the domain logic. External callers invoke reactions, not molecules directly.
-8. **When in doubt, read the manifest.** The \`compound.yaml\` is the source of truth for what exists and how it connects.
-`;
+  return [
+    tr("claude_md.workflow"),
+    "",
+    tr("claude_md.tool_reference"),
+    "",
+    tr("claude_md.ai_rules"),
+    "",
+  ].join("\n");
 }
 
 // ---------------------------------------------------------------------------
@@ -132,25 +52,39 @@ chem check workspace.yaml && chem analyze workspace.yaml
 // ---------------------------------------------------------------------------
 
 /**
- * Headings that belong to the core template. Any section in the plugin
- * output with a heading NOT in this set is considered language-specific.
+ * Static set of heading texts that the core template emits across both
+ * locales. Computed once at module load.
+ *
+ * Plugin output sections whose heading is NOT in this set are treated as
+ * language-specific and merged into the final CLAUDE.md.
  */
-const CORE_HEADINGS = new Set([
-  "Core Concept",
-  "Roles — What Each Unit Type Means",
-  "Decision Flowchart — Where Does New Code Go?",
-  "Bond Rules — What Can Depend on What",
-  "Compound Types",
-  "Workflow — How to Add a Feature",
-  "Workflow",
-  "Tool Reference",
-  "Rules for AI Assistants",
-]);
+function buildCoreHeadingSet(): Set<string> {
+  const headings = new Set<string>([
+    // Across both locales the names overlap; we list every variant we ship.
+    // Standard
+    "Core Concept",
+    "Roles — What Each Unit Type Means",
+    "Decision Flowchart — Where Does New Code Go?",
+    "Dependency Rules — What Can Depend on What",
+    "Bond Rules — What Can Depend on What",
+    "Module Types",
+    "Compound Types",
+    "Workflow — How to Add a Feature",
+    "Workflow",
+    "Tool Reference",
+    "Rules for AI Assistants",
+  ]);
+  return headings;
+}
+
+const CORE_HEADINGS = buildCoreHeadingSet();
 
 /**
  * Generate the full CLAUDE.md content for a workspace.
- * Combines language-agnostic core sections with language-specific
- * content from the plugin.
+ * Combines language-agnostic core sections (emitted via tr()) with
+ * language-specific content from the plugin. The active vocabulary is read
+ * from module-global vocabulary state — callers control the locale via
+ * setVocabulary or applyWorkspaceVocabulary before invoking this function.
  */
 export function generateClaudeMd(name: string, plugin: LanguagePlugin): string {
   const pluginContent = plugin.generateClaudeMd(name);

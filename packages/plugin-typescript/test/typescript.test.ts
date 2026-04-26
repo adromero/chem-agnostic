@@ -419,36 +419,20 @@ describe("inferUnits", () => {
 // CLAUDE.md generation
 // ---------------------------------------------------------------------------
 
-describe("generateClaudeMd", () => {
-  it("contains expected sections", () => {
+describe("generateClaudeMd (TypeScript-specific section only)", () => {
+  it("emits the TypeScript cross-compound import section", () => {
     const md = generateClaudeMd("my-project");
 
-    // Title
-    expect(md).toContain("# my-project — Chem Architecture");
-
-    // Roles table
-    expect(md).toContain("| Role |");
-    expect(md).toContain("element");
-    expect(md).toContain("molecule");
-    expect(md).toContain("reaction");
-    expect(md).toContain("interface");
-    expect(md).toContain("adapter");
-    expect(md).toContain("buffer");
-
-    // Bond rules
-    expect(md).toContain("Bond Rules");
-    expect(md).toContain("Can depend on");
-
-    // TS examples
-    expect(md).toContain("chem check");
-    expect(md).toContain("chem analyze");
-    expect(md).toContain("chem add compound");
-    expect(md).toContain("chem add unit");
+    // Plugin output now contains only the language-specific section.
+    // The core template (in @chemag/core) supplies the title, roles, bonds, etc.
+    expect(md).toContain("## Cross-Compound Imports");
+    expect(md).toContain("public.ts");
   });
 
-  it("uses workspace name in title", () => {
-    const md = generateClaudeMd("foobar");
-    expect(md).toContain("# foobar — Chem Architecture");
+  it("output is unaffected by workspace name (language section is name-agnostic)", () => {
+    const a = generateClaudeMd("foo");
+    const b = generateClaudeMd("bar");
+    expect(a).toBe(b);
   });
 });
 
@@ -519,7 +503,10 @@ describe("typescriptPlugin (index.ts)", () => {
 
   it("delegates generateClaudeMd correctly", () => {
     const md = typescriptPlugin.generateClaudeMd("delegate-test");
-    expect(md).toContain("# delegate-test — Chem Architecture");
+    // The plugin emits the language-specific section only — the title and
+    // shared sections are added by @chemag/core/template-claude-md.
+    expect(md).toContain("## Cross-Compound Imports");
+    expect(md).toContain("public.ts");
   });
 });
 

@@ -1,6 +1,7 @@
 import * as path from "node:path";
 import type { Workspace, LoadedCompound, Diagnostic } from "./types.js";
 import type { LanguagePlugin } from "./plugin-interface.js";
+import { tr } from "./vocabulary/index.js";
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -93,7 +94,12 @@ export function checkImports(
           level: "error",
           check: "import-bonds",
           compound: srcCompound.manifest.compound,
-          message: `${path.basename(abs)}: ${srcRole} imports ${targetRole} "${importedNames}" — bond violation`,
+          message: tr("diagnostic.import_bond_violation", {
+            file: path.basename(abs),
+            src_role: srcRole,
+            target_role: targetRole,
+            names: importedNames,
+          }),
           hint: `${srcRole} can only import from [${allowedRoles.join(", ")}]`,
         });
       }
@@ -122,7 +128,11 @@ export function checkImports(
                   level: "error",
                   check: "import-undeclared",
                   compound: srcCompound.manifest.compound,
-                  message: `${path.basename(abs)}: imports from "${targetCompound}" but it is not in the imports list`,
+                  message: tr("diagnostic.import_undeclared", {
+                    file: path.basename(abs),
+                    target: targetCompound,
+                    src_compound: srcCompound.manifest.compound,
+                  }),
                   hint: `Add "- compound: ${targetCompound}" to imports in ${srcCompound.manifest.compound}/compound.yaml`,
                 });
               }
@@ -131,7 +141,11 @@ export function checkImports(
                 level: "error",
                 check: "import-bypass",
                 compound: srcCompound.manifest.compound,
-                message: `${path.basename(abs)}: imports directly from "${targetCompound}" internal file instead of ${surfaceFile}`,
+                message: tr("diagnostic.import_bypass", {
+                  file: path.basename(abs),
+                  target: targetCompound,
+                  surface: surfaceFile,
+                }),
                 hint: `Import from "${targetCompound}/${surfaceFile}" instead`,
               });
             }

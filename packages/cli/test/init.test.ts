@@ -79,12 +79,16 @@ describe("cmdInit with --language typescript", () => {
     runInit(["--language", "typescript"]);
     const claudeMdPath = path.join(tmpDir, "CLAUDE.md");
     const content = fs.readFileSync(claudeMdPath, "utf-8");
-    expect(content).toContain("# testapp — Chem Architecture");
-    expect(content).toContain("## Bond Rules");
-    expect(content).toContain("## Compound Types");
+    // Default vocabulary is "standard" — title and section headings reflect
+    // that. The chemistry vocabulary is opt-in via --vocabulary or
+    // CHEMAG_VOCABULARY. The shared sections still appear.
+    expect(content).toContain("# testapp —");
+    expect(content).toContain("## Roles");
+    expect(content).toMatch(/## (Bond Rules|Dependency Rules)/);
+    expect(content).toMatch(/## (Compound|Module) Types/);
     expect(content).toContain("## Workflow");
     expect(content).toContain("## Rules for AI Assistants");
-    // TypeScript-specific: references public.ts
+    // TypeScript-specific section: references public.ts
     expect(content).toContain("public.ts");
   });
 
@@ -124,8 +128,8 @@ describe("cmdInit with --language python", () => {
     runInit(["--language", "python"]);
     const claudeMdPath = path.join(tmpDir, "CLAUDE.md");
     const content = fs.readFileSync(claudeMdPath, "utf-8");
-    expect(content).toContain("# testapp — Chem Architecture");
-    expect(content).toContain("## Bond Rules");
+    expect(content).toContain("# testapp —");
+    expect(content).toMatch(/## (Bond Rules|Dependency Rules)/);
     // Python-specific: references __init__.py and Python language section
     expect(content).toContain("__init__.py");
     expect(content).toContain("Language: Python");

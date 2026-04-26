@@ -269,7 +269,8 @@ describe("Bond rules", () => {
       }),
     ]);
     expect(diags).toHaveLength(1);
-    expect(diags[0].message).toContain("bond violation");
+    expect(diags[0].check).toBe("bond-rules");
+    expect(diags[0].message).toMatch(/violation/);
   });
 
   it("resolves dependencies from implicit solvents", () => {
