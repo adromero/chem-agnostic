@@ -27,6 +27,10 @@
       "types": "./dist/checks.d.ts",
       "default": "./dist/checks.js"
     },
+    "./check-edit": {
+      "types": "./dist/check-edit.d.ts",
+      "default": "./dist/check-edit.js"
+    },
     "./import-check": {
       "types": "./dist/import-check.d.ts",
       "default": "./dist/import-check.js"
@@ -61,7 +65,8 @@
     "dist/**/*.d.ts",
     "dist/**/*.d.ts.map",
     "dist/**/*.js.map",
-    "dist/**/*.json"
+    "dist/**/*.json",
+    "schemas"
   ],
   "scripts": {
     "typecheck": "tsc --noEmit",

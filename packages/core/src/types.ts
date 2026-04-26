@@ -142,7 +142,26 @@ export interface Diagnostic {
   compound?: string;
   message: string;
   hint?: string;
+  /**
+   * Optional structured remediation hint for AI agents and tooling. The
+   * `kind` discriminator drives which extra fields are populated.
+   * Populated by `check-edit` for diagnostics where a fix is mechanically
+   * derivable; left undefined elsewhere.
+   */
+  remediation?: DiagnosticRemediation;
 }
+
+/**
+ * Discriminated union of structured remediation hints. Consumers (AI
+ * agents, MCP tools, IDE extensions) switch on `kind` to map a
+ * diagnostic to a concrete fix.
+ */
+export type DiagnosticRemediation =
+  | { kind: "use_interface"; interface_candidates: string[] }
+  | { kind: "move_to_compound"; compound_candidates: string[] }
+  | { kind: "move_to_role_folder"; expected_folder: string }
+  | { kind: "import_via_public_surface"; surface: string; target_compound: string }
+  | { kind: "add_compound_import"; target_compound: string };
 
 export type { DiagnosticCode } from "./diagnostics/codes.js";
 

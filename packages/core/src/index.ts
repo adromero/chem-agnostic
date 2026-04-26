@@ -4,6 +4,7 @@ export * from "./types.js";
 export * from "./plugin-interface.js";
 export * from "./loader.js";
 export * from "./checks.js";
+export * from "./check-edit.js";
 export * from "./import-check.js";
 export * from "./scaffold.js";
 export * from "./sync.js";

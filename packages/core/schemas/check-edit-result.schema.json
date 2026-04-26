@@ -1,0 +1,129 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://chemag.dev/schemas/check-edit-result.schema.json",
+  "title": "CheckEditResult",
+  "description": "JSON output of `chemag check-edit` for a single file edit. Diagnostic codes follow the canonical CHEM-CATEGORY-NNN format defined in @chemag/core/diagnostics — never SCREAMING_SNAKE_CASE labels.",
+  "type": "object",
+  "required": ["file", "diagnostics"],
+  "additionalProperties": false,
+  "properties": {
+    "file": {
+      "type": "string",
+      "description": "Path of the file under check (as supplied by the caller)."
+    },
+    "compound": {
+      "type": ["string", "null"],
+      "description": "Resolved compound name, or null when unplaceable."
+    },
+    "role": {
+      "type": ["string", "null"],
+      "description": "Resolved role name, or null when unplaceable."
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/diagnostic" }
+    }
+  },
+  "definitions": {
+    "diagnostic": {
+      "type": "object",
+      "required": ["level", "code", "message"],
+      "additionalProperties": true,
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["error", "warning"]
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^CHEM-[A-Z]+-[0-9]{3}$",
+          "description": "Stable diagnostic code (CHEM-CATEGORY-NNN)."
+        },
+        "check": {
+          "type": "string",
+          "description": "Internal check identifier; informational."
+        },
+        "compound": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "hint": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "column": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "imported_module": {
+          "type": "string"
+        },
+        "imported_role": {
+          "type": "string"
+        },
+        "remediation": { "$ref": "#/definitions/remediation" }
+      }
+    },
+    "remediation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind", "interface_candidates"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "use_interface" },
+            "interface_candidates": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "compound_candidates"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "move_to_compound" },
+            "compound_candidates": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "expected_folder"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "move_to_role_folder" },
+            "expected_folder": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "surface", "target_compound"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "import_via_public_surface" },
+            "surface": { "type": "string" },
+            "target_compound": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "target_compound"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "add_compound_import" },
+            "target_compound": { "type": "string" }
+          }
+        }
+      ]
+    }
+  }
+}
