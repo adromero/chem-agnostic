@@ -63,6 +63,8 @@ export type TrKey =
   | "diagnostic.import_bond_violation" // params: { file, src_role, target_role, names, allowed }
   | "diagnostic.import_undeclared" // params: { file, target, src_compound }
   | "diagnostic.import_bypass" // params: { file, target, surface }
+  // check-edit.ts
+  | "diagnostic.unresolvable_placement" // params: { file }
   // ---- CLI help (top-level + per-command) ----
   | "cli.help.intro" // params: { version }
   | "cli.help.usage"
@@ -130,6 +132,7 @@ export const ALL_TR_KEYS: readonly TrKey[] = [
   "diagnostic.import_bond_violation",
   "diagnostic.import_undeclared",
   "diagnostic.import_bypass",
+  "diagnostic.unresolvable_placement",
   "cli.help.intro",
   "cli.help.usage",
   "cli.help.commands",

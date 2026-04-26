@@ -45,6 +45,7 @@
   "diagnostic.import_bond_violation": "{file}: {src_role} imports {target_role} \"{names}\" — bond violation",
   "diagnostic.import_undeclared": "{file}: imports from \"{target}\" but it is not in the imports list",
   "diagnostic.import_bypass": "{file}: imports directly from \"{target}\" internal file instead of {surface}",
+  "diagnostic.unresolvable_placement": "Cannot determine compound or role for file \"{file}\"",
 
   "cli.help.intro": "chemag v{version} — language-agnostic Chem architecture toolkit",
   "cli.help.usage": "Usage: chemag [options] [command]\n       chem-ag [options] [command]   (alias)",

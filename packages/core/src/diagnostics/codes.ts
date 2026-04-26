@@ -43,6 +43,7 @@ export type DiagnosticCode =
   | "CHEM-PLACEMENT-001"
   | "CHEM-PLACEMENT-002"
   | "CHEM-PLACEMENT-003"
+  | "CHEM-PLACEMENT-004"
   // ---- PUBLIC ----
   | "CHEM-PUBLIC-001"
   // ---- EXPORT ----
@@ -148,6 +149,13 @@ export const DIAGNOSTIC_CODES: Record<DiagnosticCode, DiagnosticCodeMeta> = {
     level: "error",
     trKey: "diagnostic.role_folder_mismatch",
     helpFragment: "chem-placement-003-role-folder-mismatch",
+  },
+  "CHEM-PLACEMENT-004": {
+    code: "CHEM-PLACEMENT-004",
+    category: "PLACEMENT",
+    level: "error",
+    trKey: "diagnostic.unresolvable_placement",
+    helpFragment: "chem-placement-004-unresolvable-placement",
   },
 
   // ---- PUBLIC ----

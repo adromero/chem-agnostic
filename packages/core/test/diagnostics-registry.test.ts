@@ -37,8 +37,8 @@ describe("DIAGNOSTIC_CODES — bijection with diagnostic.* TrKeys", () => {
     }
   });
 
-  it("at least 28 codes are registered (one per landed diagnostic.* TrKey)", () => {
-    expect(CODES.length).toBeGreaterThanOrEqual(28);
+  it("at least 29 codes are registered (one per landed diagnostic.* TrKey)", () => {
+    expect(CODES.length).toBeGreaterThanOrEqual(29);
   });
 
   it("the number of codes equals the number of diagnostic.* keys", () => {
