@@ -1,7 +1,7 @@
 {
   "name": "@chemag/telemetry",
-  "version": "0.0.0",
-  "description": "Opt-in usage analytics for the Chem toolkit. Implementation lands in WP-006; this package is pre-registered as a workspace member during WP-001 so consumers can wire the dependency in earlier WPs without touching pnpm-workspace.yaml again.",
+  "version": "0.1.0",
+  "description": "Opt-in usage analytics for the Chem toolkit. Privacy-first: default off, anonymous UUID generated only on consent, no file paths in payloads.",
   "license": "MIT",
   "type": "module",
   "private": true,
@@ -11,7 +11,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",

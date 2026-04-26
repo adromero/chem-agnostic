@@ -3,6 +3,17 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { resolveCliVocabulary, setVocabulary, tr } from "@chemag/core/vocabulary";
+import {
+  defaultConsentIO,
+  flushQueue,
+  initTelemetry,
+  isFirstRun,
+  makeOptInConfig,
+  makeOptOutConfig,
+  promptForConsent,
+  saveConfig,
+  setTelemetryEnabledForRun,
+} from "@chemag/telemetry";
 import { setCacheEnabled } from "./cache/cache-state.js";
 import { cmdCheck } from "./commands/check.js";
 import { cmdCheckEdit } from "./commands/check-edit.js";
@@ -12,6 +23,7 @@ import { cmdGraph } from "./commands/graph.js";
 import { cmdSync } from "./commands/sync.js";
 import { cmdInit } from "./commands/init.js";
 import { cmdAdd } from "./commands/add.js";
+import { cmdConfig } from "./commands/config.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -66,6 +78,13 @@ export function runCli(argv: string[]): void {
     setCacheEnabled(false);
   }
 
+  // Phase 1.6 — telemetry override. Boolean flag, single-token, one-shot for
+  // this invocation. Module-local override; does NOT touch the persistent
+  // config (`telemetry.enabled` in ~/.config/chemag/config.json stays as-is).
+  if (argv.includes("--no-telemetry")) {
+    setTelemetryEnabledForRun(false);
+  }
+
   if (argv.includes("--version") || argv.includes("-v")) {
     console.log(getVersion());
     process.exit(0);
@@ -74,9 +93,9 @@ export function runCli(argv: string[]): void {
   // Top-level --help / -h applies only when no subcommand was given. With a
   // subcommand the flag is forwarded to that command's parser so each
   // subcommand can emit its own help block. We look at the dispatch argv
-  // (after stripping --vocabulary <v> and --no-cache, both already handled
-  // above) and check whether the first positional is missing.
-  const dispatchArgsForHelpCheck = stripCacheFlag(stripVocabularyFlag(argv));
+  // (after stripping --vocabulary <v>, --no-cache, and --no-telemetry, all
+  // already handled above) and check whether the first positional is missing.
+  const dispatchArgsForHelpCheck = stripTelemetryFlag(stripCacheFlag(stripVocabularyFlag(argv)));
   const firstPositional = dispatchArgsForHelpCheck.find((a) => !a.startsWith("-"));
   if ((argv.includes("--help") || argv.includes("-h")) && firstPositional === undefined) {
     printHelp();
@@ -87,10 +106,10 @@ export function runCli(argv: string[]): void {
     process.exit(0);
   }
 
-  // Strip --vocabulary <value> / --vocabulary=<value> and --no-cache from
-  // the command argv so command parsers don't treat them as positionals.
-  // Phase 1 / 1.5 already captured them.
-  const dispatchArgs = stripCacheFlag(stripVocabularyFlag(argv));
+  // Strip --vocabulary <value> / --vocabulary=<value>, --no-cache, and
+  // --no-telemetry from the command argv so command parsers don't treat them
+  // as positionals. Phases 1 / 1.5 / 1.6 already captured them.
+  const dispatchArgs = stripTelemetryFlag(stripCacheFlag(stripVocabularyFlag(argv)));
   const command = dispatchArgs[0];
   const commandArgs = dispatchArgs.slice(1);
 
@@ -118,6 +137,9 @@ export function runCli(argv: string[]): void {
       break;
     case "sync":
       cmdSync(commandArgs);
+      break;
+    case "config":
+      cmdConfig(commandArgs);
       break;
     default:
       console.error(`Unknown command: ${command}`);
@@ -155,6 +177,92 @@ export function stripCacheFlag(argv: string[]): string[] {
   return argv.filter((a) => a !== "--no-cache");
 }
 
+/**
+ * Remove the boolean --no-telemetry token from argv before dispatch.
+ * Phase-1.6 resolution already toggled the run-local override. Single-token
+ * filter; mirrors stripCacheFlag.
+ */
+export function stripTelemetryFlag(argv: string[]): string[] {
+  return argv.filter((a) => a !== "--no-telemetry");
+}
+
+// ---------------------------------------------------------------------------
+// Telemetry bootstrap.
+//
+// runCli() itself stays synchronous so existing tests continue to drive the
+// dispatcher without an async harness. The bin shim calls runCliBootstrap,
+// which:
+//   1. Runs the Phase-1.6 override resolution (mirroring what runCli does
+//      internally) so initTelemetry sees the right enabled state. We do this
+//      twice — once here, once in runCli — because runCli may be called
+//      directly by tests without going through the bootstrap.
+//   2. Awaits initTelemetry which loads consent and best-effort flushes any
+//      events queued from prior runs.
+//   3. Prompts for consent on first run when interactive AND the invocation
+//      is NOT --help/--version (so docs/CI surfaces stay quiet). The prompt
+//      is skipped entirely when --no-telemetry is present (don't re-ask).
+//   4. Hands control to runCli which calls process.exit(...). Any event
+//      emitted by a command awaits its own transport before exit, so we do
+//      not need a separate process.on("exit") flush.
+// ---------------------------------------------------------------------------
+
+function isHelpOrVersion(argv: string[]): boolean {
+  if (argv.includes("--version") || argv.includes("-v")) return true;
+  // Top-level --help applies only when no positional command is present.
+  const dispatch = stripTelemetryFlag(stripCacheFlag(stripVocabularyFlag(argv)));
+  const firstPositional = dispatch.find((a) => !a.startsWith("-"));
+  return (argv.includes("--help") || argv.includes("-h")) && firstPositional === undefined;
+}
+
+export async function runCliBootstrap(argv: string[]): Promise<void> {
+  // Resolve --no-telemetry early so initTelemetry / promptForConsent see it.
+  if (argv.includes("--no-telemetry")) {
+    setTelemetryEnabledForRun(false);
+  }
+
+  // Best-effort consent prompt on the very first interactive run. Skipped if:
+  //   - --no-telemetry was passed (don't re-ask just to ignore the answer)
+  //   - this is a help/version invocation (those exit fast with no telemetry)
+  //   - the process is non-interactive (no TTY) — promptForConsent itself
+  //     short-circuits to false and prints the one-line note
+  if (isFirstRun() && !argv.includes("--no-telemetry") && !isHelpOrVersion(argv)) {
+    if (defaultConsentIO.isInteractive()) {
+      try {
+        const accepted = await promptForConsent(defaultConsentIO);
+        saveConfig(accepted ? makeOptInConfig() : makeOptOutConfig());
+      } catch {
+        // If the prompt itself fails (e.g. stdin closed mid-prompt) we
+        // record an opt-out so we don't pester on every run.
+        try {
+          saveConfig(makeOptOutConfig());
+        } catch {
+          // best-effort
+        }
+      }
+    } else {
+      // Non-interactive: print the one-line hint per the spec. Do NOT write
+      // a config file — that way the next interactive run will still prompt.
+      defaultConsentIO.print("(telemetry off — run chemag config telemetry on to enable)\n");
+    }
+  }
+
+  // Load consent + flush any prior-run queue (best-effort).
+  await initTelemetry();
+
+  runCli(argv);
+}
+
+/**
+ * Final-flush hook. Commands that emit telemetry during their lifetime should
+ * call this just before process.exit so any failed events make it to the
+ * persistent queue. Currently a no-op delegating to flushQueue (which is
+ * idempotent) so callers can adopt without conditionals.
+ */
+export async function flushTelemetryOnExit(): Promise<void> {
+  await flushQueue();
+}
+
 // Note: this module no longer auto-runs the CLI on import. The bin shim
-// (packages/cli/bin/chem-ag) calls runCli(process.argv.slice(2)) explicitly.
-// This lets tests import runCli without invoking the CLI as a side effect.
+// (packages/cli/bin/chem-ag) calls runCliBootstrap(process.argv.slice(2)).
+// runCli stays exported and synchronous for tests that want to drive it
+// without a telemetry harness.

@@ -20,5 +20,6 @@ export function chemagAliases(repoRoot: string): Record<string, string> {
     "@chemag/core": r("packages/core/src/index.ts"),
     "@chemag/plugin-typescript": r("packages/plugin-typescript/src/index.ts"),
     "@chemag/plugin-python": r("packages/plugin-python/src/index.ts"),
+    "@chemag/telemetry": r("packages/telemetry/src/index.ts"),
   };
 }

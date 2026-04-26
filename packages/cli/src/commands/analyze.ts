@@ -3,8 +3,9 @@ import { readFileSync } from "node:fs";
 import { discoverCompounds, loadCompound, loadWorkspace } from "@chemag/core/loader";
 import { checkImports } from "@chemag/core/import-check";
 import type { LanguagePlugin } from "@chemag/core/plugin-interface";
-import type { LoadedCompound, ParsedImport, Workspace } from "@chemag/core/types";
+import type { Diagnostic, LoadedCompound, ParsedImport, Workspace } from "@chemag/core/types";
 import { applyWorkspaceVocabulary, tr } from "@chemag/core/vocabulary";
+import { emit as emitTelemetry } from "@chemag/telemetry";
 import { contentHash } from "../cache/content-hash.js";
 import { createImportCache } from "../cache/import-cache.js";
 import { createManifestCache } from "../cache/manifest-cache.js";
@@ -155,6 +156,7 @@ export function cmdAnalyze(argv: string[]): void {
         2,
       ),
     );
+    emitViolations(diags);
     process.exit(errors.length > 0 ? 1 : 0);
   }
 
@@ -168,7 +170,29 @@ export function cmdAnalyze(argv: string[]): void {
 
   const out = formatDiagnostics(diags, resolvedFormat, ctx);
   console.log(out.endsWith("\n") ? out.slice(0, -1) : out);
+
+  emitViolations(diags);
+
   process.exit(errors.length > 0 ? 1 : 0);
+}
+
+/**
+ * Emit `cli.violations.found` (count + check_kinds[]). NO file paths.
+ * Fire-and-forget; safe no-op when consent is absent.
+ */
+function emitViolations(diags: Diagnostic[]): void {
+  if (diags.length === 0) return;
+  const kinds = new Set<string>();
+  for (const d of diags) {
+    const code = d.code;
+    if (typeof code !== "string") continue;
+    const parts = code.split("-");
+    if (parts.length >= 2) kinds.add(parts[1]);
+  }
+  void emitTelemetry("cli.violations.found", {
+    count: diags.length,
+    check_kinds: Array.from(kinds),
+  }).catch(() => {});
 }
 
 // ---------------------------------------------------------------------------

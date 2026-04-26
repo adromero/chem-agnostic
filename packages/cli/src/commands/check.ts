@@ -4,6 +4,7 @@ import { explainCode } from "@chemag/core/diagnostics";
 import { discoverCompounds, loadCompound, loadWorkspace } from "@chemag/core/loader";
 import type { CheckOptions, Diagnostic, LoadedCompound, Workspace } from "@chemag/core/types";
 import { applyWorkspaceVocabulary, tr } from "@chemag/core/vocabulary";
+import { emit as emitTelemetry } from "@chemag/telemetry";
 import { readFileSync } from "node:fs";
 import { createManifestCache } from "../cache/manifest-cache.js";
 import { contentHash } from "../cache/content-hash.js";
@@ -189,6 +190,7 @@ export function cmdCheck(argv: string[]): void {
         2,
       ),
     );
+    emitViolations(allDiags);
     process.exit(totalErrors > 0 ? 1 : 0);
   }
 
@@ -215,7 +217,33 @@ export function cmdCheck(argv: string[]): void {
   // since console.log appends its own.
   const out = formatDiagnostics(allDiags, resolvedFormat, ctx);
   console.log(out.endsWith("\n") ? out.slice(0, -1) : out);
+
+  // Fire-and-forget cli.violations.found (no file paths in payload). Safe
+  // because the call is a no-op when telemetry consent is not granted.
+  emitViolations(allDiags);
+
   process.exit(totalErrors > 0 ? 1 : 0);
+}
+
+/**
+ * Emit `cli.violations.found` per 09-cross-cutting.md: count + check_kinds[]
+ * derived from each Diagnostic.code's middle segment (e.g. `CHEM-BOND-001` →
+ * `BOND`). NO file paths or content. Fire-and-forget; awaiting would block
+ * the CLI exit and the no-consent path is already a no-op.
+ */
+function emitViolations(diags: Diagnostic[]): void {
+  if (diags.length === 0) return;
+  const kinds = new Set<string>();
+  for (const d of diags) {
+    const code = d.code;
+    if (typeof code !== "string") continue;
+    const parts = code.split("-");
+    if (parts.length >= 2) kinds.add(parts[1]);
+  }
+  void emitTelemetry("cli.violations.found", {
+    count: diags.length,
+    check_kinds: Array.from(kinds),
+  }).catch(() => {});
 }
 
 // ---------------------------------------------------------------------------

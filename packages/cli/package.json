@@ -24,6 +24,7 @@
     "@chemag/core": "workspace:*",
     "@chemag/plugin-python": "workspace:*",
     "@chemag/plugin-typescript": "workspace:*",
+    "@chemag/telemetry": "workspace:*",
     "proper-lockfile": "^4.1.2",
     "yaml": "^2.7.0"
   },
