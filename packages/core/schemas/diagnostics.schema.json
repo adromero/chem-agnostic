@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://chemag.dev/schemas/diagnostics.schema.json",
+  "title": "ChemagDiagnosticsReport",
+  "description": "Workspace-level diagnostics envelope emitted by `chemag check --format json` and `chemag analyze --format json` (added in wp-005). Diagnostic codes follow the CHEM-CATEGORY-NNN format defined in @chemag/core/diagnostics.",
+  "type": "object",
+  "required": ["schemaVersion", "tool", "command", "diagnostics", "summary"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0.0",
+      "description": "Schema version. Bumped on a breaking change to this envelope."
+    },
+    "tool": {
+      "type": "object",
+      "required": ["name", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "const": "chemag" },
+        "version": { "type": "string", "description": "chemag version (semver)." }
+      }
+    },
+    "command": {
+      "type": "string",
+      "enum": ["check", "analyze", "check-edit"]
+    },
+    "workspace": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "path": { "type": "string", "description": "Absolute path to the workspace directory (the parent of workspace.yaml)." }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["errors", "warnings"],
+      "additionalProperties": false,
+      "properties": {
+        "errors": { "type": "integer", "minimum": 0 },
+        "warnings": { "type": "integer", "minimum": 0 },
+        "compounds": { "type": "integer", "minimum": 0 },
+        "units": { "type": "integer", "minimum": 0 },
+        "assays": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/diagnostic" }
+    }
+  },
+  "definitions": {
+    "diagnostic": {
+      "type": "object",
+      "required": ["level", "code", "check", "message"],
+      "additionalProperties": true,
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["error", "warning"]
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^CHEM-[A-Z]+-[0-9]{3}$",
+          "description": "Stable diagnostic code (CHEM-CATEGORY-NNN)."
+        },
+        "check": {
+          "type": "string",
+          "description": "Internal check identifier."
+        },
+        "compound": { "type": "string" },
+        "message": { "type": "string" },
+        "hint": { "type": "string" },
+        "file": {
+          "type": "string",
+          "description": "Absolute or workspace-relative path to the file the diagnostic concerns. Absent for workspace-level diagnostics."
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "1-based line number within `file`. Reserved for a follow-up stage; not populated by current emitters."
+        },
+        "column": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "1-based column number within `file`. Reserved."
+        },
+        "imported_module": { "type": "string" },
+        "imported_role": { "type": "string" },
+        "remediation": { "$ref": "#/definitions/remediation" }
+      }
+    },
+    "remediation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind", "interface_candidates"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "use_interface" },
+            "interface_candidates": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "compound_candidates"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "move_to_compound" },
+            "compound_candidates": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "expected_folder"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "move_to_role_folder" },
+            "expected_folder": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "surface", "target_compound"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "import_via_public_surface" },
+            "surface": { "type": "string" },
+            "target_compound": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "target_compound"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "add_compound_import" },
+            "target_compound": { "type": "string" }
+          }
+        }
+      ]
+    }
+  }
+}
