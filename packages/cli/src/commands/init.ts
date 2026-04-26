@@ -4,6 +4,7 @@ import { execSync } from "node:child_process";
 import { stringify } from "yaml";
 import { loadPlugin } from "../plugin-loader.js";
 import { generateClaudeMd } from "@chemag/core/template-claude-md";
+import { tr } from "@chemag/core/vocabulary";
 
 const R = "\x1b[0m";
 const RED = "\x1b[31m";
@@ -94,18 +95,10 @@ export function checkPython3Available(): boolean {
 
 export function cmdInit(argv: string[]): void {
   if (argv.includes("-h") || argv.includes("--help")) {
-    console.log(`
-${BLD}chem init${R} — bootstrap a new Chem workspace
-
-${BLD}Usage:${R}  chem init <name> [options]
-
-${BLD}Options:${R}
-  --path <dir>          Base directory (default: current directory)
-  --language <lang>     Language: typescript (default) or python
-
-Creates workspace.yaml with standard roles, bonds, and compound types,
-plus the directory structure for compounds, reagents, solvents, and catalyst.
-`);
+    console.log(`\n${BLD}${tr("cli.command.init")}${R}\n`);
+    console.log(
+      `${BLD}Options:${R}\n  --path <dir>          Base directory (default: current directory)\n  --language <lang>     Language: typescript (default) or python\n\nCreates workspace.yaml with the default roles and dependency rules,\nplus the directory structure for modules, shared kernels,\ninfrastructure, and the composition root.\n`,
+    );
     process.exit(0);
   }
 

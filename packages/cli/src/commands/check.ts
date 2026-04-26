@@ -2,6 +2,7 @@ import * as path from "node:path";
 import { allChecks } from "@chemag/core/checks";
 import { discoverCompounds, loadWorkspace } from "@chemag/core/loader";
 import type { CheckOptions, Diagnostic, LoadedCompound, Workspace } from "@chemag/core/types";
+import { applyWorkspaceVocabulary, tr } from "@chemag/core/vocabulary";
 import { loadPlugin } from "../plugin-loader.js";
 
 const R = "\x1b[0m";
@@ -13,16 +14,10 @@ const BLD = "\x1b[1m";
 
 export function cmdCheck(argv: string[]): void {
   if (argv.includes("-h") || argv.includes("--help")) {
-    console.log(`
-${BLD}chemtest check${R} — validate workspace manifests and filesystem
-
-${BLD}Usage:${R}  chemtest check <workspace.yaml> [options]
-
-${BLD}Options:${R}
-  --manifest-only   Skip filesystem checks
-  --verbose, -v     Show warning details
-  --json            Machine-readable output
-`);
+    console.log(`\n${BLD}${tr("cli.command.check")}${R}\n`);
+    console.log(
+      `${BLD}Options:${R}\n  --manifest-only   Skip filesystem checks\n  --verbose, -v     Show warning details\n  --json            Machine-readable output\n`,
+    );
     process.exit(0);
   }
 
@@ -46,6 +41,10 @@ ${BLD}Options:${R}
     console.error(`${RED}Failed to load workspace:${R} ${e instanceof Error ? e.message : e}`);
     process.exit(2);
   }
+
+  // Phase 2 — adopt workspace.vocabulary if Phase 1 (cli.ts) didn't already
+  // settle on a stronger source. Must run before any tr() output below.
+  applyWorkspaceVocabulary(ws);
 
   let compounds: LoadedCompound[];
   try {

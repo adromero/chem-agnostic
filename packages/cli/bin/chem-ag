@@ -1,4 +1,4 @@
 #!/usr/bin/env node
 // Thin shim. Forwards to the compiled CLI entry point.
 // Layout: packages/cli/bin/chem-ag -> packages/cli/dist/cli.js
-import("../dist/cli.js");
+import("../dist/cli.js").then((mod) => mod.runCli(process.argv.slice(2)));

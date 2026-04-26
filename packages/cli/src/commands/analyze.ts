@@ -2,6 +2,7 @@ import * as path from "node:path";
 import { discoverCompounds, loadWorkspace } from "@chemag/core/loader";
 import { checkImports } from "@chemag/core/import-check";
 import type { LoadedCompound, Workspace } from "@chemag/core/types";
+import { applyWorkspaceVocabulary, tr } from "@chemag/core/vocabulary";
 import { loadPlugin } from "../plugin-loader.js";
 
 const R = "\x1b[0m";
@@ -13,19 +14,8 @@ const BLD = "\x1b[1m";
 
 export function cmdAnalyze(argv: string[]): void {
   if (argv.includes("-h") || argv.includes("--help")) {
-    console.log(`
-${BLD}chemtest analyze${R} — check source imports against bond rules
-
-${BLD}Usage:${R}  chemtest analyze <workspace.yaml> [options]
-
-${BLD}Options:${R}
-  --json   Machine-readable output
-
-Analyzes actual import statements in source files and checks:
-  - Bond rules (role-level dependency constraints)
-  - Cross-compound imports go through public surface
-  - No undeclared cross-compound imports
-`);
+    console.log(`\n${BLD}${tr("cli.command.analyze")}${R}\n`);
+    console.log(`${BLD}Options:${R}\n  --json   Machine-readable output\n`);
     process.exit(0);
   }
 
@@ -47,6 +37,10 @@ Analyzes actual import statements in source files and checks:
     console.error(`${RED}Failed to load workspace:${R} ${e instanceof Error ? e.message : e}`);
     process.exit(2);
   }
+
+  // Phase 2 — adopt workspace.vocabulary if Phase 1 (cli.ts) didn't already
+  // settle on a stronger source. Must run before any tr() output below.
+  applyWorkspaceVocabulary(ws);
 
   let compounds: LoadedCompound[];
   try {

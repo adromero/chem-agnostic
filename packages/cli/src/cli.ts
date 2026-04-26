@@ -2,6 +2,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { resolveCliVocabulary, setVocabulary, tr } from "@chemag/core/vocabulary";
 import { cmdCheck } from "./commands/check.js";
 import { cmdAnalyze } from "./commands/analyze.js";
 import { cmdScaffold } from "./commands/scaffold.js";
@@ -31,66 +32,95 @@ function getVersion(): string {
   return "unknown";
 }
 
+/**
+ * Print top-level help. Uses the active (Phase-1) vocabulary so flag/env
+ * choices propagate to help output. Workspace-sourced vocabulary is NOT
+ * applied here because help exits before any workspace is loaded — this is
+ * a documented limitation.
+ */
 function printHelp(): void {
-  console.log(`chemag v${getVersion()} — language-agnostic Chem architecture toolkit
-
-Usage: chemag [options] [command]
-       chem-ag [options] [command]   (alias)
-
-Options:
-  --version    Show version number
-  --help       Show this help text
-
-Commands:
-  init         Bootstrap a new Chem workspace
-  add          Add a compound or unit
-  check        Validate manifests and file structure
-  analyze      Check real imports against bond rules
-  scaffold     Generate stub files from manifests
-  graph        Output Mermaid dependency diagram
-  sync         Generate manifests from existing code
-`);
+  const intro = tr("cli.help.intro", { version: getVersion() });
+  const usage = tr("cli.help.usage");
+  const options = tr("cli.help.options");
+  const commands = tr("cli.help.commands");
+  console.log(`${intro}\n\n${usage}\n\n${options}\n\n${commands}\n`);
 }
 
-const args = process.argv.slice(2);
+/**
+ * Run the CLI dispatcher. Exposed as a function so tests can drive it
+ * without spawning a subprocess and assert that --help exits without
+ * touching loadWorkspace.
+ */
+export function runCli(argv: string[]): void {
+  // Phase 1 — resolve vocabulary from flag/env/default and lock it in
+  // before any other work happens. This is what --help and --version use.
+  const { name, source } = resolveCliVocabulary(argv, process.env);
+  setVocabulary(name, source);
 
-if (args.includes("--version") || args.includes("-v")) {
-  console.log(getVersion());
-  process.exit(0);
+  if (argv.includes("--version") || argv.includes("-v")) {
+    console.log(getVersion());
+    process.exit(0);
+  }
+
+  if (argv.includes("--help") || argv.includes("-h") || argv.length === 0) {
+    printHelp();
+    process.exit(0);
+  }
+
+  // Strip --vocabulary <value> / --vocabulary=<value> from the command argv
+  // so command parsers don't treat them as positionals. Phase 1 already
+  // captured them.
+  const dispatchArgs = stripVocabularyFlag(argv);
+  const command = dispatchArgs[0];
+  const commandArgs = dispatchArgs.slice(1);
+
+  switch (command) {
+    case "init":
+      cmdInit(commandArgs);
+      break;
+    case "add":
+      cmdAdd(commandArgs);
+      break;
+    case "check":
+      cmdCheck(commandArgs);
+      break;
+    case "analyze":
+      cmdAnalyze(commandArgs);
+      break;
+    case "scaffold":
+      cmdScaffold(commandArgs);
+      break;
+    case "graph":
+      cmdGraph(commandArgs);
+      break;
+    case "sync":
+      cmdSync(commandArgs);
+      break;
+    default:
+      console.error(`Unknown command: ${command}`);
+      console.error(`Run 'chemag --help' for a list of available commands.`);
+      process.exit(1);
+  }
 }
 
-if (args.includes("--help") || args.includes("-h") || args.length === 0) {
-  printHelp();
-  process.exit(0);
+/**
+ * Remove --vocabulary <name> and --vocabulary=<name> tokens from argv before
+ * dispatch. Phase-1 resolution already consumed them.
+ */
+function stripVocabularyFlag(argv: string[]): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "--vocabulary") {
+      i++; // skip the value too
+      continue;
+    }
+    if (a.startsWith("--vocabulary=")) continue;
+    out.push(a);
+  }
+  return out;
 }
 
-const command = args[0];
-const commandArgs = args.slice(1);
-
-switch (command) {
-  case "init":
-    cmdInit(commandArgs);
-    break;
-  case "add":
-    cmdAdd(commandArgs);
-    break;
-  case "check":
-    cmdCheck(commandArgs);
-    break;
-  case "analyze":
-    cmdAnalyze(commandArgs);
-    break;
-  case "scaffold":
-    cmdScaffold(commandArgs);
-    break;
-  case "graph":
-    cmdGraph(commandArgs);
-    break;
-  case "sync":
-    cmdSync(commandArgs);
-    break;
-  default:
-    console.error(`Unknown command: ${command}`);
-    console.error(`Run 'chemag --help' for a list of available commands.`);
-    process.exit(1);
-}
+// Note: this module no longer auto-runs the CLI on import. The bin shim
+// (packages/cli/bin/chem-ag) calls runCli(process.argv.slice(2)) explicitly.
+// This lets tests import runCli without invoking the CLI as a side effect.

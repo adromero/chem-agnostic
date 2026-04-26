@@ -267,18 +267,38 @@ describe("TypeScript E2E workflow", () => {
   });
 
   it("step 14: CLI help text reflects language-agnostic nature", async () => {
-    // Read the cli.ts source to verify help text
-    const cliPath = path.join(path.dirname(new URL(import.meta.url).pathname), "../../src/cli.ts");
-    const cliContent = fs.readFileSync(cliPath, "utf-8");
-    expect(cliContent).toContain("chem-ag");
-    expect(cliContent).toContain("language-agnostic");
-    expect(cliContent).toContain("init");
-    expect(cliContent).toContain("add");
-    expect(cliContent).toContain("check");
-    expect(cliContent).toContain("analyze");
-    expect(cliContent).toContain("scaffold");
-    expect(cliContent).toContain("graph");
-    expect(cliContent).toContain("sync");
+    // Help text now lives in the vocabulary JSON locales rather than a literal
+    // template in cli.ts. Verify by exercising the CLI dispatcher's runCli
+    // function with --help and capturing stdout.
+    const { runCli } = await import("../../src/cli.js");
+
+    const stdout: string[] = [];
+    const exitSpy = vi.spyOn(process, "exit").mockImplementation(((_code?: number) => {
+      throw new Error("__exit__");
+    }) as never);
+    const logSpy = vi.spyOn(console, "log").mockImplementation((...a: any[]) => {
+      stdout.push(a.join(" "));
+    });
+
+    try {
+      runCli(["--help"]);
+    } catch (e: any) {
+      if (e.message !== "__exit__") throw e;
+    } finally {
+      exitSpy.mockRestore();
+      logSpy.mockRestore();
+    }
+
+    const out = stdout.join("\n");
+    expect(out).toMatch(/chem-ag|chemag/);
+    expect(out.toLowerCase()).toContain("language-agnostic");
+    expect(out).toContain("init");
+    expect(out).toContain("add");
+    expect(out).toContain("check");
+    expect(out).toContain("analyze");
+    expect(out).toContain("scaffold");
+    expect(out).toContain("graph");
+    expect(out).toContain("sync");
   });
 
   it("step 15: exit codes are correct for errors", async () => {

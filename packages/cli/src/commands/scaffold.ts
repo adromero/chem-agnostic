@@ -2,6 +2,7 @@ import * as path from "node:path";
 import { discoverCompounds, loadWorkspace } from "@chemag/core/loader";
 import { scaffoldWorkspace } from "@chemag/core/scaffold";
 import type { LoadedCompound, Workspace } from "@chemag/core/types";
+import { applyWorkspaceVocabulary, tr } from "@chemag/core/vocabulary";
 import { loadPlugin } from "../plugin-loader.js";
 
 const R = "\x1b[0m";
@@ -12,14 +13,10 @@ const BLD = "\x1b[1m";
 
 export function cmdScaffold(argv: string[]): void {
   if (argv.includes("-h") || argv.includes("--help")) {
-    console.log(`
-${BLD}chem scaffold${R} — generate stub files from manifests
-
-${BLD}Usage:${R}  chem scaffold <workspace.yaml> [options]
-
-${BLD}Options:${R}
-  --dry-run   Show what would be created without writing files
-`);
+    console.log(`\n${BLD}${tr("cli.command.scaffold")}${R}\n`);
+    console.log(
+      `${BLD}Options:${R}\n  --dry-run   Show what would be created without writing files\n`,
+    );
     process.exit(0);
   }
 
@@ -41,6 +38,10 @@ ${BLD}Options:${R}
     console.error(`${RED}Failed to load workspace:${R} ${e instanceof Error ? e.message : e}`);
     process.exit(2);
   }
+
+  // Phase 2 — adopt workspace.vocabulary if Phase 1 (cli.ts) didn't already
+  // settle on a stronger source. Must run before any tr() output below.
+  applyWorkspaceVocabulary(ws);
 
   const plugin = loadPlugin({ language: ws.language });
 

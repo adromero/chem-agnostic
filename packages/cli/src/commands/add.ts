@@ -4,6 +4,7 @@ import { parseDocument, stringify } from "yaml";
 import { loadWorkspace, discoverCompounds } from "@chemag/core/loader";
 import { loadPlugin } from "../plugin-loader.js";
 import { scaffoldWorkspace } from "@chemag/core/scaffold";
+import { applyWorkspaceVocabulary, tr } from "@chemag/core/vocabulary";
 
 const R = "\x1b[0m";
 const RED = "\x1b[31m";
@@ -13,39 +14,22 @@ const BLD = "\x1b[1m";
 
 export function cmdAdd(argv: string[]): void {
   if (argv.includes("-h") || argv.includes("--help") || argv.length < 2) {
-    console.log(`
-${BLD}chem add${R} — add a compound or unit
-
-${BLD}Usage:${R}
-  chem add compound <name> [options]
-  chem add unit <compound> <role> <name> [options]
-
-${BLD}Compound options:${R}
-  --type <type>      compound (default), reagent, or solvent
-  --workspace <file> Path to workspace.yaml (default: ./workspace.yaml)
-
-${BLD}Unit options:${R}
-  --workspace <file>  Path to workspace.yaml (default: ./workspace.yaml)
-  --export            Also add to the compound's exports
-  --implements <name> Interface this adapter implements (adapter role only)
-
-${BLD}Examples:${R}
-  ${DIM}chem add compound payments${R}
-  ${DIM}chem add compound identity --type reagent${R}
-  ${DIM}chem add unit reporting element InvoiceId${R}
-  ${DIM}chem add unit reporting adapter PgReportRepo --implements ReportRepository --export${R}
-`);
+    console.log(`\n${BLD}${tr("cli.command.add")}${R}\n`);
+    console.log(
+      `${BLD}Module options:${R}\n  --type <type>       module (default), shared-kernel, or infrastructure\n  --workspace <file>  Path to workspace.yaml (default: ./workspace.yaml)\n\n${BLD}Unit options:${R}\n  --workspace <file>  Path to workspace.yaml (default: ./workspace.yaml)\n  --export            Also add to the module's exports\n  --implements <name> Port this adapter implements (adapter role only)\n\n${BLD}Examples:${R}\n  ${DIM}chemag add module payments${R}\n  ${DIM}chemag add module identity --type shared-kernel${R}\n  ${DIM}chemag add unit reporting value-object InvoiceId${R}\n  ${DIM}chemag add unit reporting adapter PgReportRepo --implements ReportRepository --export${R}\n`,
+    );
     process.exit(0);
   }
 
   const sub = argv[0];
 
-  if (sub === "compound") {
+  // Accept both vocabularies: "compound"/"module" target the same code path.
+  if (sub === "compound" || sub === "module") {
     addCompound(argv.slice(1));
   } else if (sub === "unit") {
     addUnit(argv.slice(1));
   } else {
-    console.error(`${RED}Unknown add target: "${sub}". Use "compound" or "unit".${R}`);
+    console.error(`${RED}Unknown add target: "${sub}". Use "compound"/"module" or "unit".${R}`);
     process.exit(2);
   }
 }
@@ -63,14 +47,24 @@ function addCompound(argv: string[]): void {
 
   const wsPath = resolveWorkspace(argv);
   const ws = loadWorkspace(wsPath);
+  applyWorkspaceVocabulary(ws);
   const wsDir = path.dirname(wsPath);
 
   const typeIdx = argv.indexOf("--type");
   const type = typeIdx >= 0 ? argv[typeIdx + 1] : "compound";
+  // Map vocabulary-aliased type names back to canonical workspace type names.
+  const canonicalType =
+    type === "module"
+      ? "compound"
+      : type === "shared-kernel"
+        ? "reagent"
+        : type === "infrastructure"
+          ? "solvent"
+          : type;
 
-  // Determine directory
+  // Determine directory using the canonical type
   let baseDir: string;
-  switch (type) {
+  switch (canonicalType) {
     case "reagent":
       baseDir = path.resolve(wsDir, ws.paths.reagents ?? "./src/reagents");
       break;
@@ -97,11 +91,11 @@ function addCompound(argv: string[]): void {
   fs.mkdirSync(compoundDir, { recursive: true });
   console.log(`  ${GRN}+${R}  ${path.relative(wsDir, compoundDir)}/`);
 
-  // Write compound.yaml
+  // Write compound.yaml — the YAML field names are stable across vocabularies.
   const manifest: Record<string, unknown> = {
     compound: name,
   };
-  if (type !== "compound") manifest.type = type;
+  if (canonicalType !== "compound") manifest.type = canonicalType;
   manifest.description = "";
   manifest.exports = {};
   manifest.imports = [];
@@ -135,6 +129,7 @@ function addUnit(argv: string[]): void {
 
   const wsPath = resolveWorkspace(argv);
   const ws = loadWorkspace(wsPath);
+  applyWorkspaceVocabulary(ws);
   const wsDir = path.dirname(wsPath);
 
   // Validate role
