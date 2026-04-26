@@ -53,12 +53,12 @@ export interface CheckEditResult {
   diagnostics: CheckEditDiagnostic[];
 }
 
-/** Per-diagnostic record emitted by check-edit. */
+/**
+ * Per-diagnostic record emitted by check-edit. `file`, `line`, and `column`
+ * are inherited from `Diagnostic` (added in wp-005); `imported_module` /
+ * `imported_role` are check-edit specific extras for the JSON output.
+ */
 export interface CheckEditDiagnostic extends Diagnostic {
-  /** Optional 1-based line number, when the diagnostic targets an import. */
-  line?: number;
-  /** Optional 1-based column number. Always 1 today; reserved for future use. */
-  column?: number;
   /** Module specifier of the offending import, when applicable. */
   imported_module?: string;
   /** Resolved role of the imported target, when applicable. */
@@ -208,6 +208,7 @@ export function runCheckEdit(opts: RunCheckEditOptions): CheckEditResult {
       hint:
         "Provide --proposed-role and --proposed-compound, or place the file under " +
         "<compounds>/<name>/<role-folder>/.",
+      file: absFilePath,
     };
     return {
       file: filePath,
@@ -243,6 +244,7 @@ export function runCheckEdit(opts: RunCheckEditOptions): CheckEditResult {
         }),
         hint: `File: ${filePath}`,
         remediation: { kind: "move_to_role_folder", expected_folder: expectedFolder },
+        file: absFilePath,
       });
     }
   }
@@ -417,6 +419,7 @@ function checkSingleFileImports(
         hint: `${srcRole} can only import from [${allowedRoles.join(", ")}]`,
         imported_module: imp.moduleSpecifier,
         imported_role: targetRole,
+        file: absFilePath,
         ...(remediation ? { remediation } : {}),
       });
     }
@@ -452,6 +455,7 @@ function checkSingleFileImports(
                 hint: `Add "- compound: ${targetCompound}" to imports in ${srcCompound.manifest.compound}/compound.yaml`,
                 imported_module: imp.moduleSpecifier,
                 imported_role: targetRole,
+                file: absFilePath,
                 remediation: { kind: "add_compound_import", target_compound: targetCompound },
               });
             }
@@ -469,6 +473,7 @@ function checkSingleFileImports(
               hint: `Import from "${targetCompound}/${surfaceFile}" instead`,
               imported_module: imp.moduleSpecifier,
               imported_role: targetRole,
+              file: absFilePath,
               remediation: {
                 kind: "import_via_public_surface",
                 surface: surfaceFile,

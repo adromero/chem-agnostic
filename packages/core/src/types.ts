@@ -149,6 +149,21 @@ export interface Diagnostic {
    * derivable; left undefined elsewhere.
    */
   remediation?: DiagnosticRemediation;
+  // ------------------------------------------------------------------- //
+  // Optional location fields (added in wp-005). Populated for source-level
+  // diagnostics (import-check, check-edit) and any manifest-level check that
+  // can pinpoint a single file. Workspace-level diagnostics leave them
+  // undefined — SARIF then renders them as workspace-level findings.
+  // line/column are deferred until the language-plugin contract surfaces
+  // import positions; the fields exist now so the public Diagnostic shape
+  // is stable.
+  // ------------------------------------------------------------------- //
+  /** Absolute or workspace-relative path to the file the diagnostic concerns. */
+  file?: string;
+  /** 1-based line number within `file`. Undefined if not known. */
+  line?: number;
+  /** 1-based column number within `file`. Undefined if not known. */
+  column?: number;
 }
 
 /**

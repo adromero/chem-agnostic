@@ -118,6 +118,8 @@ export function checkImports(
             names: importedNames,
           }),
           hint: `${srcRole} can only import from [${allowedRoles.join(", ")}]`,
+          // wp-005: source-level diagnostics MUST populate `file` (absolute path).
+          file: abs,
         });
       }
 
@@ -152,6 +154,8 @@ export function checkImports(
                     src_compound: srcCompound.manifest.compound,
                   }),
                   hint: `Add "- compound: ${targetCompound}" to imports in ${srcCompound.manifest.compound}/compound.yaml`,
+                  // wp-005: source-level diagnostics MUST populate `file`.
+                  file: abs,
                 });
               }
 
@@ -166,6 +170,8 @@ export function checkImports(
                   surface: surfaceFile,
                 }),
                 hint: `Import from "${targetCompound}/${surfaceFile}" instead`,
+                // wp-005: source-level diagnostics MUST populate `file`.
+                file: abs,
               });
             }
           }
