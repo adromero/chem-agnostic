@@ -2,6 +2,9 @@
 // Workspace (workspace.yaml)
 // ---------------------------------------------------------------------------
 
+/** Names of the locales shipped with the toolkit. */
+export type VocabularyName = "standard" | "chemistry";
+
 export interface Workspace {
   workspace: string;
   language: string;
@@ -11,6 +14,8 @@ export interface Workspace {
   signals?: WorkspaceSignals;
   paths: WorkspacePaths;
   rules?: WorkspaceRules;
+  /** Optional locale for diagnostic and CLAUDE.md output. */
+  vocabulary?: VocabularyName;
 }
 
 export interface RoleDefinition {

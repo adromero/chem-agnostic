@@ -14,6 +14,7 @@ export function chemagAliases(repoRoot: string): Record<string, string> {
     "@chemag/core/sync": r("packages/core/src/sync.ts"),
     "@chemag/core/graph": r("packages/core/src/graph.ts"),
     "@chemag/core/template-claude-md": r("packages/core/src/template-claude-md.ts"),
+    "@chemag/core/vocabulary": r("packages/core/src/vocabulary/index.ts"),
     "@chemag/core": r("packages/core/src/index.ts"),
     "@chemag/plugin-typescript": r("packages/plugin-typescript/src/index.ts"),
     "@chemag/plugin-python": r("packages/plugin-python/src/index.ts"),

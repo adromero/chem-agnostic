@@ -20,6 +20,16 @@ export function loadWorkspace(workspacePath: string): Workspace {
     throw new Error(`Missing "paths.compounds" field in ${workspacePath}`);
   }
 
+  // Optional vocabulary field — validate against the known VocabularyName set.
+  if (ws.vocabulary !== undefined) {
+    if (ws.vocabulary !== "standard" && ws.vocabulary !== "chemistry") {
+      throw new Error(
+        `Invalid "vocabulary" field in ${workspacePath}: ` +
+          `expected "standard" or "chemistry", got "${String(ws.vocabulary)}"`,
+      );
+    }
+  }
+
   return ws;
 }
 
