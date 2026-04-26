@@ -1,9 +1,6 @@
 import type { Workspace, LoadedCompound } from "./types.js";
 
-export function generateMermaid(
-  workspace: Workspace,
-  compounds: LoadedCompound[],
-): string {
+export function generateMermaid(workspace: Workspace, compounds: LoadedCompound[]): string {
   const lines: string[] = ["graph LR"];
 
   // Group compounds by type
@@ -72,9 +69,7 @@ export function generateMermaid(
     for (const li of c.manifest.signals?.listens ?? []) {
       const from = emitters.get(li.signal);
       if (from) {
-        lines.push(
-          `  ${from} -.->|"${li.signal}"| ${c.manifest.compound}`,
-        );
+        lines.push(`  ${from} -.->|"${li.signal}"| ${c.manifest.compound}`);
       }
     }
   }
@@ -86,9 +81,7 @@ export function generateMermaid(
     for (const w of c.manifest.wiring ?? []) {
       if (!wiredCompounds.has(w.compound)) {
         wiredCompounds.add(w.compound);
-        lines.push(
-          `  ${c.manifest.compound} -.-o ${w.compound}`,
-        );
+        lines.push(`  ${c.manifest.compound} -.-o ${w.compound}`);
       }
     }
   }

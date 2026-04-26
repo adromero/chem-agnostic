@@ -12,9 +12,7 @@ import type { ParsedImport } from "@chemag/core/types";
  * Returns a Map from file path to its parsed imports.
  * For missing/unreadable files, returns an empty array.
  */
-export function parseImportsBatch(
-  filePaths: string[],
-): Map<string, ParsedImport[]> {
+export function parseImportsBatch(filePaths: string[]): Map<string, ParsedImport[]> {
   const result = new Map<string, ParsedImport[]>();
 
   if (filePaths.length === 0) return result;
@@ -58,10 +56,7 @@ export function parseImports(filePath: string): ParsedImport[] {
  * Checks filesystem for .ts, .tsx, index.ts candidates.
  * Returns the first that exists, or undefined.
  */
-export function resolveModulePath(
-  fromFile: string,
-  moduleSpec: string,
-): string | undefined {
+export function resolveModulePath(fromFile: string, moduleSpec: string): string | undefined {
   // Skip bare/package imports (node_modules)
   if (!moduleSpec.startsWith(".") && !moduleSpec.startsWith("/")) {
     return undefined;
@@ -70,12 +65,7 @@ export function resolveModulePath(
   const dir = path.dirname(fromFile);
   const base = path.resolve(dir, moduleSpec);
 
-  const candidates = [
-    base,
-    base + ".ts",
-    base + ".tsx",
-    path.join(base, "index.ts"),
-  ];
+  const candidates = [base, base + ".ts", base + ".tsx", path.join(base, "index.ts")];
 
   for (const c of candidates) {
     if (fs.existsSync(c) && fs.statSync(c).isFile()) {

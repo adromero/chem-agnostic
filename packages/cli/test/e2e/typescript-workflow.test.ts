@@ -26,30 +26,22 @@ function runCmd(
   const stdout: string[] = [];
   const stderr: string[] = [];
 
-  const exitSpy = vi
-    .spyOn(process, "exit")
-    .mockImplementation(((code?: number) => {
-      exitCode.value = code;
-      throw new Error(`process.exit(${code})`);
-    }) as any);
+  const exitSpy = vi.spyOn(process, "exit").mockImplementation(((code?: number) => {
+    exitCode.value = code;
+    throw new Error(`process.exit(${code})`);
+  }) as any);
 
-  const logSpy = vi
-    .spyOn(console, "log")
-    .mockImplementation((...a: any[]) => {
-      stdout.push(a.join(" "));
-    });
+  const logSpy = vi.spyOn(console, "log").mockImplementation((...a: any[]) => {
+    stdout.push(a.join(" "));
+  });
 
-  const errorSpy = vi
-    .spyOn(console, "error")
-    .mockImplementation((...a: any[]) => {
-      stderr.push(a.join(" "));
-    });
+  const errorSpy = vi.spyOn(console, "error").mockImplementation((...a: any[]) => {
+    stderr.push(a.join(" "));
+  });
 
-  const warnSpy = vi
-    .spyOn(console, "warn")
-    .mockImplementation((...a: any[]) => {
-      stderr.push(a.join(" "));
-    });
+  const warnSpy = vi.spyOn(console, "warn").mockImplementation((...a: any[]) => {
+    stderr.push(a.join(" "));
+  });
 
   try {
     fn(argv);
@@ -80,13 +72,7 @@ afterAll(() => {
 describe("TypeScript E2E workflow", () => {
   it("step 1: init creates workspace.yaml, CLAUDE.md, and directories", async () => {
     const { cmdInit } = await import("../../src/commands/init.js");
-    const result = runCmd(cmdInit, [
-      "mytsapp",
-      "--path",
-      tmpDir,
-      "--language",
-      "typescript",
-    ]);
+    const result = runCmd(cmdInit, ["mytsapp", "--path", tmpDir, "--language", "typescript"]);
 
     // Should not exit with error
     expect(result.exitCode).toBeUndefined();
@@ -115,10 +101,7 @@ describe("TypeScript E2E workflow", () => {
 
     expect(result.exitCode).toBeUndefined();
 
-    const manifestPath = path.join(
-      tmpDir,
-      "src/compounds/payments/compound.yaml",
-    );
+    const manifestPath = path.join(tmpDir, "src/compounds/payments/compound.yaml");
     expect(fs.existsSync(manifestPath)).toBe(true);
 
     const manifest = parseYaml(fs.readFileSync(manifestPath, "utf-8"));
@@ -127,21 +110,12 @@ describe("TypeScript E2E workflow", () => {
 
   it("step 3: add unit — element", async () => {
     const { cmdAdd } = await import("../../src/commands/add.js");
-    const result = runCmd(cmdAdd, [
-      "unit",
-      "payments",
-      "element",
-      "PaymentId",
-      "--export",
-    ]);
+    const result = runCmd(cmdAdd, ["unit", "payments", "element", "PaymentId", "--export"]);
 
     expect(result.exitCode).toBeUndefined();
 
     // Manifest updated
-    const manifestPath = path.join(
-      tmpDir,
-      "src/compounds/payments/compound.yaml",
-    );
+    const manifestPath = path.join(tmpDir, "src/compounds/payments/compound.yaml");
     const manifest = parseYaml(fs.readFileSync(manifestPath, "utf-8"));
     expect(manifest.units).toHaveLength(1);
     expect(manifest.units[0].role).toBe("element");
@@ -149,10 +123,7 @@ describe("TypeScript E2E workflow", () => {
     expect(manifest.units[0].file).toContain("elements/PaymentId.ts");
 
     // Stub file created
-    const stubPath = path.join(
-      tmpDir,
-      "src/compounds/payments/elements/PaymentId.ts",
-    );
+    const stubPath = path.join(tmpDir, "src/compounds/payments/elements/PaymentId.ts");
     expect(fs.existsSync(stubPath)).toBe(true);
     const content = fs.readFileSync(stubPath, "utf-8");
     expect(content).toContain("export class PaymentId");
@@ -160,20 +131,11 @@ describe("TypeScript E2E workflow", () => {
 
   it("step 4: add unit — molecule", async () => {
     const { cmdAdd } = await import("../../src/commands/add.js");
-    const result = runCmd(cmdAdd, [
-      "unit",
-      "payments",
-      "molecule",
-      "PaymentOrder",
-      "--export",
-    ]);
+    const result = runCmd(cmdAdd, ["unit", "payments", "molecule", "PaymentOrder", "--export"]);
 
     expect(result.exitCode).toBeUndefined();
 
-    const stubPath = path.join(
-      tmpDir,
-      "src/compounds/payments/molecules/PaymentOrder.ts",
-    );
+    const stubPath = path.join(tmpDir, "src/compounds/payments/molecules/PaymentOrder.ts");
     expect(fs.existsSync(stubPath)).toBe(true);
     const content = fs.readFileSync(stubPath, "utf-8");
     expect(content).toContain("export class PaymentOrder");
@@ -181,20 +143,11 @@ describe("TypeScript E2E workflow", () => {
 
   it("step 5: add unit — interface", async () => {
     const { cmdAdd } = await import("../../src/commands/add.js");
-    const result = runCmd(cmdAdd, [
-      "unit",
-      "payments",
-      "interface",
-      "PaymentGateway",
-      "--export",
-    ]);
+    const result = runCmd(cmdAdd, ["unit", "payments", "interface", "PaymentGateway", "--export"]);
 
     expect(result.exitCode).toBeUndefined();
 
-    const stubPath = path.join(
-      tmpDir,
-      "src/compounds/payments/interfaces/PaymentGateway.ts",
-    );
+    const stubPath = path.join(tmpDir, "src/compounds/payments/interfaces/PaymentGateway.ts");
     expect(fs.existsSync(stubPath)).toBe(true);
     const content = fs.readFileSync(stubPath, "utf-8");
     expect(content).toContain("export interface PaymentGateway");
@@ -213,10 +166,7 @@ describe("TypeScript E2E workflow", () => {
 
     expect(result.exitCode).toBeUndefined();
 
-    const stubPath = path.join(
-      tmpDir,
-      "src/compounds/payments/adapters/StripeGateway.ts",
-    );
+    const stubPath = path.join(tmpDir, "src/compounds/payments/adapters/StripeGateway.ts");
     expect(fs.existsSync(stubPath)).toBe(true);
     const content = fs.readFileSync(stubPath, "utf-8");
     expect(content).toContain("export class StripeGateway");
@@ -225,20 +175,11 @@ describe("TypeScript E2E workflow", () => {
 
   it("step 7: add unit — reaction", async () => {
     const { cmdAdd } = await import("../../src/commands/add.js");
-    const result = runCmd(cmdAdd, [
-      "unit",
-      "payments",
-      "reaction",
-      "processPayment",
-      "--export",
-    ]);
+    const result = runCmd(cmdAdd, ["unit", "payments", "reaction", "processPayment", "--export"]);
 
     expect(result.exitCode).toBeUndefined();
 
-    const stubPath = path.join(
-      tmpDir,
-      "src/compounds/payments/reactions/processPayment.ts",
-    );
+    const stubPath = path.join(tmpDir, "src/compounds/payments/reactions/processPayment.ts");
     expect(fs.existsSync(stubPath)).toBe(true);
     const content = fs.readFileSync(stubPath, "utf-8");
     expect(content).toContain("export async function processPayment");
@@ -246,42 +187,23 @@ describe("TypeScript E2E workflow", () => {
 
   it("step 8: add unit — buffer", async () => {
     const { cmdAdd } = await import("../../src/commands/add.js");
-    const result = runCmd(cmdAdd, [
-      "unit",
-      "payments",
-      "buffer",
-      "validatePayment",
-      "--export",
-    ]);
+    const result = runCmd(cmdAdd, ["unit", "payments", "buffer", "validatePayment", "--export"]);
 
     expect(result.exitCode).toBeUndefined();
 
-    const stubPath = path.join(
-      tmpDir,
-      "src/compounds/payments/buffers/validatePayment.ts",
-    );
+    const stubPath = path.join(tmpDir, "src/compounds/payments/buffers/validatePayment.ts");
     expect(fs.existsSync(stubPath)).toBe(true);
     const content = fs.readFileSync(stubPath, "utf-8");
     expect(content).toContain("export function validatePayment");
   });
 
   it("step 9: manifest has all 6 units", () => {
-    const manifestPath = path.join(
-      tmpDir,
-      "src/compounds/payments/compound.yaml",
-    );
+    const manifestPath = path.join(tmpDir, "src/compounds/payments/compound.yaml");
     const manifest = parseYaml(fs.readFileSync(manifestPath, "utf-8"));
     expect(manifest.units).toHaveLength(6);
 
     const roles = manifest.units.map((u: any) => u.role).sort();
-    expect(roles).toEqual([
-      "adapter",
-      "buffer",
-      "element",
-      "interface",
-      "molecule",
-      "reaction",
-    ]);
+    expect(roles).toEqual(["adapter", "buffer", "element", "interface", "molecule", "reaction"]);
   });
 
   it("step 10: scaffold (re-run is a no-op for existing files)", async () => {
@@ -299,22 +221,15 @@ describe("TypeScript E2E workflow", () => {
 
   it("step 11: check passes with no errors", async () => {
     // Create public.ts for the compound to satisfy the check
-    const publicPath = path.join(
-      tmpDir,
-      "src/compounds/payments/public.ts",
-    );
+    const publicPath = path.join(tmpDir, "src/compounds/payments/public.ts");
     if (!fs.existsSync(publicPath)) {
       // Generate via scaffold or write manually
-      const { loadWorkspace, discoverCompounds } = await import(
-        "@chemag/core/loader"
-      );
+      const { loadWorkspace, discoverCompounds } = await import("@chemag/core/loader");
       const { loadPlugin } = await import("../../src/plugin-loader.js");
       const ws = loadWorkspace(path.join(tmpDir, "workspace.yaml"));
       const compounds = discoverCompounds(ws, tmpDir);
       const plugin = loadPlugin({ language: "typescript" });
-      const paymentCompound = compounds.find(
-        (c) => c.manifest.compound === "payments",
-      )!;
+      const paymentCompound = compounds.find((c) => c.manifest.compound === "payments")!;
       const content = plugin.generatePublicSurface(paymentCompound, ws);
       fs.writeFileSync(publicPath, content, "utf-8");
     }
@@ -353,10 +268,7 @@ describe("TypeScript E2E workflow", () => {
 
   it("step 14: CLI help text reflects language-agnostic nature", async () => {
     // Read the cli.ts source to verify help text
-    const cliPath = path.join(
-      path.dirname(new URL(import.meta.url).pathname),
-      "../../src/cli.ts",
-    );
+    const cliPath = path.join(path.dirname(new URL(import.meta.url).pathname), "../../src/cli.ts");
     const cliContent = fs.readFileSync(cliPath, "utf-8");
     expect(cliContent).toContain("chem-ag");
     expect(cliContent).toContain("language-agnostic");

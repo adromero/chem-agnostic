@@ -152,10 +152,7 @@ const CORE_HEADINGS = new Set([
  * Combines language-agnostic core sections with language-specific
  * content from the plugin.
  */
-export function generateClaudeMd(
-  name: string,
-  plugin: LanguagePlugin,
-): string {
+export function generateClaudeMd(name: string, plugin: LanguagePlugin): string {
   const pluginContent = plugin.generateClaudeMd(name);
   const languageSection = extractLanguageSection(pluginContent);
 

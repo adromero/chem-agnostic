@@ -41,17 +41,13 @@ already have one. Existing manifests are never overwritten.
   try {
     ws = loadWorkspace(wsPath);
   } catch (e: unknown) {
-    console.error(
-      `${RED}Failed to load workspace:${R} ${e instanceof Error ? e.message : e}`,
-    );
+    console.error(`${RED}Failed to load workspace:${R} ${e instanceof Error ? e.message : e}`);
     process.exit(2);
   }
 
   const plugin = loadPlugin({ language: ws.language });
 
-  console.log(
-    `\n${BLD}chem sync${R}${dryRun ? ` ${DIM}(dry run)${R}` : ""}\n`,
-  );
+  console.log(`\n${BLD}chem sync${R}${dryRun ? ` ${DIM}(dry run)${R}` : ""}\n`);
   console.log(`${BLD}Workspace:${R} ${ws.workspace}\n`);
 
   const result = syncWorkspace(ws, wsDir, plugin, dryRun);

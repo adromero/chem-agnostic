@@ -61,10 +61,7 @@ function writeWorkspace(language: string): string {
 }
 
 /** Write a compound manifest in the standard location. */
-function writeCompound(
-  name: string,
-  manifest: Record<string, unknown>,
-): string {
+function writeCompound(name: string, manifest: Record<string, unknown>): string {
   const compoundDir = path.join(tmpDir, "src/compounds", name);
   fs.mkdirSync(compoundDir, { recursive: true });
   const manifestPath = path.join(compoundDir, "compound.yaml");
@@ -114,10 +111,7 @@ describe("cmdAdd compound", () => {
 
     await runAdd(["compound", "payments"]);
 
-    const manifestPath = path.join(
-      tmpDir,
-      "src/compounds/payments/compound.yaml",
-    );
+    const manifestPath = path.join(tmpDir, "src/compounds/payments/compound.yaml");
     expect(fs.existsSync(manifestPath)).toBe(true);
 
     const content = fs.readFileSync(manifestPath, "utf-8");
@@ -139,19 +133,13 @@ describe("cmdAdd unit — TypeScript", () => {
     await runAdd(["unit", "reporting", "element", "ReportId"]);
 
     // Check the manifest was updated
-    const manifestPath = path.join(
-      tmpDir,
-      "src/compounds/reporting/compound.yaml",
-    );
+    const manifestPath = path.join(tmpDir, "src/compounds/reporting/compound.yaml");
     const content = fs.readFileSync(manifestPath, "utf-8");
     expect(content).toContain("name: ReportId");
     expect(content).toContain("elements/ReportId.ts");
 
     // Check the stub file was created
-    const stubPath = path.join(
-      tmpDir,
-      "src/compounds/reporting/elements/ReportId.ts",
-    );
+    const stubPath = path.join(tmpDir, "src/compounds/reporting/elements/ReportId.ts");
     expect(fs.existsSync(stubPath)).toBe(true);
   });
 
@@ -167,10 +155,7 @@ describe("cmdAdd unit — TypeScript", () => {
 
     await runAdd(["unit", "reporting", "element", "ReportId", "--export"]);
 
-    const manifestPath = path.join(
-      tmpDir,
-      "src/compounds/reporting/compound.yaml",
-    );
+    const manifestPath = path.join(tmpDir, "src/compounds/reporting/compound.yaml");
     const content = fs.readFileSync(manifestPath, "utf-8");
     expect(content).toContain("elements:");
     expect(content).toContain("ReportId");
@@ -182,25 +167,13 @@ describe("cmdAdd unit — TypeScript", () => {
       compound: "reporting",
       exports: {},
       imports: [],
-      units: [
-        { role: "interface", name: "Repo", file: "./interfaces/Repo.ts" },
-      ],
+      units: [{ role: "interface", name: "Repo", file: "./interfaces/Repo.ts" }],
       assays: [],
     });
 
-    await runAdd([
-      "unit",
-      "reporting",
-      "adapter",
-      "PgRepo",
-      "--implements",
-      "Repo",
-    ]);
+    await runAdd(["unit", "reporting", "adapter", "PgRepo", "--implements", "Repo"]);
 
-    const manifestPath = path.join(
-      tmpDir,
-      "src/compounds/reporting/compound.yaml",
-    );
+    const manifestPath = path.join(tmpDir, "src/compounds/reporting/compound.yaml");
     const content = fs.readFileSync(manifestPath, "utf-8");
     expect(content).toContain("name: PgRepo");
     expect(content).toContain("adapters/PgRepo.ts");
@@ -223,19 +196,13 @@ describe("cmdAdd unit — Python", () => {
     await runAdd(["unit", "reporting", "element", "ReportId"]);
 
     // Check the manifest was updated with .py path
-    const manifestPath = path.join(
-      tmpDir,
-      "src/compounds/reporting/compound.yaml",
-    );
+    const manifestPath = path.join(tmpDir, "src/compounds/reporting/compound.yaml");
     const content = fs.readFileSync(manifestPath, "utf-8");
     expect(content).toContain("name: ReportId");
     expect(content).toContain("elements/report_id.py");
 
     // Check the stub file was created with snake_case name
-    const stubPath = path.join(
-      tmpDir,
-      "src/compounds/reporting/elements/report_id.py",
-    );
+    const stubPath = path.join(tmpDir, "src/compounds/reporting/elements/report_id.py");
     expect(fs.existsSync(stubPath)).toBe(true);
   });
 
@@ -251,10 +218,7 @@ describe("cmdAdd unit — Python", () => {
 
     await runAdd(["unit", "reporting", "reaction", "GenerateReport"]);
 
-    const manifestPath = path.join(
-      tmpDir,
-      "src/compounds/reporting/compound.yaml",
-    );
+    const manifestPath = path.join(tmpDir, "src/compounds/reporting/compound.yaml");
     const content = fs.readFileSync(manifestPath, "utf-8");
     expect(content).toContain("reactions/generate_report.py");
   });
@@ -268,12 +232,7 @@ describe("cmdAdd error cases", () => {
       units: [],
     });
 
-    const { exitCode, stderr } = await runAdd([
-      "unit",
-      "reporting",
-      "unknownrole",
-      "Foo",
-    ]);
+    const { exitCode, stderr } = await runAdd(["unit", "reporting", "unknownrole", "Foo"]);
     expect(exitCode).toBe(2);
     expect(stderr.join("\n")).toContain("Unknown role");
   });
@@ -281,12 +240,7 @@ describe("cmdAdd error cases", () => {
   it("fails for unknown compound", async () => {
     writeWorkspace("typescript");
 
-    const { exitCode, stderr } = await runAdd([
-      "unit",
-      "nonexistent",
-      "element",
-      "Foo",
-    ]);
+    const { exitCode, stderr } = await runAdd(["unit", "nonexistent", "element", "Foo"]);
     expect(exitCode).toBe(2);
     expect(stderr.join("\n")).toContain("not found");
   });
@@ -295,17 +249,10 @@ describe("cmdAdd error cases", () => {
     writeWorkspace("typescript");
     writeCompound("reporting", {
       compound: "reporting",
-      units: [
-        { role: "element", name: "ReportId", file: "./elements/ReportId.ts" },
-      ],
+      units: [{ role: "element", name: "ReportId", file: "./elements/ReportId.ts" }],
     });
 
-    const { exitCode, stderr } = await runAdd([
-      "unit",
-      "reporting",
-      "element",
-      "ReportId",
-    ]);
+    const { exitCode, stderr } = await runAdd(["unit", "reporting", "element", "ReportId"]);
     expect(exitCode).toBe(1);
     expect(stderr.join("\n")).toContain("already exists");
   });

@@ -25,10 +25,7 @@ export function checkImports(
   for (const c of compounds) compoundMap.set(c.manifest.compound, c);
 
   // Map absolute file path -> { compound name, unit name, role }
-  const fileIndex = new Map<
-    string,
-    { compound: string; unit: string; role: string }
-  >();
+  const fileIndex = new Map<string, { compound: string; unit: string; role: string }>();
   for (const c of compounds) {
     for (const u of c.manifest.units ?? []) {
       const abs = path.resolve(c.dir, u.file);
@@ -103,12 +100,10 @@ export function checkImports(
 
       // --- Check 2: Cross-compound import rules ---
       if (targetCompound !== srcCompound.manifest.compound) {
-        const crossRule =
-          workspace.rules?.cross_compound_imports ?? "public_only";
+        const crossRule = workspace.rules?.cross_compound_imports ?? "public_only";
 
         if (crossRule === "public_only") {
-          const surfaceFile =
-            workspace.rules?.public_surface ?? plugin.defaults.publicSurface;
+          const surfaceFile = workspace.rules?.public_surface ?? plugin.defaults.publicSurface;
           const targetC = compoundMap.get(targetCompound);
 
           if (targetC) {

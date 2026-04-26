@@ -10,28 +10,14 @@
     "chemag": "./bin/chem-ag",
     "chem-ag": "./bin/chem-ag"
   },
-  "files": [
-    "bin",
-    "dist/**/*.js",
-    "dist/**/*.d.ts",
-    "dist/**/*.d.ts.map",
-    "dist/**/*.js.map"
-  ],
+  "files": ["bin", "dist/**/*.js", "dist/**/*.d.ts", "dist/**/*.d.ts.map", "dist/**/*.js.map"],
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
     "prepublishOnly": "pnpm run build"
   },
-  "keywords": [
-    "architecture",
-    "chem",
-    "chemag",
-    "analyzer",
-    "typescript",
-    "python",
-    "scaffolding"
-  ],
+  "keywords": ["architecture", "chem", "chemag", "analyzer", "typescript", "python", "scaffolding"],
   "dependencies": {
     "@chemag/core": "workspace:*",
     "@chemag/plugin-python": "workspace:*",

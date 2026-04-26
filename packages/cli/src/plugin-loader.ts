@@ -24,7 +24,7 @@ export function loadPlugin(options: LoadPluginOptions): LanguagePlugin {
   if (language === undefined) {
     console.error(
       "DEPRECATION WARNING: No language specified, defaulting to TypeScript. " +
-        "Pass { language: \"typescript\" } explicitly.",
+        'Pass { language: "typescript" } explicitly.',
     );
     return typescriptPlugin;
   }

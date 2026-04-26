@@ -132,27 +132,37 @@ ${BLD}Options:${R}
 
   // Summary
   if (json) {
-    console.log(JSON.stringify({
-      workspace: ws.workspace,
-      compounds: compounds.length,
-      units: totalUnits,
-      assays: totalAssays,
-      errors: totalErrors,
-      warnings: totalWarnings,
-      checks: results.map(({ check, diagnostics }) => ({
-        check,
-        passed: diagnostics.filter((d) => d.level === "error").length === 0,
-        diagnostics,
-      })),
-    }, null, 2));
+    console.log(
+      JSON.stringify(
+        {
+          workspace: ws.workspace,
+          compounds: compounds.length,
+          units: totalUnits,
+          assays: totalAssays,
+          errors: totalErrors,
+          warnings: totalWarnings,
+          checks: results.map(({ check, diagnostics }) => ({
+            check,
+            passed: diagnostics.filter((d) => d.level === "error").length === 0,
+            diagnostics,
+          })),
+        },
+        null,
+        2,
+      ),
+    );
   } else {
     console.log();
     if (totalErrors === 0) {
-      const w = totalWarnings ? ` ${YEL}(${totalWarnings} warning${totalWarnings !== 1 ? "s" : ""})${R}` : "";
+      const w = totalWarnings
+        ? ` ${YEL}(${totalWarnings} warning${totalWarnings !== 1 ? "s" : ""})${R}`
+        : "";
       console.log(`${GRN}${BLD}All ${passed} checks passed${R}${w}\n`);
     } else {
       const w = totalWarnings ? `, ${totalWarnings} warning${totalWarnings !== 1 ? "s" : ""}` : "";
-      console.log(`${RED}${BLD}${failed} check${failed !== 1 ? "s" : ""} failed${R} \u2014 ${totalErrors} error${totalErrors !== 1 ? "s" : ""}${w} | ${GRN}${passed} passed${R}\n`);
+      console.log(
+        `${RED}${BLD}${failed} check${failed !== 1 ? "s" : ""} failed${R} \u2014 ${totalErrors} error${totalErrors !== 1 ? "s" : ""}${w} | ${GRN}${passed} passed${R}\n`,
+      );
     }
   }
 

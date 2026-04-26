@@ -26,10 +26,7 @@ export function toSnakeCase(name: string): string {
 // Unit stub generation
 // ---------------------------------------------------------------------------
 
-export function generateUnitStub(
-  unit: UnitDeclaration,
-  _imports: ResolvedImport[],
-): string {
+export function generateUnitStub(unit: UnitDeclaration, _imports: ResolvedImport[]): string {
   switch (unit.role) {
     case "element":
       return generateElementStub(unit);
@@ -115,8 +112,7 @@ class ${unit.name}(ABC):
 }
 
 function generateAdapterStub(unit: UnitDeclaration): string {
-  const implementsName =
-    unit.implements && unit.implements.length > 0 ? unit.implements[0] : null;
+  const implementsName = unit.implements && unit.implements.length > 0 ? unit.implements[0] : null;
   const baseClass = implementsName ?? "object";
   const docstring = implementsName
     ? `"""Implements: ${implementsName}"""`
@@ -171,19 +167,13 @@ def ${funcName}(
 // Public surface generation (__init__.py)
 // ---------------------------------------------------------------------------
 
-export function generatePublicSurface(
-  compound: LoadedCompound,
-  workspace: Workspace,
-): string {
+export function generatePublicSurface(compound: LoadedCompound, workspace: Workspace): string {
   const exports = compound.manifest.exports;
   if (!exports || Object.keys(exports).length === 0) {
     return `"""${compound.manifest.compound} — public surface."""\n`;
   }
 
-  const lines: string[] = [
-    `"""${compound.manifest.compound} — public surface."""`,
-    "",
-  ];
+  const lines: string[] = [`"""${compound.manifest.compound} — public surface."""`, ""];
 
   const roles = workspace.roles;
 
@@ -203,14 +193,9 @@ export function generatePublicSurface(
 // Assay (test) stub generation
 // ---------------------------------------------------------------------------
 
-export function generateAssayStub(
-  assay: AssayDeclaration,
-  compound: LoadedCompound,
-): string {
+export function generateAssayStub(assay: AssayDeclaration, compound: LoadedCompound): string {
   const compoundName = compound.manifest.compound;
-  const subjectImports = (assay.subjects ?? [])
-    .map((s) => `    ${s},`)
-    .join("\n");
+  const subjectImports = (assay.subjects ?? []).map((s) => `    ${s},`).join("\n");
 
   const importBlock =
     assay.subjects && assay.subjects.length > 0
@@ -235,11 +220,7 @@ ${importBlock}${testFunctions || `\ndef test_placeholder() -> None:\n    """TODO
 // Import formatting
 // ---------------------------------------------------------------------------
 
-export function formatImportStatement(
-  from: string,
-  to: string,
-  isTypeOnly: boolean,
-): string {
+export function formatImportStatement(from: string, to: string, isTypeOnly: boolean): string {
   if (isTypeOnly) {
     return `from typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n    from ${from} import ${to}`;
   }
@@ -250,11 +231,7 @@ export function formatImportStatement(
 // Unit inference
 // ---------------------------------------------------------------------------
 
-export function inferUnits(
-  dir: string,
-  roleFolder: string,
-  role: string,
-): InferredUnit[] {
+export function inferUnits(dir: string, roleFolder: string, role: string): InferredUnit[] {
   const fullDir = path.join(dir, roleFolder);
   let entries: string[];
   try {

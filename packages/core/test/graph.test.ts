@@ -22,10 +22,7 @@ function minWs(): Workspace {
   };
 }
 
-function lc(
-  name: string,
-  overrides?: Partial<LoadedCompound["manifest"]>,
-): LoadedCompound {
+function lc(name: string, overrides?: Partial<LoadedCompound["manifest"]>): LoadedCompound {
   return {
     dir: `/tmp/${name}`,
     manifest: { compound: name, units: [], ...overrides },
@@ -39,10 +36,7 @@ describe("generateMermaid", () => {
   });
 
   it("renders import edges", () => {
-    const output = generateMermaid(minWs(), [
-      lc("a", { imports: [{ compound: "b" }] }),
-      lc("b"),
-    ]);
+    const output = generateMermaid(minWs(), [lc("a", { imports: [{ compound: "b" }] }), lc("b")]);
     expect(output).toContain("a --> b");
   });
 
@@ -65,9 +59,7 @@ describe("generateMermaid", () => {
     const output = generateMermaid(minWs(), [
       lc("root", {
         type: "catalyst",
-        wiring: [
-          { interface: "Repo", adapter: "PgRepo", compound: "a" },
-        ],
+        wiring: [{ interface: "Repo", adapter: "PgRepo", compound: "a" }],
       }),
       lc("a"),
     ]);
@@ -75,11 +67,8 @@ describe("generateMermaid", () => {
   });
 
   it("groups by compound type in subgraphs", () => {
-    const output = generateMermaid(minWs(), [
-      lc("shared", { type: "reagent" }),
-      lc("feature"),
-    ]);
-    expect(output).toContain('subgraph reagents');
-    expect(output).toContain('subgraph compounds');
+    const output = generateMermaid(minWs(), [lc("shared", { type: "reagent" }), lc("feature")]);
+    expect(output).toContain("subgraph reagents");
+    expect(output).toContain("subgraph compounds");
   });
 });

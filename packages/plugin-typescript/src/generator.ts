@@ -16,11 +16,7 @@ import type {
 /**
  * Format a TypeScript import statement.
  */
-export function formatImportStatement(
-  from: string,
-  to: string,
-  isTypeOnly: boolean,
-): string {
+export function formatImportStatement(from: string, to: string, isTypeOnly: boolean): string {
   const kw = isTypeOnly ? "import type" : "import";
   return `${kw} { ${from} } from "${to}";`;
 }
@@ -46,10 +42,7 @@ function renderImportLines(imports: ResolvedImport[]): string {
 /**
  * Generate a role-specific TypeScript stub for a unit declaration.
  */
-export function generateUnitStub(
-  unit: UnitDeclaration,
-  imports: ResolvedImport[],
-): string {
+export function generateUnitStub(unit: UnitDeclaration, imports: ResolvedImport[]): string {
   const head = renderImportLines(imports);
 
   switch (unit.role) {
@@ -77,20 +70,12 @@ export function generateUnitStub(
       );
 
     case "interface":
-      return (
-        `${head}export interface ${unit.name} {\n` +
-        `  // TODO: define methods\n` +
-        `}\n`
-      );
+      return `${head}export interface ${unit.name} {\n` + `  // TODO: define methods\n` + `}\n`;
 
     case "adapter": {
       const impl = (unit.implements ?? []).join(", ");
       const clause = impl ? ` implements ${impl}` : "";
-      return (
-        `${head}export class ${unit.name}${clause} {\n` +
-        `  // TODO: implement\n` +
-        `}\n`
-      );
+      return `${head}export class ${unit.name}${clause} {\n` + `  // TODO: implement\n` + `}\n`;
     }
 
     case "buffer":
@@ -116,10 +101,7 @@ export function generateUnitStub(
  * Generate the public surface module (re-exports) for a compound.
  * Uses `export type` for interfaces.
  */
-export function generatePublicSurface(
-  compound: LoadedCompound,
-  _workspace: Workspace,
-): string {
+export function generatePublicSurface(compound: LoadedCompound, _workspace: Workspace): string {
   if (!compound.manifest.exports) return "";
 
   const lines: string[] = [];
@@ -129,9 +111,7 @@ export function generatePublicSurface(
     const role = roleKey.replace(/s$/, "");
 
     for (const name of names) {
-      const unit = (compound.manifest.units ?? []).find(
-        (u) => u.name === name,
-      );
+      const unit = (compound.manifest.units ?? []).find((u) => u.name === name);
       if (!unit) continue;
 
       let rel = unit.file.replace(/\.ts$/, "").replace(/\\/g, "/");
@@ -152,18 +132,13 @@ export function generatePublicSurface(
 /**
  * Generate a stub test file for a compound assay.
  */
-export function generateAssayStub(
-  assay: AssayDeclaration,
-  compound: LoadedCompound,
-): string {
+export function generateAssayStub(assay: AssayDeclaration, compound: LoadedCompound): string {
   const assayAbs = path.resolve(compound.dir, assay.file);
   const assayDir = path.dirname(assayAbs);
 
   const importLines: string[] = [];
   for (const subject of assay.subjects ?? []) {
-    const unit = (compound.manifest.units ?? []).find(
-      (u) => u.name === subject,
-    );
+    const unit = (compound.manifest.units ?? []).find((u) => u.name === subject);
     if (!unit) continue;
 
     const unitAbs = path.resolve(compound.dir, unit.file);
@@ -174,11 +149,7 @@ export function generateAssayStub(
   const head = importLines.length > 0 ? importLines.join("\n") + "\n\n" : "";
   const label = (assay.subjects ?? []).join(", ") || assay.name;
 
-  return (
-    `${head}describe("${label}", () => {\n` +
-    `  it.todo("should work");\n` +
-    `});\n`
-  );
+  return `${head}describe("${label}", () => {\n` + `  it.todo("should work");\n` + `});\n`;
 }
 
 // ---------------------------------------------------------------------------
@@ -190,10 +161,7 @@ export function generateAssayStub(
  * Strips .ts extension for TypeScript module specifiers.
  */
 export function formatRelativeImport(fromDir: string, toFile: string): string {
-  let rel = path
-    .relative(fromDir, toFile)
-    .replace(/\\/g, "/")
-    .replace(/\.ts$/, "");
+  let rel = path.relative(fromDir, toFile).replace(/\\/g, "/").replace(/\.ts$/, "");
   if (!rel.startsWith(".")) rel = "./" + rel;
   return rel;
 }
@@ -205,23 +173,21 @@ export function formatRelativeImport(fromDir: string, toFile: string): string {
 /**
  * Scan a role directory for TypeScript files and infer unit declarations.
  */
-export function inferUnits(
-  dir: string,
-  roleFolder: string,
-  role: string,
-): InferredUnit[] {
+export function inferUnits(dir: string, roleFolder: string, role: string): InferredUnit[] {
   const roleDir = path.join(dir, roleFolder);
   if (!fs.existsSync(roleDir)) return [];
 
   let files: string[];
   try {
-    files = fs.readdirSync(roleDir).filter(
-      (f) =>
-        f.endsWith(".ts") &&
-        !f.endsWith(".test.ts") &&
-        !f.endsWith(".spec.ts") &&
-        !f.endsWith(".d.ts"),
-    );
+    files = fs
+      .readdirSync(roleDir)
+      .filter(
+        (f) =>
+          f.endsWith(".ts") &&
+          !f.endsWith(".test.ts") &&
+          !f.endsWith(".spec.ts") &&
+          !f.endsWith(".d.ts"),
+      );
   } catch {
     return [];
   }
@@ -279,8 +245,7 @@ function inferExports(filePath: string): string[] {
   try {
     const content = fs.readFileSync(filePath, "utf-8");
     const names: string[] = [];
-    const exportPattern =
-      /export\s+(?:class|interface|function|const|type|enum)\s+(\w+)/g;
+    const exportPattern = /export\s+(?:class|interface|function|const|type|enum)\s+(\w+)/g;
     let match: RegExpExecArray | null;
     while ((match = exportPattern.exec(content)) !== null) {
       names.push(match[1]);

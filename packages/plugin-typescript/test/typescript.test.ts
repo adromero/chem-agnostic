@@ -4,11 +4,7 @@ import * as path from "node:path";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 
 import { typescriptPlugin } from "../src/index.js";
-import {
-  parseImports,
-  parseImportsBatch,
-  resolveModulePath,
-} from "../src/parser.js";
+import { parseImports, parseImportsBatch, resolveModulePath } from "../src/parser.js";
 import {
   generateUnitStub,
   generatePublicSurface,
@@ -71,14 +67,22 @@ describe("generateUnitStub", () => {
   });
 
   it("generates reaction stub", () => {
-    const unit: UnitDeclaration = { role: "reaction", name: "createOrder", file: "./reactions/createOrder.ts" };
+    const unit: UnitDeclaration = {
+      role: "reaction",
+      name: "createOrder",
+      file: "./reactions/createOrder.ts",
+    };
     const code = generateUnitStub(unit, noImports);
     expect(code).toContain("export async function createOrder");
     expect(code).toContain("Promise<void>");
   });
 
   it("generates interface stub", () => {
-    const unit: UnitDeclaration = { role: "interface", name: "OrderRepo", file: "./interfaces/OrderRepo.ts" };
+    const unit: UnitDeclaration = {
+      role: "interface",
+      name: "OrderRepo",
+      file: "./interfaces/OrderRepo.ts",
+    };
     const code = generateUnitStub(unit, noImports);
     expect(code).toContain("export interface OrderRepo");
   });
@@ -106,7 +110,11 @@ describe("generateUnitStub", () => {
   });
 
   it("generates buffer stub", () => {
-    const unit: UnitDeclaration = { role: "buffer", name: "authGuard", file: "./buffers/authGuard.ts" };
+    const unit: UnitDeclaration = {
+      role: "buffer",
+      name: "authGuard",
+      file: "./buffers/authGuard.ts",
+    };
     const code = generateUnitStub(unit, noImports);
     expect(code).toContain("export function authGuard");
     expect(code).toContain("next: () => Promise<void>");
@@ -121,9 +129,18 @@ describe("generateUnitStub", () => {
   });
 
   it("includes imports when provided", () => {
-    const unit: UnitDeclaration = { role: "reaction", name: "doWork", file: "./reactions/doWork.ts" };
+    const unit: UnitDeclaration = {
+      role: "reaction",
+      name: "doWork",
+      file: "./reactions/doWork.ts",
+    };
     const imports: ResolvedImport[] = [
-      { fromCompound: "../interfaces/Logger", fromUnit: "Logger", names: ["Logger"], isTypeOnly: true },
+      {
+        fromCompound: "../interfaces/Logger",
+        fromUnit: "Logger",
+        names: ["Logger"],
+        isTypeOnly: true,
+      },
     ];
     const code = generateUnitStub(unit, imports);
     expect(code).toContain("import type { Logger }");
@@ -359,8 +376,14 @@ describe("inferImplements", () => {
 
 describe("inferUnits", () => {
   it("infers units from role directory", () => {
-    writeTemp("compound/elements/UserId.ts", `export class UserId { constructor(readonly value: string) {} }\n`);
-    writeTemp("compound/elements/Email.ts", `export class Email { constructor(readonly value: string) {} }\n`);
+    writeTemp(
+      "compound/elements/UserId.ts",
+      `export class UserId { constructor(readonly value: string) {} }\n`,
+    );
+    writeTemp(
+      "compound/elements/Email.ts",
+      `export class Email { constructor(readonly value: string) {} }\n`,
+    );
 
     const units = inferUnits(path.join(tmpDir, "compound"), "elements", "element");
     expect(units).toHaveLength(2);
@@ -515,9 +538,7 @@ describe("generateAssayStub", () => {
       dir: "/fake/compounds/orders",
       manifest: {
         compound: "orders",
-        units: [
-          { role: "reaction", name: "createOrder", file: "./reactions/createOrder.ts" },
-        ],
+        units: [{ role: "reaction", name: "createOrder", file: "./reactions/createOrder.ts" }],
       },
     };
     const result = generateAssayStub(assay, compound);

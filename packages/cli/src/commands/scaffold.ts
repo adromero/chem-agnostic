@@ -37,9 +37,7 @@ ${BLD}Options:${R}
   try {
     ws = loadWorkspace(wsPath);
   } catch (e: unknown) {
-    console.error(
-      `${RED}Failed to load workspace:${R} ${e instanceof Error ? e.message : e}`,
-    );
+    console.error(`${RED}Failed to load workspace:${R} ${e instanceof Error ? e.message : e}`);
     process.exit(2);
   }
 
@@ -49,15 +47,11 @@ ${BLD}Options:${R}
   try {
     compounds = discoverCompounds(ws, wsDir);
   } catch (e: unknown) {
-    console.error(
-      `${RED}Failed to discover compounds:${R} ${e instanceof Error ? e.message : e}`,
-    );
+    console.error(`${RED}Failed to discover compounds:${R} ${e instanceof Error ? e.message : e}`);
     process.exit(2);
   }
 
-  console.log(
-    `\n${BLD}chem scaffold${R}${dryRun ? ` ${DIM}(dry run)${R}` : ""}\n`,
-  );
+  console.log(`\n${BLD}chem scaffold${R}${dryRun ? ` ${DIM}(dry run)${R}` : ""}\n`);
   console.log(`${BLD}Workspace:${R} ${ws.workspace}`);
   console.log();
 

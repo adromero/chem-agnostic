@@ -200,9 +200,7 @@ function parsePythonImports(source: string): ParsedImport[] {
  * Parse imports from multiple Python files without shelling out to Python.
  * This avoids Node->Python subprocess issues in restricted environments.
  */
-export function parseImportsBatch(
-  filePaths: string[],
-): Map<string, ParsedImport[]> {
+export function parseImportsBatch(filePaths: string[]): Map<string, ParsedImport[]> {
   const result = new Map<string, ParsedImport[]>();
   if (filePaths.length === 0) return result;
 

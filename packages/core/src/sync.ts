@@ -17,24 +17,17 @@ export function syncWorkspace(
 ): SyncResult {
   const created: string[] = [];
   const skipped: string[] = [];
-  const manifestFilename =
-    workspace.rules?.manifest_filename ?? "compound.yaml";
+  const manifestFilename = workspace.rules?.manifest_filename ?? "compound.yaml";
 
   // Directories to scan: [dir, compoundType]
   const scanDirs: [string, string][] = [
     [path.resolve(workspaceDir, workspace.paths.compounds), "compound"],
   ];
   if (workspace.paths.reagents) {
-    scanDirs.push([
-      path.resolve(workspaceDir, workspace.paths.reagents),
-      "reagent",
-    ]);
+    scanDirs.push([path.resolve(workspaceDir, workspace.paths.reagents), "reagent"]);
   }
   if (workspace.paths.solvents) {
-    scanDirs.push([
-      path.resolve(workspaceDir, workspace.paths.solvents),
-      "solvent",
-    ]);
+    scanDirs.push([path.resolve(workspaceDir, workspace.paths.solvents), "solvent"]);
   }
 
   for (const [baseDir, compoundType] of scanDirs) {
@@ -53,21 +46,11 @@ export function syncWorkspace(
       }
 
       // No manifest — infer one from the directory contents
-      const manifest = inferCompound(
-        entry.name,
-        compoundType,
-        compoundDir,
-        workspace,
-        plugin,
-      );
+      const manifest = inferCompound(entry.name, compoundType, compoundDir, workspace, plugin);
 
       if (manifest.units && manifest.units.length > 0) {
         if (!dryRun) {
-          fs.writeFileSync(
-            manifestPath,
-            stringify(manifest, { lineWidth: 100 }),
-            "utf-8",
-          );
+          fs.writeFileSync(manifestPath, stringify(manifest, { lineWidth: 100 }), "utf-8");
         }
         created.push(manifestPath);
       }
@@ -99,9 +82,7 @@ function inferCompound(
     if (!fs.existsSync(roleDir)) continue;
 
     // Use plugin.isSourceFile to filter source files (language-aware)
-    const files = fs.readdirSync(roleDir).filter((f) =>
-      plugin.isSourceFile(f),
-    );
+    const files = fs.readdirSync(roleDir).filter((f) => plugin.isSourceFile(f));
 
     for (const file of files) {
       // Strip the first matching extension to get the unit name
@@ -141,9 +122,7 @@ function inferCompound(
   const assays: NonNullable<Compound["assays"]> = [];
   const assayDir = path.join(dir, "assays");
   if (fs.existsSync(assayDir)) {
-    const files = fs.readdirSync(assayDir).filter((f) =>
-      plugin.defaults.testFilePattern.test(f),
-    );
+    const files = fs.readdirSync(assayDir).filter((f) => plugin.defaults.testFilePattern.test(f));
     for (const file of files) {
       // Strip extension for assay name
       let assayName = file;

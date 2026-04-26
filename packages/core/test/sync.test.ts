@@ -47,19 +47,12 @@ describe("syncWorkspace", () => {
     const compoundDir = path.join(tmpDir, "compounds", "billing");
     const elemDir = path.join(compoundDir, "elements");
     fs.mkdirSync(elemDir, { recursive: true });
-    fs.writeFileSync(
-      path.join(elemDir, "InvoiceId.ts"),
-      "export class InvoiceId {}",
-      "utf-8",
-    );
+    fs.writeFileSync(path.join(elemDir, "InvoiceId.ts"), "export class InvoiceId {}", "utf-8");
 
     const result = syncWorkspace(minWs(), tmpDir, plugin, false);
     expect(result.created).toHaveLength(1);
 
-    const manifest = fs.readFileSync(
-      path.join(compoundDir, "compound.yaml"),
-      "utf-8",
-    );
+    const manifest = fs.readFileSync(path.join(compoundDir, "compound.yaml"), "utf-8");
     expect(manifest).toContain("compound: billing");
     expect(manifest).toContain("name: InvoiceId");
     expect(manifest).toContain("role: element");
@@ -83,17 +76,11 @@ describe("syncWorkspace", () => {
     const compoundDir = path.join(tmpDir, "compounds", "billing");
     const elemDir = path.join(compoundDir, "elements");
     fs.mkdirSync(elemDir, { recursive: true });
-    fs.writeFileSync(
-      path.join(elemDir, "InvoiceId.ts"),
-      "export class InvoiceId {}",
-      "utf-8",
-    );
+    fs.writeFileSync(path.join(elemDir, "InvoiceId.ts"), "export class InvoiceId {}", "utf-8");
 
     const result = syncWorkspace(minWs(), tmpDir, plugin, true);
     expect(result.created).toHaveLength(1);
-    expect(
-      fs.existsSync(path.join(compoundDir, "compound.yaml")),
-    ).toBe(false);
+    expect(fs.existsSync(path.join(compoundDir, "compound.yaml"))).toBe(false);
   });
 
   it("infers implements from adapter class", () => {
@@ -114,10 +101,7 @@ describe("syncWorkspace", () => {
     );
 
     syncWorkspace(minWs(), tmpDir, plugin, false);
-    const manifest = fs.readFileSync(
-      path.join(compoundDir, "compound.yaml"),
-      "utf-8",
-    );
+    const manifest = fs.readFileSync(path.join(compoundDir, "compound.yaml"), "utf-8");
     expect(manifest).toContain("PaymentGateway");
     expect(manifest).toContain("implements");
   });
@@ -126,22 +110,11 @@ describe("syncWorkspace", () => {
     const compoundDir = path.join(tmpDir, "compounds", "billing");
     const elemDir = path.join(compoundDir, "elements");
     fs.mkdirSync(elemDir, { recursive: true });
-    fs.writeFileSync(
-      path.join(elemDir, "InvoiceId.ts"),
-      "export class InvoiceId {}",
-      "utf-8",
-    );
-    fs.writeFileSync(
-      path.join(elemDir, "InvoiceId.test.ts"),
-      "test",
-      "utf-8",
-    );
+    fs.writeFileSync(path.join(elemDir, "InvoiceId.ts"), "export class InvoiceId {}", "utf-8");
+    fs.writeFileSync(path.join(elemDir, "InvoiceId.test.ts"), "test", "utf-8");
 
     syncWorkspace(minWs(), tmpDir, plugin, false);
-    const manifest = fs.readFileSync(
-      path.join(compoundDir, "compound.yaml"),
-      "utf-8",
-    );
+    const manifest = fs.readFileSync(path.join(compoundDir, "compound.yaml"), "utf-8");
     // Should have InvoiceId but not InvoiceId.test
     expect(manifest).toContain("name: InvoiceId");
     expect(manifest).not.toContain("InvoiceId.test");

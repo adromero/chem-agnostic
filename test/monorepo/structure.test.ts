@@ -47,27 +47,16 @@ describe("monorepo structure", () => {
   });
 
   describe("packages/", () => {
-    const pkgs = [
-      "cli",
-      "core",
-      "plugin-typescript",
-      "plugin-python",
-      "telemetry",
-    ];
-    it.each(pkgs.map((p) => [p]))(
-      "package %s has package.json + tsconfig.json + src/",
-      (pkg) => {
-        expect(existsSync(abs(`packages/${pkg}/package.json`))).toBe(true);
-        expect(existsSync(abs(`packages/${pkg}/tsconfig.json`))).toBe(true);
-        expect(existsSync(abs(`packages/${pkg}/src`))).toBe(true);
-      },
-    );
+    const pkgs = ["cli", "core", "plugin-typescript", "plugin-python", "telemetry"];
+    it.each(pkgs.map((p) => [p]))("package %s has package.json + tsconfig.json + src/", (pkg) => {
+      expect(existsSync(abs(`packages/${pkg}/package.json`))).toBe(true);
+      expect(existsSync(abs(`packages/${pkg}/tsconfig.json`))).toBe(true);
+      expect(existsSync(abs(`packages/${pkg}/src`))).toBe(true);
+    });
 
     it("CLI package owns the bin shim and exposes both names", () => {
       expect(existsSync(abs("packages/cli/bin/chem-ag"))).toBe(true);
-      const pkg = JSON.parse(
-        readFileSync(abs("packages/cli/package.json"), "utf-8"),
-      );
+      const pkg = JSON.parse(readFileSync(abs("packages/cli/package.json"), "utf-8"));
       expect(pkg.name).toBe("@chemag/cli");
       expect(pkg.bin).toBeDefined();
       expect(pkg.bin.chemag).toBeDefined();
@@ -76,9 +65,7 @@ describe("monorepo structure", () => {
     });
 
     it("core package exposes typed subpath exports", () => {
-      const pkg = JSON.parse(
-        readFileSync(abs("packages/core/package.json"), "utf-8"),
-      );
+      const pkg = JSON.parse(readFileSync(abs("packages/core/package.json"), "utf-8"));
       expect(pkg.name).toBe("@chemag/core");
       expect(pkg.exports).toMatchObject({
         ".": expect.any(Object),
@@ -102,10 +89,7 @@ describe("monorepo structure", () => {
     });
 
     it("plugin-python package.json does not list parse_imports.py", () => {
-      const raw = readFileSync(
-        abs("packages/plugin-python/package.json"),
-        "utf-8",
-      );
+      const raw = readFileSync(abs("packages/plugin-python/package.json"), "utf-8");
       expect(raw).not.toContain("parse_imports.py");
     });
 

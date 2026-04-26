@@ -17,14 +17,16 @@ const hasPython = (() => {
   }
 })();
 
-const canNodeSpawnPython = hasPython && (() => {
-  try {
-    execFileSync("python3", ["-c", "print('ok')"], { encoding: "utf-8", timeout: 5_000 });
-    return true;
-  } catch {
-    return false;
-  }
-})();
+const canNodeSpawnPython =
+  hasPython &&
+  (() => {
+    try {
+      execFileSync("python3", ["-c", "print('ok')"], { encoding: "utf-8", timeout: 5_000 });
+      return true;
+    } catch {
+      return false;
+    }
+  })();
 
 const describeIfPython = canNodeSpawnPython ? describe : describe.skip;
 
@@ -96,12 +98,10 @@ describe("pythonPlugin basics", () => {
   });
 
   it("unitFilePath produces snake_case .py path", () => {
-    expect(pythonPlugin.unitFilePath("element", "UserId", "elements")).toBe(
-      "elements/user_id.py",
+    expect(pythonPlugin.unitFilePath("element", "UserId", "elements")).toBe("elements/user_id.py");
+    expect(pythonPlugin.unitFilePath("molecule", "UserProfile", "molecules")).toBe(
+      "molecules/user_profile.py",
     );
-    expect(
-      pythonPlugin.unitFilePath("molecule", "UserProfile", "molecules"),
-    ).toBe("molecules/user_profile.py");
   });
 });
 
@@ -110,14 +110,7 @@ describe("pythonPlugin basics", () => {
 // ---------------------------------------------------------------------------
 
 describeIfPython("generateUnitStub", () => {
-  const roles = [
-    "element",
-    "molecule",
-    "reaction",
-    "interface",
-    "adapter",
-    "buffer",
-  ] as const;
+  const roles = ["element", "molecule", "reaction", "interface", "adapter", "buffer"] as const;
 
   for (const role of roles) {
     it(`generates syntactically valid Python for role: ${role}`, () => {
@@ -174,10 +167,7 @@ describeIfPython("parseImports", () => {
   }
 
   it("parses 'import X'", () => {
-    const fp = writePy(
-      "import_x.py",
-      `import os\nimport sys\n`,
-    );
+    const fp = writePy("import_x.py", `import os\nimport sys\n`);
     const imports = pythonPlugin.parseImports(fp);
     expect(imports).toHaveLength(2);
     expect(imports[0]).toMatchObject({
@@ -193,10 +183,7 @@ describeIfPython("parseImports", () => {
   });
 
   it("parses 'from X import Y'", () => {
-    const fp = writePy(
-      "from_x.py",
-      `from os.path import join, exists\n`,
-    );
+    const fp = writePy("from_x.py", `from os.path import join, exists\n`);
     const imports = pythonPlugin.parseImports(fp);
     expect(imports).toHaveLength(1);
     expect(imports[0]).toMatchObject({
@@ -207,10 +194,7 @@ describeIfPython("parseImports", () => {
   });
 
   it("parses 'from . import Z' (relative)", () => {
-    const fp = writePy(
-      "rel_import.py",
-      `from . import sibling\n`,
-    );
+    const fp = writePy("rel_import.py", `from . import sibling\n`);
     const imports = pythonPlugin.parseImports(fp);
     expect(imports).toHaveLength(1);
     expect(imports[0]).toMatchObject({
@@ -221,10 +205,7 @@ describeIfPython("parseImports", () => {
   });
 
   it("parses 'from ..pkg import W' (double-dot relative)", () => {
-    const fp = writePy(
-      "rel_import2.py",
-      `from ..pkg import Widget\n`,
-    );
+    const fp = writePy("rel_import2.py", `from ..pkg import Widget\n`);
     const imports = pythonPlugin.parseImports(fp);
     expect(imports).toHaveLength(1);
     expect(imports[0]).toMatchObject({
@@ -249,9 +230,7 @@ import os
     // First import: typing.TYPE_CHECKING itself
     // Second: User under TYPE_CHECKING guard -> isTypeOnly
     // Third: os -> not type-only
-    const userImport = imports.find(
-      (i) => i.moduleSpecifier === ".models",
-    );
+    const userImport = imports.find((i) => i.moduleSpecifier === ".models");
     expect(userImport).toBeDefined();
     expect(userImport!.isTypeOnly).toBe(true);
 
@@ -261,20 +240,14 @@ import os
   });
 
   it("skips from __future__ import", () => {
-    const fp = writePy(
-      "future.py",
-      `from __future__ import annotations\nimport os\n`,
-    );
+    const fp = writePy("future.py", `from __future__ import annotations\nimport os\n`);
     const imports = pythonPlugin.parseImports(fp);
     expect(imports).toHaveLength(1);
     expect(imports[0]!.moduleSpecifier).toBe("os");
   });
 
   it("handles files with syntax errors gracefully", () => {
-    const fp = writePy(
-      "bad_syntax.py",
-      `def foo(\n`,
-    );
+    const fp = writePy("bad_syntax.py", `def foo(\n`);
     // Should not throw, just return empty imports for that file
     const imports = pythonPlugin.parseImports(fp);
     expect(imports).toEqual([]);
@@ -344,15 +317,9 @@ describe("generatePublicSurface", () => {
     };
 
     const result = pythonPlugin.generatePublicSurface(compound, workspace);
-    expect(result).toContain(
-      "from .elements.order_id import OrderId",
-    );
-    expect(result).toContain(
-      "from .molecules.order import Order",
-    );
-    expect(result).toContain(
-      "from .reactions.create_order import CreateOrder",
-    );
+    expect(result).toContain("from .elements.order_id import OrderId");
+    expect(result).toContain("from .molecules.order import Order");
+    expect(result).toContain("from .reactions.create_order import CreateOrder");
   });
 
   it("generates minimal __init__.py for compound with no exports", () => {
@@ -473,20 +440,12 @@ describe("Python discovery", () => {
 
 describe("formatImportStatement", () => {
   it("formats a regular import", () => {
-    const result = pythonPlugin.formatImportStatement(
-      "os.path",
-      "join",
-      false,
-    );
+    const result = pythonPlugin.formatImportStatement("os.path", "join", false);
     expect(result).toBe("from os.path import join");
   });
 
   it("formats a TYPE_CHECKING import", () => {
-    const result = pythonPlugin.formatImportStatement(
-      ".models",
-      "User",
-      true,
-    );
+    const result = pythonPlugin.formatImportStatement(".models", "User", true);
     expect(result).toContain("TYPE_CHECKING");
     expect(result).toContain("from .models import User");
   });
@@ -523,11 +482,7 @@ describeIfPython("resolveModulePath", () => {
     writeFileSync(path.join(tmpDir, "pkg", "__init__.py"), "", "utf-8");
     writeFileSync(path.join(tmpDir, "pkg", "module_a.py"), "x = 1\n", "utf-8");
     writeFileSync(path.join(tmpDir, "pkg", "sub", "__init__.py"), "", "utf-8");
-    writeFileSync(
-      path.join(tmpDir, "pkg", "sub", "module_b.py"),
-      "y = 2\n",
-      "utf-8",
-    );
+    writeFileSync(path.join(tmpDir, "pkg", "sub", "module_b.py"), "y = 2\n", "utf-8");
   });
 
   afterAll(() => {
@@ -617,21 +572,9 @@ describe("inferUnits", () => {
       `class UserId:\n    pass\n`,
       "utf-8",
     );
-    writeFileSync(
-      path.join(tmpDir, "elements", "email.py"),
-      `class Email:\n    pass\n`,
-      "utf-8",
-    );
-    writeFileSync(
-      path.join(tmpDir, "elements", "__init__.py"),
-      "",
-      "utf-8",
-    );
-    writeFileSync(
-      path.join(tmpDir, "elements", "test_user_id.py"),
-      "# test file\n",
-      "utf-8",
-    );
+    writeFileSync(path.join(tmpDir, "elements", "email.py"), `class Email:\n    pass\n`, "utf-8");
+    writeFileSync(path.join(tmpDir, "elements", "__init__.py"), "", "utf-8");
+    writeFileSync(path.join(tmpDir, "elements", "test_user_id.py"), "# test file\n", "utf-8");
   });
 
   afterAll(() => {
@@ -657,10 +600,7 @@ describe("python parser implementation", () => {
   it("parser module parses imports without execFileSync", async () => {
     const { readFileSync } = await import("node:fs");
     const parserSource = readFileSync(
-      path.resolve(
-        path.dirname(new URL(import.meta.url).pathname),
-        "../src/parser.ts",
-      ),
+      path.resolve(path.dirname(new URL(import.meta.url).pathname), "../src/parser.ts"),
       "utf-8",
     );
     expect(parserSource).toContain("readFileSync");

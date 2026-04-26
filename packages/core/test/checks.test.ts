@@ -1,11 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { allChecks } from "../src/checks.js";
-import type {
-  Workspace,
-  LoadedCompound,
-  CheckOptions,
-  Compound,
-} from "../src/types.js";
+import type { Workspace, LoadedCompound, CheckOptions, Compound } from "../src/types.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -66,11 +61,7 @@ function lc(manifest: Compound, dir = "/tmp/fake"): LoadedCompound {
   return { manifest, dir };
 }
 
-function runCheck(
-  name: string,
-  workspace: Workspace,
-  compounds: LoadedCompound[],
-) {
+function runCheck(name: string, workspace: Workspace, compounds: LoadedCompound[]) {
   const check = allChecks.find((c) => c.name === name);
   if (!check) throw new Error(`Unknown check: ${name}`);
   return check.fn(workspace, compounds, OPTS);
@@ -287,9 +278,7 @@ describe("Bond rules", () => {
         compound: "logging",
         type: "solvent",
         exports: { interfaces: ["Logger"] },
-        units: [
-          { role: "interface", name: "Logger", file: "./interfaces/Logger.ts" },
-        ],
+        units: [{ role: "interface", name: "Logger", file: "./interfaces/Logger.ts" }],
       }),
       lc({
         compound: "a",
@@ -330,18 +319,14 @@ describe("Signal consistency", () => {
     const diags = runCheck("Signal consistency", ws(), [
       lc({
         compound: "a",
-        units: [
-          { role: "reaction", name: "doA", file: "./reactions/doA.ts" },
-        ],
+        units: [{ role: "reaction", name: "doA", file: "./reactions/doA.ts" }],
         signals: {
           emits: [{ signal: "a.done", emitted_by: "doA" }],
         },
       }),
       lc({
         compound: "b",
-        units: [
-          { role: "reaction", name: "onA", file: "./reactions/onA.ts" },
-        ],
+        units: [{ role: "reaction", name: "onA", file: "./reactions/onA.ts" }],
         signals: {
           listens: [{ signal: "a.done", handler: "onA" }],
         },
@@ -354,9 +339,7 @@ describe("Signal consistency", () => {
     const diags = runCheck("Signal consistency", ws(), [
       lc({
         compound: "b",
-        units: [
-          { role: "reaction", name: "onA", file: "./reactions/onA.ts" },
-        ],
+        units: [{ role: "reaction", name: "onA", file: "./reactions/onA.ts" }],
         signals: {
           listens: [{ signal: "never.emitted", handler: "onA" }],
         },
@@ -370,9 +353,7 @@ describe("Signal consistency", () => {
     const diags = runCheck("Signal consistency", ws(), [
       lc({
         compound: "a",
-        units: [
-          { role: "element", name: "X", file: "./elements/X.ts" },
-        ],
+        units: [{ role: "element", name: "X", file: "./elements/X.ts" }],
         signals: {
           emits: [{ signal: "x.done", emitted_by: "X" }],
         },
@@ -389,9 +370,7 @@ describe("Wiring validity", () => {
       lc({
         compound: "root",
         type: "catalyst",
-        wiring: [
-          { interface: "Repo", adapter: "PgRepo", compound: "a" },
-        ],
+        wiring: [{ interface: "Repo", adapter: "PgRepo", compound: "a" }],
         units: [],
       }),
       lc({
@@ -415,9 +394,7 @@ describe("Wiring validity", () => {
       lc({
         compound: "root",
         type: "catalyst",
-        wiring: [
-          { interface: "Repo", adapter: "PgRepo", compound: "a" },
-        ],
+        wiring: [{ interface: "Repo", adapter: "PgRepo", compound: "a" }],
         units: [],
       }),
       lc({
@@ -428,9 +405,7 @@ describe("Wiring validity", () => {
         ],
       }),
     ]);
-    expect(diags.some((d) => d.message.includes("does not declare"))).toBe(
-      true,
-    );
+    expect(diags.some((d) => d.message.includes("does not declare"))).toBe(true);
   });
 });
 
@@ -451,9 +426,7 @@ describe("Role restrictions", () => {
       lc({
         compound: "root",
         type: "catalyst",
-        units: [
-          { role: "reaction", name: "boot", file: "./reactions/boot.ts" },
-        ],
+        units: [{ role: "reaction", name: "boot", file: "./reactions/boot.ts" }],
       }),
     ]);
     expect(diags).toHaveLength(1);
@@ -467,9 +440,7 @@ describe("Assay references", () => {
       lc({
         compound: "a",
         units: [],
-        assays: [
-          { name: "Ghost.test", file: "./assays/Ghost.test.ts", subjects: ["Ghost"] },
-        ],
+        assays: [{ name: "Ghost.test", file: "./assays/Ghost.test.ts", subjects: ["Ghost"] }],
       }),
     ]);
     expect(diags).toHaveLength(1);

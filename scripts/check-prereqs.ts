@@ -212,9 +212,7 @@ function main(): void {
   }
 
   if (result.ok) {
-    console.log(
-      `check-prereqs: OK (${result.checked.length} env vars checked).`,
-    );
+    console.log(`check-prereqs: OK (${result.checked.length} env vars checked).`);
     return;
   }
 
@@ -225,9 +223,7 @@ function main(): void {
   console.error(
     `\n${result.missing.length} of ${result.checked.length} required keys are missing.`,
   );
-  console.error(
-    "See docs/master-plan/PREREQUISITES.md for how to provision each one.",
-  );
+  console.error("See docs/master-plan/PREREQUISITES.md for how to provision each one.");
   process.exit(1);
 }
 

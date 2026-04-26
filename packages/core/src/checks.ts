@@ -1,11 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import type {
-  Workspace,
-  LoadedCompound,
-  Diagnostic,
-  CheckFn,
-} from "./types.js";
+import type { Workspace, LoadedCompound, Diagnostic, CheckFn } from "./types.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -15,9 +10,7 @@ function compoundType(c: LoadedCompound): string {
   return c.manifest.type ?? "compound";
 }
 
-function buildCompoundMap(
-  compounds: LoadedCompound[],
-): Map<string, LoadedCompound> {
+function buildCompoundMap(compounds: LoadedCompound[]): Map<string, LoadedCompound> {
   const map = new Map<string, LoadedCompound>();
   for (const c of compounds) map.set(c.manifest.compound, c);
   return map;
@@ -134,14 +127,12 @@ const checkPublicSurface: CheckFn = (ws, compounds, opts) => {
   if (opts.manifestOnly) return [];
   if (ws.rules?.cross_compound_imports !== "public_only") return [];
 
-  const surfaceFile =
-    ws.rules?.public_surface ?? opts.defaultPublicSurface ?? "public.ts";
+  const surfaceFile = ws.rules?.public_surface ?? opts.defaultPublicSurface ?? "public.ts";
   const diags: Diagnostic[] = [];
 
   for (const c of compounds) {
     if (compoundType(c) === "catalyst") continue;
-    if (!c.manifest.exports || Object.keys(c.manifest.exports).length === 0)
-      continue;
+    if (!c.manifest.exports || Object.keys(c.manifest.exports).length === 0) continue;
 
     const abs = path.join(c.dir, surfaceFile);
     if (!fs.existsSync(abs)) {
@@ -311,10 +302,7 @@ const checkCompoundTypeImports: CheckFn = (ws, compounds) => {
           compound: c.manifest.compound,
           message: `Cannot import "${imp.compound}" — ${targetType} compounds are not importable`,
         });
-      } else if (
-        targetDef?.importable_by === "same_type" &&
-        selfType !== targetType
-      ) {
+      } else if (targetDef?.importable_by === "same_type" && selfType !== targetType) {
         diags.push({
           level: "error",
           check: "compound-type-imports",
@@ -348,9 +336,7 @@ const checkBondRules: CheckFn = (ws, compounds) => {
 
     // External units accessible via imports + implicit solvents
     const externalUnits = new Map<string, string>();
-    const importedNames = new Set(
-      (c.manifest.imports ?? []).map((i) => i.compound),
-    );
+    const importedNames = new Set((c.manifest.imports ?? []).map((i) => i.compound));
 
     for (const other of compounds) {
       if (other.manifest.compound === c.manifest.compound) continue;
@@ -373,8 +359,7 @@ const checkBondRules: CheckFn = (ws, compounds) => {
       if (!allowedRoles) continue;
 
       for (const dep of u.depends_on ?? []) {
-        let depRole: string | undefined =
-          localUnits.get(dep) ?? externalUnits.get(dep);
+        let depRole: string | undefined = localUnits.get(dep) ?? externalUnits.get(dep);
 
         if (depRole === undefined) {
           diags.push({
@@ -411,9 +396,7 @@ const checkSignalConsistency: CheckFn = (_ws, compounds) => {
 
   for (const c of compounds) {
     const reactions = new Set(
-      (c.manifest.units ?? [])
-        .filter((u) => u.role === "reaction")
-        .map((u) => u.name),
+      (c.manifest.units ?? []).filter((u) => u.role === "reaction").map((u) => u.name),
     );
 
     for (const em of c.manifest.signals?.emits ?? []) {
@@ -480,12 +463,8 @@ const checkWiringValidity: CheckFn = (_ws, compounds) => {
       }
 
       const units = target.manifest.units ?? [];
-      const iface = units.find(
-        (u) => u.role === "interface" && u.name === w.interface,
-      );
-      const adapter = units.find(
-        (u) => u.role === "adapter" && u.name === w.adapter,
-      );
+      const iface = units.find((u) => u.role === "interface" && u.name === w.interface);
+      const adapter = units.find((u) => u.role === "adapter" && u.name === w.adapter);
 
       if (!iface) {
         diags.push({
@@ -579,9 +558,7 @@ const checkAssayReferences: CheckFn = (_ws, compounds) => {
   for (const c of compounds) {
     const unitNames = new Set((c.manifest.units ?? []).map((u) => u.name));
     const interfaces = new Set(
-      (c.manifest.units ?? [])
-        .filter((u) => u.role === "interface")
-        .map((u) => u.name),
+      (c.manifest.units ?? []).filter((u) => u.role === "interface").map((u) => u.name),
     );
 
     for (const a of c.manifest.assays ?? []) {

@@ -10,10 +10,7 @@ export default defineConfig({
     alias: chemagAliases(here),
   },
   test: {
-    include: [
-      "scripts/**/*.test.ts",
-      "test/**/*.test.ts",
-    ],
+    include: ["scripts/**/*.test.ts", "test/**/*.test.ts"],
     exclude: ["**/node_modules/**", "**/dist/**", "packages/**"],
   },
 });

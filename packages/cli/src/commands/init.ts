@@ -116,14 +116,11 @@ plus the directory structure for compounds, reagents, solvents, and catalyst.
   }
 
   const pathIdx = argv.indexOf("--path");
-  const baseDir = pathIdx >= 0 && argv[pathIdx + 1]
-    ? path.resolve(argv[pathIdx + 1])
-    : process.cwd();
+  const baseDir =
+    pathIdx >= 0 && argv[pathIdx + 1] ? path.resolve(argv[pathIdx + 1]) : process.cwd();
 
   const langIdx = argv.indexOf("--language");
-  const language = langIdx >= 0 && argv[langIdx + 1]
-    ? argv[langIdx + 1]
-    : "typescript";
+  const language = langIdx >= 0 && argv[langIdx + 1] ? argv[langIdx + 1] : "typescript";
 
   const wsPath = path.join(baseDir, "workspace.yaml");
 
@@ -162,12 +159,7 @@ plus the directory structure for compounds, reagents, solvents, and catalyst.
   console.log(`  ${GRN}+${R}  CLAUDE.md`);
 
   // Create directories
-  const dirs = [
-    ws.paths.compounds,
-    ws.paths.reagents,
-    ws.paths.solvents,
-    ws.paths.catalyst,
-  ];
+  const dirs = [ws.paths.compounds, ws.paths.reagents, ws.paths.solvents, ws.paths.catalyst];
 
   for (const dir of dirs) {
     const abs = path.resolve(baseDir, dir);

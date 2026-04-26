@@ -33,30 +33,22 @@ function runCmd(
   const stdout: string[] = [];
   const stderr: string[] = [];
 
-  const exitSpy = vi
-    .spyOn(process, "exit")
-    .mockImplementation(((code?: number) => {
-      exitCode.value = code;
-      throw new Error(`process.exit(${code})`);
-    }) as any);
+  const exitSpy = vi.spyOn(process, "exit").mockImplementation(((code?: number) => {
+    exitCode.value = code;
+    throw new Error(`process.exit(${code})`);
+  }) as any);
 
-  const logSpy = vi
-    .spyOn(console, "log")
-    .mockImplementation((...a: any[]) => {
-      stdout.push(a.join(" "));
-    });
+  const logSpy = vi.spyOn(console, "log").mockImplementation((...a: any[]) => {
+    stdout.push(a.join(" "));
+  });
 
-  const errorSpy = vi
-    .spyOn(console, "error")
-    .mockImplementation((...a: any[]) => {
-      stderr.push(a.join(" "));
-    });
+  const errorSpy = vi.spyOn(console, "error").mockImplementation((...a: any[]) => {
+    stderr.push(a.join(" "));
+  });
 
-  const warnSpy = vi
-    .spyOn(console, "warn")
-    .mockImplementation((...a: any[]) => {
-      stderr.push(a.join(" "));
-    });
+  const warnSpy = vi.spyOn(console, "warn").mockImplementation((...a: any[]) => {
+    stderr.push(a.join(" "));
+  });
 
   try {
     fn(argv);
@@ -87,13 +79,7 @@ describe.skipIf(!hasPython3)("Python E2E workflow", () => {
 
   it("step 1: init with --language python", async () => {
     const { cmdInit } = await import("../../src/commands/init.js");
-    const result = runCmd(cmdInit, [
-      "mypyapp",
-      "--path",
-      tmpDir,
-      "--language",
-      "python",
-    ]);
+    const result = runCmd(cmdInit, ["mypyapp", "--path", tmpDir, "--language", "python"]);
 
     expect(result.exitCode).toBeUndefined();
 
@@ -105,10 +91,7 @@ describe.skipIf(!hasPython3)("Python E2E workflow", () => {
     expect(wsContent).toContain("public_surface: __init__.py");
 
     // CLAUDE.md has Python content
-    const claudeMd = fs.readFileSync(
-      path.join(tmpDir, "CLAUDE.md"),
-      "utf-8",
-    );
+    const claudeMd = fs.readFileSync(path.join(tmpDir, "CLAUDE.md"), "utf-8");
     expect(claudeMd).toContain("__init__.py");
     expect(claudeMd).toContain("Language: Python");
 
@@ -125,10 +108,7 @@ describe.skipIf(!hasPython3)("Python E2E workflow", () => {
 
     expect(result.exitCode).toBeUndefined();
 
-    const manifestPath = path.join(
-      tmpDir,
-      "src/compounds/billing/compound.yaml",
-    );
+    const manifestPath = path.join(tmpDir, "src/compounds/billing/compound.yaml");
     expect(fs.existsSync(manifestPath)).toBe(true);
 
     const manifest = parseYaml(fs.readFileSync(manifestPath, "utf-8"));
@@ -137,21 +117,12 @@ describe.skipIf(!hasPython3)("Python E2E workflow", () => {
 
   it("step 3: add unit — element (snake_case file)", async () => {
     const { cmdAdd } = await import("../../src/commands/add.js");
-    const result = runCmd(cmdAdd, [
-      "unit",
-      "billing",
-      "element",
-      "InvoiceId",
-      "--export",
-    ]);
+    const result = runCmd(cmdAdd, ["unit", "billing", "element", "InvoiceId", "--export"]);
 
     expect(result.exitCode).toBeUndefined();
 
     // File uses snake_case
-    const stubPath = path.join(
-      tmpDir,
-      "src/compounds/billing/elements/invoice_id.py",
-    );
+    const stubPath = path.join(tmpDir, "src/compounds/billing/elements/invoice_id.py");
     expect(fs.existsSync(stubPath)).toBe(true);
 
     const content = fs.readFileSync(stubPath, "utf-8");
@@ -159,30 +130,18 @@ describe.skipIf(!hasPython3)("Python E2E workflow", () => {
     expect(content).toContain("@dataclass(frozen=True)");
 
     // Manifest uses snake_case path
-    const manifestPath = path.join(
-      tmpDir,
-      "src/compounds/billing/compound.yaml",
-    );
+    const manifestPath = path.join(tmpDir, "src/compounds/billing/compound.yaml");
     const manifest = parseYaml(fs.readFileSync(manifestPath, "utf-8"));
     expect(manifest.units[0].file).toContain("elements/invoice_id.py");
   });
 
   it("step 4: add unit — molecule", async () => {
     const { cmdAdd } = await import("../../src/commands/add.js");
-    const result = runCmd(cmdAdd, [
-      "unit",
-      "billing",
-      "molecule",
-      "InvoiceDocument",
-      "--export",
-    ]);
+    const result = runCmd(cmdAdd, ["unit", "billing", "molecule", "InvoiceDocument", "--export"]);
 
     expect(result.exitCode).toBeUndefined();
 
-    const stubPath = path.join(
-      tmpDir,
-      "src/compounds/billing/molecules/invoice_document.py",
-    );
+    const stubPath = path.join(tmpDir, "src/compounds/billing/molecules/invoice_document.py");
     expect(fs.existsSync(stubPath)).toBe(true);
     const content = fs.readFileSync(stubPath, "utf-8");
     expect(content).toContain("class InvoiceDocument");
@@ -201,10 +160,7 @@ describe.skipIf(!hasPython3)("Python E2E workflow", () => {
 
     expect(result.exitCode).toBeUndefined();
 
-    const stubPath = path.join(
-      tmpDir,
-      "src/compounds/billing/interfaces/invoice_repository.py",
-    );
+    const stubPath = path.join(tmpDir, "src/compounds/billing/interfaces/invoice_repository.py");
     expect(fs.existsSync(stubPath)).toBe(true);
     const content = fs.readFileSync(stubPath, "utf-8");
     expect(content).toContain("class InvoiceRepository(ABC)");
@@ -224,10 +180,7 @@ describe.skipIf(!hasPython3)("Python E2E workflow", () => {
 
     expect(result.exitCode).toBeUndefined();
 
-    const stubPath = path.join(
-      tmpDir,
-      "src/compounds/billing/adapters/pg_invoice_repo.py",
-    );
+    const stubPath = path.join(tmpDir, "src/compounds/billing/adapters/pg_invoice_repo.py");
     expect(fs.existsSync(stubPath)).toBe(true);
     const content = fs.readFileSync(stubPath, "utf-8");
     expect(content).toContain("class PgInvoiceRepo");
@@ -235,20 +188,11 @@ describe.skipIf(!hasPython3)("Python E2E workflow", () => {
 
   it("step 7: add unit — reaction", async () => {
     const { cmdAdd } = await import("../../src/commands/add.js");
-    const result = runCmd(cmdAdd, [
-      "unit",
-      "billing",
-      "reaction",
-      "GenerateInvoice",
-      "--export",
-    ]);
+    const result = runCmd(cmdAdd, ["unit", "billing", "reaction", "GenerateInvoice", "--export"]);
 
     expect(result.exitCode).toBeUndefined();
 
-    const stubPath = path.join(
-      tmpDir,
-      "src/compounds/billing/reactions/generate_invoice.py",
-    );
+    const stubPath = path.join(tmpDir, "src/compounds/billing/reactions/generate_invoice.py");
     expect(fs.existsSync(stubPath)).toBe(true);
     const content = fs.readFileSync(stubPath, "utf-8");
     expect(content).toContain("async def generate_invoice");
@@ -256,42 +200,23 @@ describe.skipIf(!hasPython3)("Python E2E workflow", () => {
 
   it("step 8: add unit — buffer", async () => {
     const { cmdAdd } = await import("../../src/commands/add.js");
-    const result = runCmd(cmdAdd, [
-      "unit",
-      "billing",
-      "buffer",
-      "ValidateInvoice",
-      "--export",
-    ]);
+    const result = runCmd(cmdAdd, ["unit", "billing", "buffer", "ValidateInvoice", "--export"]);
 
     expect(result.exitCode).toBeUndefined();
 
-    const stubPath = path.join(
-      tmpDir,
-      "src/compounds/billing/buffers/validate_invoice.py",
-    );
+    const stubPath = path.join(tmpDir, "src/compounds/billing/buffers/validate_invoice.py");
     expect(fs.existsSync(stubPath)).toBe(true);
     const content = fs.readFileSync(stubPath, "utf-8");
     expect(content).toContain("def validate_invoice");
   });
 
   it("step 9: manifest has all 6 units with correct paths", () => {
-    const manifestPath = path.join(
-      tmpDir,
-      "src/compounds/billing/compound.yaml",
-    );
+    const manifestPath = path.join(tmpDir, "src/compounds/billing/compound.yaml");
     const manifest = parseYaml(fs.readFileSync(manifestPath, "utf-8"));
     expect(manifest.units).toHaveLength(6);
 
     const roles = manifest.units.map((u: any) => u.role).sort();
-    expect(roles).toEqual([
-      "adapter",
-      "buffer",
-      "element",
-      "interface",
-      "molecule",
-      "reaction",
-    ]);
+    expect(roles).toEqual(["adapter", "buffer", "element", "interface", "molecule", "reaction"]);
 
     // All file paths use snake_case and .py extension
     for (const unit of manifest.units) {
@@ -314,22 +239,15 @@ describe.skipIf(!hasPython3)("Python E2E workflow", () => {
 
   it("step 11: __init__.py generated as public surface", async () => {
     // Generate __init__.py for the compound
-    const { loadWorkspace, discoverCompounds } = await import(
-      "@chemag/core/loader"
-    );
+    const { loadWorkspace, discoverCompounds } = await import("@chemag/core/loader");
     const { loadPlugin } = await import("../../src/plugin-loader.js");
     const ws = loadWorkspace(path.join(tmpDir, "workspace.yaml"));
     const compounds = discoverCompounds(ws, tmpDir);
     const plugin = loadPlugin({ language: "python" });
 
-    const billingCompound = compounds.find(
-      (c) => c.manifest.compound === "billing",
-    )!;
+    const billingCompound = compounds.find((c) => c.manifest.compound === "billing")!;
     const content = plugin.generatePublicSurface(billingCompound, ws);
-    const initPath = path.join(
-      tmpDir,
-      "src/compounds/billing/__init__.py",
-    );
+    const initPath = path.join(tmpDir, "src/compounds/billing/__init__.py");
     fs.writeFileSync(initPath, content, "utf-8");
 
     expect(fs.existsSync(initPath)).toBe(true);
@@ -368,10 +286,7 @@ describe.skipIf(!hasPython3)("Python E2E workflow", () => {
 
   it("step 15: analyze detects bond violation in Python code", async () => {
     // Write a reaction that imports from an adapter (bond violation)
-    const reactionPath = path.join(
-      tmpDir,
-      "src/compounds/billing/reactions/generate_invoice.py",
-    );
+    const reactionPath = path.join(tmpDir, "src/compounds/billing/reactions/generate_invoice.py");
     fs.writeFileSync(
       reactionPath,
       `"""GenerateInvoice — workflow."""

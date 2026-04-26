@@ -139,7 +139,9 @@ function addUnit(argv: string[]): void {
 
   // Validate role
   if (!ws.roles[role]) {
-    console.error(`${RED}Unknown role "${role}". Known roles: [${Object.keys(ws.roles).join(", ")}]${R}`);
+    console.error(
+      `${RED}Unknown role "${role}". Known roles: [${Object.keys(ws.roles).join(", ")}]${R}`,
+    );
     process.exit(2);
   }
 

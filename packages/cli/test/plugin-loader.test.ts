@@ -24,9 +24,7 @@ describe("loadPlugin", () => {
     const plugin = loadPlugin({});
     expect(plugin.name).toBe("typescript");
     expect(errorSpy).toHaveBeenCalledOnce();
-    expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining("DEPRECATION WARNING"),
-    );
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("DEPRECATION WARNING"));
   });
 
   it("throws error listing available options for language: 'rust'", () => {

@@ -23,12 +23,8 @@ export function loadWorkspace(workspacePath: string): Workspace {
   return ws;
 }
 
-export function discoverCompounds(
-  workspace: Workspace,
-  workspaceDir: string,
-): LoadedCompound[] {
-  const manifestFilename =
-    workspace.rules?.manifest_filename ?? "compound.yaml";
+export function discoverCompounds(workspace: Workspace, workspaceDir: string): LoadedCompound[] {
+  const manifestFilename = workspace.rules?.manifest_filename ?? "compound.yaml";
   const compounds: LoadedCompound[] = [];
 
   // Standard compound directories (each subdirectory is a compound)

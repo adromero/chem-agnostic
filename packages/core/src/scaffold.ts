@@ -1,11 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import type {
-  Workspace,
-  LoadedCompound,
-  UnitDeclaration,
-  ResolvedImport,
-} from "./types.js";
+import type { Workspace, LoadedCompound, UnitDeclaration, ResolvedImport } from "./types.js";
 import type { LanguagePlugin } from "./plugin-interface.js";
 
 // ---------------------------------------------------------------------------
@@ -32,8 +27,7 @@ export function scaffoldWorkspace(
   // Identify implicit solvents
   const implicitNames = new Set<string>();
   for (const c of compounds) {
-    const typeDef =
-      workspace.compound_types?.[c.manifest.type ?? "compound"];
+    const typeDef = workspace.compound_types?.[c.manifest.type ?? "compound"];
     if (typeDef?.implicit) implicitNames.add(c.manifest.compound);
   }
 
@@ -49,22 +43,14 @@ export function scaffoldWorkspace(
         continue;
       }
 
-      const imports = resolveImports(
-        unit,
-        c,
-        compoundMap,
-        implicitNames,
-        workspace,
-        plugin,
-      );
+      const imports = resolveImports(unit, c, compoundMap, implicitNames, workspace, plugin);
       const content = plugin.generateUnitStub(unit, imports);
       writeFile(abs, content, dryRun);
       created.push(abs);
     }
 
     // Public surface
-    const surface =
-      workspace.rules?.public_surface ?? plugin.defaults.publicSurface;
+    const surface = workspace.rules?.public_surface ?? plugin.defaults.publicSurface;
     const surfacePath = path.resolve(c.dir, surface);
     if (
       c.manifest.exports &&
@@ -157,14 +143,11 @@ export function resolveImports(
       const exported = allExportedNames(target);
       if (!exported.has(depName)) continue;
 
-      const surface =
-        workspace.rules?.public_surface ?? plugin.defaults.publicSurface;
+      const surface = workspace.rules?.public_surface ?? plugin.defaults.publicSurface;
       const surfaceAbs = path.resolve(target.dir, surface);
       const rel = plugin.formatRelativeImport(unitDir, surfaceAbs);
 
-      const depUnit = (target.manifest.units ?? []).find(
-        (u) => u.name === depName,
-      );
+      const depUnit = (target.manifest.units ?? []).find((u) => u.name === depName);
       imports.push({
         fromCompound: rel,
         fromUnit: depName,
@@ -184,10 +167,7 @@ export function resolveImports(
 // ---------------------------------------------------------------------------
 
 function mergeImports(imports: ResolvedImport[]): ResolvedImport[] {
-  const byPath = new Map<
-    string,
-    { names: Set<string>; isTypeOnly: boolean; fromUnit: string }
-  >();
+  const byPath = new Map<string, { names: Set<string>; isTypeOnly: boolean; fromUnit: string }>();
 
   for (const imp of imports) {
     const existing = byPath.get(imp.fromCompound);

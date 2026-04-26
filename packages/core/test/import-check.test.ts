@@ -1,11 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { checkImports } from "../src/import-check.js";
-import type {
-  Workspace,
-  LoadedCompound,
-  Compound,
-  ParsedImport,
-} from "../src/types.js";
+import type { Workspace, LoadedCompound, Compound, ParsedImport } from "../src/types.js";
 import type { LanguagePlugin } from "../src/plugin-interface.js";
 
 // ---------------------------------------------------------------------------
@@ -94,20 +89,42 @@ function mockPlugin(
       }
       return result;
     },
-    parseImports() { return []; },
+    parseImports() {
+      return [];
+    },
     resolveModulePath(_fromFile: string, moduleSpec: string): string | undefined {
       return resolutions.get(moduleSpec);
     },
-    generateUnitStub() { return ""; },
-    generatePublicSurface() { return ""; },
-    generateAssayStub() { return ""; },
-    unitFilePath() { return ""; },
-    formatRelativeImport() { return ""; },
-    formatImportStatement() { return ""; },
-    inferUnits() { return []; },
-    inferImplements() { return []; },
-    isSourceFile() { return true; },
-    generateClaudeMd() { return ""; },
+    generateUnitStub() {
+      return "";
+    },
+    generatePublicSurface() {
+      return "";
+    },
+    generateAssayStub() {
+      return "";
+    },
+    unitFilePath() {
+      return "";
+    },
+    formatRelativeImport() {
+      return "";
+    },
+    formatImportStatement() {
+      return "";
+    },
+    inferUnits() {
+      return [];
+    },
+    inferImplements() {
+      return [];
+    },
+    isSourceFile() {
+      return true;
+    },
+    generateClaudeMd() {
+      return "";
+    },
   } as unknown as LanguagePlugin;
 }
 
@@ -133,7 +150,10 @@ describe("checkImports", () => {
       const reactionPath = "/project/compounds/a/reactions/DoStuff.ts";
 
       const importMap = new Map<string, ParsedImport[]>([
-        [elementPath, [{ moduleSpecifier: "../reactions/DoStuff", names: ["DoStuff"], isTypeOnly: false }]],
+        [
+          elementPath,
+          [{ moduleSpecifier: "../reactions/DoStuff", names: ["DoStuff"], isTypeOnly: false }],
+        ],
         [reactionPath, []],
       ]);
 
@@ -169,7 +189,10 @@ describe("checkImports", () => {
       const interfacePath = "/project/compounds/a/interfaces/Repo.ts";
 
       const importMap = new Map<string, ParsedImport[]>([
-        [reactionPath, [{ moduleSpecifier: "../interfaces/Repo", names: ["Repo"], isTypeOnly: false }]],
+        [
+          reactionPath,
+          [{ moduleSpecifier: "../interfaces/Repo", names: ["Repo"], isTypeOnly: false }],
+        ],
         [interfacePath, []],
       ]);
 
@@ -190,9 +213,7 @@ describe("checkImports", () => {
         {
           compound: "a",
           imports: [{ compound: "b" }],
-          units: [
-            { role: "reaction", name: "DoStuff", file: "./reactions/DoStuff.ts" },
-          ],
+          units: [{ role: "reaction", name: "DoStuff", file: "./reactions/DoStuff.ts" }],
         },
         "/project/compounds/a",
       );
@@ -200,9 +221,7 @@ describe("checkImports", () => {
       const compoundB = lc(
         {
           compound: "b",
-          units: [
-            { role: "interface", name: "Repo", file: "./interfaces/Repo.ts" },
-          ],
+          units: [{ role: "interface", name: "Repo", file: "./interfaces/Repo.ts" }],
         },
         "/project/compounds/b",
       );
@@ -211,7 +230,10 @@ describe("checkImports", () => {
       const internalPath = "/project/compounds/b/interfaces/Repo.ts";
 
       const importMap = new Map<string, ParsedImport[]>([
-        [reactionPath, [{ moduleSpecifier: "../../b/interfaces/Repo", names: ["Repo"], isTypeOnly: false }]],
+        [
+          reactionPath,
+          [{ moduleSpecifier: "../../b/interfaces/Repo", names: ["Repo"], isTypeOnly: false }],
+        ],
         [internalPath, []],
       ]);
 
@@ -236,9 +258,7 @@ describe("checkImports", () => {
         {
           compound: "a",
           imports: [], // no imports declared
-          units: [
-            { role: "reaction", name: "DoStuff", file: "./reactions/DoStuff.ts" },
-          ],
+          units: [{ role: "reaction", name: "DoStuff", file: "./reactions/DoStuff.ts" }],
         },
         "/project/compounds/a",
       );
@@ -246,9 +266,7 @@ describe("checkImports", () => {
       const compoundB = lc(
         {
           compound: "b",
-          units: [
-            { role: "interface", name: "Repo", file: "./interfaces/Repo.ts" },
-          ],
+          units: [{ role: "interface", name: "Repo", file: "./interfaces/Repo.ts" }],
         },
         "/project/compounds/b",
       );
@@ -257,7 +275,10 @@ describe("checkImports", () => {
       const internalPath = "/project/compounds/b/interfaces/Repo.ts";
 
       const importMap = new Map<string, ParsedImport[]>([
-        [reactionPath, [{ moduleSpecifier: "../../b/interfaces/Repo", names: ["Repo"], isTypeOnly: false }]],
+        [
+          reactionPath,
+          [{ moduleSpecifier: "../../b/interfaces/Repo", names: ["Repo"], isTypeOnly: false }],
+        ],
         [internalPath, []],
       ]);
 
@@ -292,7 +313,10 @@ describe("checkImports", () => {
       const reactionPath = "/project/compounds/a/reactions/DoStuff.ts";
 
       const importMap = new Map<string, ParsedImport[]>([
-        [elementPath, [{ moduleSpecifier: "../reactions/DoStuff", names: ["DoStuff"], isTypeOnly: true }]],
+        [
+          elementPath,
+          [{ moduleSpecifier: "../reactions/DoStuff", names: ["DoStuff"], isTypeOnly: true }],
+        ],
         [reactionPath, []],
       ]);
 
@@ -314,9 +338,7 @@ describe("checkImports", () => {
         {
           compound: "a",
           imports: [],
-          units: [
-            { role: "reaction", name: "DoStuff", file: "./reactions/DoStuff.ts" },
-          ],
+          units: [{ role: "reaction", name: "DoStuff", file: "./reactions/DoStuff.ts" }],
         },
         "/project/compounds/a",
       );
@@ -324,9 +346,7 @@ describe("checkImports", () => {
       const compoundB = lc(
         {
           compound: "b",
-          units: [
-            { role: "interface", name: "Repo", file: "./interfaces/Repo.ts" },
-          ],
+          units: [{ role: "interface", name: "Repo", file: "./interfaces/Repo.ts" }],
         },
         "/project/compounds/b",
       );
@@ -335,7 +355,10 @@ describe("checkImports", () => {
       const internalPath = "/project/compounds/b/interfaces/Repo.ts";
 
       const importMap = new Map<string, ParsedImport[]>([
-        [reactionPath, [{ moduleSpecifier: "../../b/interfaces/Repo", names: ["Repo"], isTypeOnly: true }]],
+        [
+          reactionPath,
+          [{ moduleSpecifier: "../../b/interfaces/Repo", names: ["Repo"], isTypeOnly: true }],
+        ],
         [internalPath, []],
       ]);
 
@@ -356,9 +379,7 @@ describe("checkImports", () => {
       const compoundA = lc(
         {
           compound: "a",
-          units: [
-            { role: "reaction", name: "DoStuff", file: "./reactions/DoStuff.ts" },
-          ],
+          units: [{ role: "reaction", name: "DoStuff", file: "./reactions/DoStuff.ts" }],
         },
         "/project/compounds/a",
       );
@@ -366,10 +387,13 @@ describe("checkImports", () => {
       const reactionPath = "/project/compounds/a/reactions/DoStuff.ts";
 
       const importMap = new Map<string, ParsedImport[]>([
-        [reactionPath, [
-          { moduleSpecifier: "lodash", names: ["map"], isTypeOnly: false },
-          { moduleSpecifier: "node:path", names: ["join"], isTypeOnly: false },
-        ]],
+        [
+          reactionPath,
+          [
+            { moduleSpecifier: "lodash", names: ["map"], isTypeOnly: false },
+            { moduleSpecifier: "node:path", names: ["join"], isTypeOnly: false },
+          ],
+        ],
       ]);
 
       // External/stdlib modules resolve to undefined
@@ -388,9 +412,7 @@ describe("checkImports", () => {
       const compoundA = lc(
         {
           compound: "a",
-          units: [
-            { role: "reaction", name: "DoStuff", file: "./reactions/DoStuff.ts" },
-          ],
+          units: [{ role: "reaction", name: "DoStuff", file: "./reactions/DoStuff.ts" }],
         },
         "/project/compounds/a",
       );
@@ -398,9 +420,10 @@ describe("checkImports", () => {
       const reactionPath = "/project/compounds/a/reactions/DoStuff.ts";
 
       const importMap = new Map<string, ParsedImport[]>([
-        [reactionPath, [
-          { moduleSpecifier: "../utils/helpers", names: ["helper"], isTypeOnly: false },
-        ]],
+        [
+          reactionPath,
+          [{ moduleSpecifier: "../utils/helpers", names: ["helper"], isTypeOnly: false }],
+        ],
       ]);
 
       // Resolves to a file but it's not a known chem unit
@@ -421,9 +444,7 @@ describe("checkImports", () => {
         {
           compound: "a",
           imports: [], // no explicit import of "logging"
-          units: [
-            { role: "reaction", name: "DoStuff", file: "./reactions/DoStuff.ts" },
-          ],
+          units: [{ role: "reaction", name: "DoStuff", file: "./reactions/DoStuff.ts" }],
         },
         "/project/compounds/a",
       );
@@ -432,9 +453,7 @@ describe("checkImports", () => {
         {
           compound: "logging",
           type: "solvent",
-          units: [
-            { role: "interface", name: "Logger", file: "./interfaces/Logger.ts" },
-          ],
+          units: [{ role: "interface", name: "Logger", file: "./interfaces/Logger.ts" }],
         },
         "/project/solvents/logging",
       );
@@ -443,7 +462,16 @@ describe("checkImports", () => {
       const publicPath = "/project/solvents/logging/public.ts";
 
       const importMap = new Map<string, ParsedImport[]>([
-        [reactionPath, [{ moduleSpecifier: "../../../solvents/logging/public", names: ["Logger"], isTypeOnly: false }]],
+        [
+          reactionPath,
+          [
+            {
+              moduleSpecifier: "../../../solvents/logging/public",
+              names: ["Logger"],
+              isTypeOnly: false,
+            },
+          ],
+        ],
         ["/project/solvents/logging/interfaces/Logger.ts", []],
       ]);
 
@@ -467,9 +495,7 @@ describe("checkImports", () => {
         {
           compound: "a",
           imports: [{ compound: "b" }],
-          units: [
-            { role: "reaction", name: "DoStuff", file: "./reactions/DoStuff.ts" },
-          ],
+          units: [{ role: "reaction", name: "DoStuff", file: "./reactions/DoStuff.ts" }],
         },
         "/project/compounds/a",
       );
@@ -477,9 +503,7 @@ describe("checkImports", () => {
       const compoundB = lc(
         {
           compound: "b",
-          units: [
-            { role: "interface", name: "Repo", file: "./interfaces/Repo.ts" },
-          ],
+          units: [{ role: "interface", name: "Repo", file: "./interfaces/Repo.ts" }],
         },
         "/project/compounds/b",
       );
@@ -492,9 +516,7 @@ describe("checkImports", () => {
         ["/project/compounds/b/interfaces/Repo.ts", []],
       ]);
 
-      const resolutions = new Map<string, string | undefined>([
-        ["../../b/public", publicPath],
-      ]);
+      const resolutions = new Map<string, string | undefined>([["../../b/public", publicPath]]);
 
       const plugin = mockPlugin(importMap, resolutions);
       const diags = checkImports(ws(), [compoundA, compoundB], plugin);
@@ -511,9 +533,7 @@ describe("checkImports", () => {
         {
           compound: "a",
           imports: [], // no imports declared
-          units: [
-            { role: "reaction", name: "DoStuff", file: "./reactions/DoStuff.ts" },
-          ],
+          units: [{ role: "reaction", name: "DoStuff", file: "./reactions/DoStuff.ts" }],
         },
         "/project/compounds/a",
       );
@@ -521,9 +541,7 @@ describe("checkImports", () => {
       const compoundB = lc(
         {
           compound: "b",
-          units: [
-            { role: "interface", name: "Repo", file: "./interfaces/Repo.ts" },
-          ],
+          units: [{ role: "interface", name: "Repo", file: "./interfaces/Repo.ts" }],
         },
         "/project/compounds/b",
       );
@@ -532,7 +550,10 @@ describe("checkImports", () => {
       const internalPath = "/project/compounds/b/interfaces/Repo.ts";
 
       const importMap = new Map<string, ParsedImport[]>([
-        [reactionPath, [{ moduleSpecifier: "../../b/interfaces/Repo", names: ["Repo"], isTypeOnly: false }]],
+        [
+          reactionPath,
+          [{ moduleSpecifier: "../../b/interfaces/Repo", names: ["Repo"], isTypeOnly: false }],
+        ],
         [internalPath, []],
       ]);
 

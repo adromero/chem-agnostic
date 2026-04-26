@@ -50,17 +50,11 @@ export const pythonPlugin: LanguagePlugin = {
     return doGenerateUnitStub(unit, imports);
   },
 
-  generatePublicSurface(
-    compound: LoadedCompound,
-    workspace: Workspace,
-  ): string {
+  generatePublicSurface(compound: LoadedCompound, workspace: Workspace): string {
     return doGeneratePublicSurface(compound, workspace);
   },
 
-  generateAssayStub(
-    assay: AssayDeclaration,
-    compound: LoadedCompound,
-  ): string {
+  generateAssayStub(assay: AssayDeclaration, compound: LoadedCompound): string {
     return doGenerateAssayStub(assay, compound);
   },
 
@@ -80,11 +74,7 @@ export const pythonPlugin: LanguagePlugin = {
     return `.${modulePath}`;
   },
 
-  formatImportStatement(
-    from: string,
-    to: string,
-    isTypeOnly: boolean,
-  ): string {
+  formatImportStatement(from: string, to: string, isTypeOnly: boolean): string {
     return doFormatImportStatement(from, to, isTypeOnly);
   },
 

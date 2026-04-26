@@ -52,19 +52,14 @@ describe("scaffoldWorkspace", () => {
       dir: compoundDir,
       manifest: {
         compound: "reporting",
-        units: [
-          { role: "element", name: "ReportId", file: "./elements/ReportId.ts" },
-        ],
+        units: [{ role: "element", name: "ReportId", file: "./elements/ReportId.ts" }],
       },
     };
 
     const result = scaffoldWorkspace(minWs(), [compound], plugin, false);
     expect(result.created).toHaveLength(1);
 
-    const content = fs.readFileSync(
-      path.join(compoundDir, "elements/ReportId.ts"),
-      "utf-8",
-    );
+    const content = fs.readFileSync(path.join(compoundDir, "elements/ReportId.ts"), "utf-8");
     expect(content).toContain("export class ReportId");
     expect(content).toContain("readonly value: string");
   });
@@ -88,10 +83,7 @@ describe("scaffoldWorkspace", () => {
     };
 
     const result = scaffoldWorkspace(minWs(), [compound], plugin, false);
-    const content = fs.readFileSync(
-      path.join(compoundDir, "reactions/generateReport.ts"),
-      "utf-8",
-    );
+    const content = fs.readFileSync(path.join(compoundDir, "reactions/generateReport.ts"), "utf-8");
     expect(content).toContain("export async function generateReport");
     expect(content).toContain("Promise<void>");
     expect(result.created).toHaveLength(1);
@@ -122,10 +114,7 @@ describe("scaffoldWorkspace", () => {
     };
 
     scaffoldWorkspace(minWs(), [compound], plugin, false);
-    const content = fs.readFileSync(
-      path.join(compoundDir, "adapters/PgRepo.ts"),
-      "utf-8",
-    );
+    const content = fs.readFileSync(path.join(compoundDir, "adapters/PgRepo.ts"), "utf-8");
     expect(content).toContain("implements Repo");
     expect(content).toContain("import type { Repo }");
   });
@@ -138,17 +127,12 @@ describe("scaffoldWorkspace", () => {
       dir: compoundDir,
       manifest: {
         compound: "api",
-        units: [
-          { role: "buffer", name: "auth", file: "./buffers/auth.ts" },
-        ],
+        units: [{ role: "buffer", name: "auth", file: "./buffers/auth.ts" }],
       },
     };
 
     scaffoldWorkspace(minWs(), [compound], plugin, false);
-    const content = fs.readFileSync(
-      path.join(compoundDir, "buffers/auth.ts"),
-      "utf-8",
-    );
+    const content = fs.readFileSync(path.join(compoundDir, "buffers/auth.ts"), "utf-8");
     expect(content).toContain("export function auth");
     expect(content).toContain("next");
   });
@@ -170,10 +154,7 @@ describe("scaffoldWorkspace", () => {
     };
 
     scaffoldWorkspace(minWs(), [compound], plugin, false);
-    const content = fs.readFileSync(
-      path.join(compoundDir, "public.ts"),
-      "utf-8",
-    );
+    const content = fs.readFileSync(path.join(compoundDir, "public.ts"), "utf-8");
     expect(content).toContain('export { ReportId } from "./elements/ReportId"');
     expect(content).toContain('export type { Repo } from "./interfaces/Repo"');
   });
@@ -186,9 +167,7 @@ describe("scaffoldWorkspace", () => {
       dir: compoundDir,
       manifest: {
         compound: "reporting",
-        units: [
-          { role: "element", name: "ReportId", file: "./elements/ReportId.ts" },
-        ],
+        units: [{ role: "element", name: "ReportId", file: "./elements/ReportId.ts" }],
         assays: [
           {
             name: "ReportId.test",
@@ -200,10 +179,7 @@ describe("scaffoldWorkspace", () => {
     };
 
     scaffoldWorkspace(minWs(), [compound], plugin, false);
-    const content = fs.readFileSync(
-      path.join(compoundDir, "assays/ReportId.test.ts"),
-      "utf-8",
-    );
+    const content = fs.readFileSync(path.join(compoundDir, "assays/ReportId.test.ts"), "utf-8");
     expect(content).toContain("import { ReportId }");
     expect(content).toContain("describe");
   });
@@ -218,9 +194,7 @@ describe("scaffoldWorkspace", () => {
       dir: compoundDir,
       manifest: {
         compound: "reporting",
-        units: [
-          { role: "element", name: "ReportId", file: "./elements/ReportId.ts" },
-        ],
+        units: [{ role: "element", name: "ReportId", file: "./elements/ReportId.ts" }],
       },
     };
 
@@ -229,10 +203,7 @@ describe("scaffoldWorkspace", () => {
     expect(result.skipped).toHaveLength(1);
 
     // Content should be untouched
-    const content = fs.readFileSync(
-      path.join(elemDir, "ReportId.ts"),
-      "utf-8",
-    );
+    const content = fs.readFileSync(path.join(elemDir, "ReportId.ts"), "utf-8");
     expect(content).toBe("existing");
   });
 
@@ -244,9 +215,7 @@ describe("scaffoldWorkspace", () => {
       dir: compoundDir,
       manifest: {
         compound: "reporting",
-        units: [
-          { role: "element", name: "X", file: "./elements/X.ts" },
-        ],
+        units: [{ role: "element", name: "X", file: "./elements/X.ts" }],
       },
     };
 
@@ -266,9 +235,7 @@ describe("scaffoldWorkspace", () => {
       manifest: {
         compound: "a",
         exports: { elements: ["UserId"] },
-        units: [
-          { role: "element", name: "UserId", file: "./elements/UserId.ts" },
-        ],
+        units: [{ role: "element", name: "UserId", file: "./elements/UserId.ts" }],
       },
     };
 
@@ -289,10 +256,7 @@ describe("scaffoldWorkspace", () => {
     };
 
     scaffoldWorkspace(minWs(), [a, b], plugin, false);
-    const content = fs.readFileSync(
-      path.join(compoundB, "molecules/Profile.ts"),
-      "utf-8",
-    );
+    const content = fs.readFileSync(path.join(compoundB, "molecules/Profile.ts"), "utf-8");
     expect(content).toContain("import { UserId }");
     expect(content).toContain("/a/public");
   });

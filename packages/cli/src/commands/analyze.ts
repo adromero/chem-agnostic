@@ -43,9 +43,7 @@ Analyzes actual import statements in source files and checks:
   try {
     ws = loadWorkspace(wsPath);
   } catch (e: unknown) {
-    console.error(
-      `${RED}Failed to load workspace:${R} ${e instanceof Error ? e.message : e}`,
-    );
+    console.error(`${RED}Failed to load workspace:${R} ${e instanceof Error ? e.message : e}`);
     process.exit(2);
   }
 
@@ -53,25 +51,18 @@ Analyzes actual import statements in source files and checks:
   try {
     compounds = discoverCompounds(ws, wsDir);
   } catch (e: unknown) {
-    console.error(
-      `${RED}Failed to discover compounds:${R} ${e instanceof Error ? e.message : e}`,
-    );
+    console.error(`${RED}Failed to discover compounds:${R} ${e instanceof Error ? e.message : e}`);
     process.exit(2);
   }
 
   const plugin = loadPlugin({ language: ws.language });
 
-  const totalFiles = compounds.reduce(
-    (n, c) => n + (c.manifest.units?.length ?? 0),
-    0,
-  );
+  const totalFiles = compounds.reduce((n, c) => n + (c.manifest.units?.length ?? 0), 0);
 
   if (!json) {
     console.log(`\n${BLD}chemtest analyze${R}\n`);
     console.log(`${BLD}Workspace:${R} ${ws.workspace}`);
-    console.log(
-      `${DIM}  Scanning ${totalFiles} source files (${plugin.name})${R}\n`,
-    );
+    console.log(`${DIM}  Scanning ${totalFiles} source files (${plugin.name})${R}\n`);
   }
 
   const diags = checkImports(ws, compounds, plugin);
@@ -106,9 +97,7 @@ Analyzes actual import statements in source files and checks:
       const errs = group.filter((d) => d.level === "error");
 
       if (errs.length > 0) {
-        console.log(
-          `  ${RED}✗${R}  ${name} ${DIM}— ${errs.length} violation(s)${R}`,
-        );
+        console.log(`  ${RED}✗${R}  ${name} ${DIM}— ${errs.length} violation(s)${R}`);
         for (const d of errs) {
           const pfx = d.compound ? `${DIM}${d.compound}${R} > ` : "";
           console.log(`     ${RED}error${R}: ${pfx}${d.message}`);
