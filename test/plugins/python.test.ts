@@ -17,7 +17,16 @@ const hasPython = (() => {
   }
 })();
 
-const describeIfPython = hasPython ? describe : describe.skip;
+const canNodeSpawnPython = hasPython && (() => {
+  try {
+    execFileSync("python3", ["-c", "print('ok')"], { encoding: "utf-8", timeout: 5_000 });
+    return true;
+  } catch {
+    return false;
+  }
+})();
+
+const describeIfPython = canNodeSpawnPython ? describe : describe.skip;
 
 // ---------------------------------------------------------------------------
 // Snake_case conversion (no Python needed)
@@ -644,9 +653,8 @@ describe("inferUnits", () => {
 // Timeout verification (structural, no Python needed)
 // ---------------------------------------------------------------------------
 
-describe("execFileSync timeout", () => {
-  it("parser module uses 30-second timeout in parseImportsBatch", async () => {
-    // We verify the timeout is set by reading the source
+describe("python parser implementation", () => {
+  it("parser module parses imports without execFileSync", async () => {
     const { readFileSync } = await import("node:fs");
     const parserSource = readFileSync(
       path.resolve(
@@ -655,6 +663,7 @@ describe("execFileSync timeout", () => {
       ),
       "utf-8",
     );
-    expect(parserSource).toContain("timeout: 30_000");
+    expect(parserSource).toContain("readFileSync");
+    expect(parserSource).not.toContain("execFileSync(");
   });
 });

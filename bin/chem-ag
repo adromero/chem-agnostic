@@ -1,0 +1,5 @@
+#!/usr/bin/env node
+// Thin shim that forwards to the compiled CLI entry point.
+// In the monorepo, this lives at packages/cli/bin/chem-ag and forwards to
+// packages/cli/dist/cli.js. During wp-001 it is moved with `git mv`.
+import("../dist/src/cli.js");
