@@ -111,7 +111,7 @@ function inferCompound(
 
       // Add to exports (everything except adapters)
       if (role !== "adapter") {
-        const plural = role + "s";
+        const plural = `${role}s`;
         if (!exportNames[plural]) exportNames[plural] = [];
         exportNames[plural].push(unitName);
       }

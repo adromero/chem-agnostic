@@ -201,5 +201,5 @@ function extractLanguageSection(pluginMd: string): string {
   if (languageSections.length === 0) return "\n";
 
   const result = languageSections.join("\n").trim();
-  return result + "\n\n";
+  return `${result}\n\n`;
 }

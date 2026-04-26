@@ -163,7 +163,7 @@ function addUnit(argv: string[]): void {
   // Use plugin to determine file path
   const plugin = loadPlugin({ language: ws.language });
   const folder = ws.roles[role].folder;
-  const file = "./" + plugin.unitFilePath(role, unitName, folder);
+  const file = `./${plugin.unitFilePath(role, unitName, folder)}`;
 
   console.log(`\n${BLD}chem add unit${R}\n`);
 
@@ -186,13 +186,13 @@ function addUnit(argv: string[]): void {
 
   // Add to exports if requested
   if (shouldExport) {
-    const pluralRole = role + "s";
+    const pluralRole = `${role}s`;
     let exports = doc.get("exports") as any;
     if (!exports) {
       doc.set("exports", {});
       exports = doc.get("exports");
     }
-    let roleExports = exports.get(pluralRole);
+    const roleExports = exports.get(pluralRole);
     if (!roleExports) {
       exports.set(pluralRole, doc.createNode([unitName]));
     } else {

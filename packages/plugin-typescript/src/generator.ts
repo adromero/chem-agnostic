@@ -32,7 +32,7 @@ function renderImportLines(imports: ResolvedImport[]): string {
   const lines = imports.map((imp) =>
     formatImportStatement(imp.names.join(", "), imp.fromCompound, imp.isTypeOnly),
   );
-  return lines.join("\n") + "\n\n";
+  return `${lines.join("\n")}\n\n`;
 }
 
 // ---------------------------------------------------------------------------
@@ -47,46 +47,25 @@ export function generateUnitStub(unit: UnitDeclaration, imports: ResolvedImport[
 
   switch (unit.role) {
     case "element":
-      return (
-        `${head}export class ${unit.name} {\n` +
-        `  constructor(readonly value: string) {}\n` +
-        `}\n`
-      );
+      return `${head}export class ${unit.name} {\n  constructor(readonly value: string) {}\n}\n`;
 
     case "molecule":
-      return (
-        `${head}export class ${unit.name} {\n` +
-        `  constructor() {\n` +
-        `    // TODO: implement\n` +
-        `  }\n` +
-        `}\n`
-      );
+      return `${head}export class ${unit.name} {\n  constructor() {\n    // TODO: implement\n  }\n}\n`;
 
     case "reaction":
-      return (
-        `${head}export async function ${unit.name}(): Promise<void> {\n` +
-        `  // TODO: implement\n` +
-        `}\n`
-      );
+      return `${head}export async function ${unit.name}(): Promise<void> {\n  // TODO: implement\n}\n`;
 
     case "interface":
-      return `${head}export interface ${unit.name} {\n` + `  // TODO: define methods\n` + `}\n`;
+      return `${head}export interface ${unit.name} {\n  // TODO: define methods\n}\n`;
 
     case "adapter": {
       const impl = (unit.implements ?? []).join(", ");
       const clause = impl ? ` implements ${impl}` : "";
-      return `${head}export class ${unit.name}${clause} {\n` + `  // TODO: implement\n` + `}\n`;
+      return `${head}export class ${unit.name}${clause} {\n  // TODO: implement\n}\n`;
     }
 
     case "buffer":
-      return (
-        `${head}export function ${unit.name}(\n` +
-        `  next: () => Promise<void>,\n` +
-        `): Promise<void> {\n` +
-        `  // TODO: implement\n` +
-        `  return next();\n` +
-        `}\n`
-      );
+      return `${head}export function ${unit.name}(\n  next: () => Promise<void>,\n): Promise<void> {\n  // TODO: implement\n  return next();\n}\n`;
 
     default:
       return `// TODO: implement ${unit.name} (${unit.role})\n`;
@@ -115,14 +94,14 @@ export function generatePublicSurface(compound: LoadedCompound, _workspace: Work
       if (!unit) continue;
 
       let rel = unit.file.replace(/\.ts$/, "").replace(/\\/g, "/");
-      if (!rel.startsWith(".")) rel = "./" + rel;
+      if (!rel.startsWith(".")) rel = `./${rel}`;
 
       const kw = role === "interface" ? "export type" : "export";
       lines.push(`${kw} { ${name} } from "${rel}";`);
     }
   }
 
-  return lines.join("\n") + "\n";
+  return `${lines.join("\n")}\n`;
 }
 
 // ---------------------------------------------------------------------------
@@ -146,10 +125,10 @@ export function generateAssayStub(assay: AssayDeclaration, compound: LoadedCompo
     importLines.push(`import { ${subject} } from "${rel}";`);
   }
 
-  const head = importLines.length > 0 ? importLines.join("\n") + "\n\n" : "";
+  const head = importLines.length > 0 ? `${importLines.join("\n")}\n\n` : "";
   const label = (assay.subjects ?? []).join(", ") || assay.name;
 
-  return `${head}describe("${label}", () => {\n` + `  it.todo("should work");\n` + `});\n`;
+  return `${head}describe("${label}", () => {\n  it.todo("should work");\n});\n`;
 }
 
 // ---------------------------------------------------------------------------
@@ -162,7 +141,7 @@ export function generateAssayStub(assay: AssayDeclaration, compound: LoadedCompo
  */
 export function formatRelativeImport(fromDir: string, toFile: string): string {
   let rel = path.relative(fromDir, toFile).replace(/\\/g, "/").replace(/\.ts$/, "");
-  if (!rel.startsWith(".")) rel = "./" + rel;
+  if (!rel.startsWith(".")) rel = `./${rel}`;
   return rel;
 }
 
@@ -246,8 +225,7 @@ function inferExports(filePath: string): string[] {
     const content = fs.readFileSync(filePath, "utf-8");
     const names: string[] = [];
     const exportPattern = /export\s+(?:class|interface|function|const|type|enum)\s+(\w+)/g;
-    let match: RegExpExecArray | null;
-    while ((match = exportPattern.exec(content)) !== null) {
+    for (const match of content.matchAll(exportPattern)) {
       names.push(match[1]);
     }
     return names;

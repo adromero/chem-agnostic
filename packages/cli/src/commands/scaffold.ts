@@ -1,7 +1,8 @@
 import * as path from "node:path";
-import { loadWorkspace, discoverCompounds } from "@chemag/core/loader";
-import { loadPlugin } from "../plugin-loader.js";
+import { discoverCompounds, loadWorkspace } from "@chemag/core/loader";
 import { scaffoldWorkspace } from "@chemag/core/scaffold";
+import type { LoadedCompound, Workspace } from "@chemag/core/types";
+import { loadPlugin } from "../plugin-loader.js";
 
 const R = "\x1b[0m";
 const RED = "\x1b[31m";
@@ -33,7 +34,7 @@ ${BLD}Options:${R}
   const wsPath = path.resolve(wsArg);
   const wsDir = path.dirname(wsPath);
 
-  let ws;
+  let ws: Workspace;
   try {
     ws = loadWorkspace(wsPath);
   } catch (e: unknown) {
@@ -43,7 +44,7 @@ ${BLD}Options:${R}
 
   const plugin = loadPlugin({ language: ws.language });
 
-  let compounds;
+  let compounds: LoadedCompound[];
   try {
     compounds = discoverCompounds(ws, wsDir);
   } catch (e: unknown) {

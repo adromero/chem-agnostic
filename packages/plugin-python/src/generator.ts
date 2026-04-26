@@ -275,28 +275,20 @@ function extractPythonExports(filePath: string): string[] {
     const content = readFileSync(filePath, "utf-8");
     const exports: string[] = [];
 
-    // Match class definitions
-    const classPattern = /^class\s+(\w+)/gm;
-    let match: RegExpExecArray | null;
-    while ((match = classPattern.exec(content)) !== null) {
-      if (match[1] && !match[1].startsWith("_")) {
-        exports.push(match[1]);
-      }
-    }
+    const patterns: RegExp[] = [
+      // Class definitions
+      /^class\s+(\w+)/gm,
+      // Top-level function definitions
+      /^def\s+(\w+)/gm,
+      // Top-level async function definitions
+      /^async\s+def\s+(\w+)/gm,
+    ];
 
-    // Match top-level function definitions
-    const funcPattern = /^def\s+(\w+)/gm;
-    while ((match = funcPattern.exec(content)) !== null) {
-      if (match[1] && !match[1].startsWith("_")) {
-        exports.push(match[1]);
-      }
-    }
-
-    // Match top-level async function definitions
-    const asyncFuncPattern = /^async\s+def\s+(\w+)/gm;
-    while ((match = asyncFuncPattern.exec(content)) !== null) {
-      if (match[1] && !match[1].startsWith("_")) {
-        exports.push(match[1]);
+    for (const pattern of patterns) {
+      for (const match of content.matchAll(pattern)) {
+        if (match[1] && !match[1].startsWith("_")) {
+          exports.push(match[1]);
+        }
       }
     }
 

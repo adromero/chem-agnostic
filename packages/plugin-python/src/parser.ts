@@ -7,7 +7,7 @@ import type { ParsedImport, WorkspaceRules } from "@chemag/core/types";
  * Retained for generator/test helpers that still shell out to Python.
  */
 export function discoverPython(): string {
-  const envPython = process.env["CHEM_PYTHON"];
+  const envPython = process.env.CHEM_PYTHON;
   if (envPython) {
     return envPython;
   }
@@ -257,7 +257,7 @@ export function resolveModulePath(
 
     const segments = modulePart.split(".");
     const modulePath = path.join(baseDir, ...segments);
-    const pyFile = modulePath + ".py";
+    const pyFile = `${modulePath}.py`;
     if (existsSync(pyFile)) return pyFile;
 
     const initFile = path.join(modulePath, "__init__.py");
@@ -272,7 +272,7 @@ export function resolveModulePath(
       const segments = moduleSpec.split(".");
       const modulePath = path.join(workspaceRoot, ...segments);
 
-      const pyFile = modulePath + ".py";
+      const pyFile = `${modulePath}.py`;
       if (existsSync(pyFile)) return pyFile;
 
       const initFile = path.join(modulePath, "__init__.py");

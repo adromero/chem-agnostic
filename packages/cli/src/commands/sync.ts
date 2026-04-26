@@ -1,7 +1,8 @@
 import * as path from "node:path";
 import { loadWorkspace } from "@chemag/core/loader";
-import { loadPlugin } from "../plugin-loader.js";
 import { syncWorkspace } from "@chemag/core/sync";
+import type { Workspace } from "@chemag/core/types";
+import { loadPlugin } from "../plugin-loader.js";
 
 const R = "\x1b[0m";
 const RED = "\x1b[31m";
@@ -37,7 +38,7 @@ already have one. Existing manifests are never overwritten.
   const wsPath = path.resolve(wsArg);
   const wsDir = path.dirname(wsPath);
 
-  let ws;
+  let ws: Workspace;
   try {
     ws = loadWorkspace(wsPath);
   } catch (e: unknown) {

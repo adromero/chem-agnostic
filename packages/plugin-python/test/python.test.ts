@@ -167,7 +167,7 @@ describeIfPython("parseImports", () => {
   }
 
   it("parses 'import X'", () => {
-    const fp = writePy("import_x.py", `import os\nimport sys\n`);
+    const fp = writePy("import_x.py", "import os\nimport sys\n");
     const imports = pythonPlugin.parseImports(fp);
     expect(imports).toHaveLength(2);
     expect(imports[0]).toMatchObject({
@@ -183,7 +183,7 @@ describeIfPython("parseImports", () => {
   });
 
   it("parses 'from X import Y'", () => {
-    const fp = writePy("from_x.py", `from os.path import join, exists\n`);
+    const fp = writePy("from_x.py", "from os.path import join, exists\n");
     const imports = pythonPlugin.parseImports(fp);
     expect(imports).toHaveLength(1);
     expect(imports[0]).toMatchObject({
@@ -194,7 +194,7 @@ describeIfPython("parseImports", () => {
   });
 
   it("parses 'from . import Z' (relative)", () => {
-    const fp = writePy("rel_import.py", `from . import sibling\n`);
+    const fp = writePy("rel_import.py", "from . import sibling\n");
     const imports = pythonPlugin.parseImports(fp);
     expect(imports).toHaveLength(1);
     expect(imports[0]).toMatchObject({
@@ -205,7 +205,7 @@ describeIfPython("parseImports", () => {
   });
 
   it("parses 'from ..pkg import W' (double-dot relative)", () => {
-    const fp = writePy("rel_import2.py", `from ..pkg import Widget\n`);
+    const fp = writePy("rel_import2.py", "from ..pkg import Widget\n");
     const imports = pythonPlugin.parseImports(fp);
     expect(imports).toHaveLength(1);
     expect(imports[0]).toMatchObject({
@@ -240,14 +240,14 @@ import os
   });
 
   it("skips from __future__ import", () => {
-    const fp = writePy("future.py", `from __future__ import annotations\nimport os\n`);
+    const fp = writePy("future.py", "from __future__ import annotations\nimport os\n");
     const imports = pythonPlugin.parseImports(fp);
     expect(imports).toHaveLength(1);
     expect(imports[0]!.moduleSpecifier).toBe("os");
   });
 
   it("handles files with syntax errors gracefully", () => {
-    const fp = writePy("bad_syntax.py", `def foo(\n`);
+    const fp = writePy("bad_syntax.py", "def foo(\n");
     // Should not throw, just return empty imports for that file
     const imports = pythonPlugin.parseImports(fp);
     expect(imports).toEqual([]);
@@ -406,29 +406,29 @@ class StripeGateway(PaymentGateway):
 
 describe("Python discovery", () => {
   it("uses CHEM_PYTHON env var when set", () => {
-    const original = process.env["CHEM_PYTHON"];
+    const original = process.env.CHEM_PYTHON;
     try {
-      process.env["CHEM_PYTHON"] = "/usr/bin/custom-python";
+      process.env.CHEM_PYTHON = "/usr/bin/custom-python";
       expect(discoverPython()).toBe("/usr/bin/custom-python");
     } finally {
       if (original !== undefined) {
-        process.env["CHEM_PYTHON"] = original;
+        process.env.CHEM_PYTHON = original;
       } else {
-        delete process.env["CHEM_PYTHON"];
+        delete process.env.CHEM_PYTHON;
       }
     }
   });
 
   it("falls back to python3 when CHEM_PYTHON is not set", () => {
-    const original = process.env["CHEM_PYTHON"];
+    const original = process.env.CHEM_PYTHON;
     try {
-      delete process.env["CHEM_PYTHON"];
+      delete process.env.CHEM_PYTHON;
       expect(discoverPython()).toBe("python3");
     } finally {
       if (original !== undefined) {
-        process.env["CHEM_PYTHON"] = original;
+        process.env.CHEM_PYTHON = original;
       } else {
-        delete process.env["CHEM_PYTHON"];
+        delete process.env.CHEM_PYTHON;
       }
     }
   });
@@ -569,10 +569,10 @@ describe("inferUnits", () => {
     mkdirSync(path.join(tmpDir, "elements"), { recursive: true });
     writeFileSync(
       path.join(tmpDir, "elements", "user_id.py"),
-      `class UserId:\n    pass\n`,
+      "class UserId:\n    pass\n",
       "utf-8",
     );
-    writeFileSync(path.join(tmpDir, "elements", "email.py"), `class Email:\n    pass\n`, "utf-8");
+    writeFileSync(path.join(tmpDir, "elements", "email.py"), "class Email:\n    pass\n", "utf-8");
     writeFileSync(path.join(tmpDir, "elements", "__init__.py"), "", "utf-8");
     writeFileSync(path.join(tmpDir, "elements", "test_user_id.py"), "# test file\n", "utf-8");
   });

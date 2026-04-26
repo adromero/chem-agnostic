@@ -347,19 +347,19 @@ describe("formatImportStatement", () => {
 
 describe("inferImplements", () => {
   it("detects single implements clause", () => {
-    const fp = writeTemp("adapter.ts", `export class PgRepo implements OrderRepo {\n}\n`);
+    const fp = writeTemp("adapter.ts", "export class PgRepo implements OrderRepo {\n}\n");
     const result = inferImplements(fp);
     expect(result).toEqual(["OrderRepo"]);
   });
 
   it("detects multiple implements", () => {
-    const fp = writeTemp("multi.ts", `export class Multi implements Foo, Bar {\n}\n`);
+    const fp = writeTemp("multi.ts", "export class Multi implements Foo, Bar {\n}\n");
     const result = inferImplements(fp);
     expect(result).toEqual(["Foo", "Bar"]);
   });
 
   it("returns empty for no implements", () => {
-    const fp = writeTemp("plain.ts", `export class Plain {\n}\n`);
+    const fp = writeTemp("plain.ts", "export class Plain {\n}\n");
     const result = inferImplements(fp);
     expect(result).toEqual([]);
   });
@@ -378,11 +378,11 @@ describe("inferUnits", () => {
   it("infers units from role directory", () => {
     writeTemp(
       "compound/elements/UserId.ts",
-      `export class UserId { constructor(readonly value: string) {} }\n`,
+      "export class UserId { constructor(readonly value: string) {} }\n",
     );
     writeTemp(
       "compound/elements/Email.ts",
-      `export class Email { constructor(readonly value: string) {} }\n`,
+      "export class Email { constructor(readonly value: string) {} }\n",
     );
 
     const units = inferUnits(path.join(tmpDir, "compound"), "elements", "element");
@@ -392,7 +392,7 @@ describe("inferUnits", () => {
   });
 
   it("skips .test.ts and .spec.ts and .d.ts files", () => {
-    writeTemp("compound/reactions/doWork.ts", `export async function doWork() {}\n`);
+    writeTemp("compound/reactions/doWork.ts", "export async function doWork() {}\n");
     writeTemp("compound/reactions/doWork.test.ts", `test("", () => {});\n`);
     writeTemp("compound/reactions/doWork.spec.ts", `test("", () => {});\n`);
     writeTemp("compound/reactions/types.d.ts", `declare module "x" {}\n`);
@@ -408,7 +408,7 @@ describe("inferUnits", () => {
   });
 
   it("infers implements for adapter role", () => {
-    writeTemp("compound/adapters/PgRepo.ts", `export class PgRepo implements OrderRepo {\n}\n`);
+    writeTemp("compound/adapters/PgRepo.ts", "export class PgRepo implements OrderRepo {\n}\n");
     const units = inferUnits(path.join(tmpDir, "compound"), "adapters", "adapter");
     expect(units).toHaveLength(1);
     expect(units[0].implements).toBe("OrderRepo");
@@ -542,7 +542,7 @@ describe("generateAssayStub", () => {
       },
     };
     const result = generateAssayStub(assay, compound);
-    expect(result).toContain(`import { createOrder }`);
+    expect(result).toContain("import { createOrder }");
     expect(result).toContain(`describe("createOrder"`);
     expect(result).toContain("it.todo");
   });

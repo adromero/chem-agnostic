@@ -18,7 +18,7 @@ function buildCompoundMap(compounds: LoadedCompound[]): Map<string, LoadedCompou
 
 /** Pluralise a role name the way exports keys are written (element -> elements) */
 function pluralise(role: string): string {
-  return role + "s";
+  return `${role}s`;
 }
 
 /** Singularise an exports key back to a role (elements -> element) */
@@ -359,7 +359,7 @@ const checkBondRules: CheckFn = (ws, compounds) => {
       if (!allowedRoles) continue;
 
       for (const dep of u.depends_on ?? []) {
-        let depRole: string | undefined = localUnits.get(dep) ?? externalUnits.get(dep);
+        const depRole: string | undefined = localUnits.get(dep) ?? externalUnits.get(dep);
 
         if (depRole === undefined) {
           diags.push({
@@ -367,7 +367,7 @@ const checkBondRules: CheckFn = (ws, compounds) => {
             check: "bond-rules",
             compound: c.manifest.compound,
             message: `"${u.name}" depends on "${dep}" which cannot be resolved`,
-            hint: `Not a local unit, not in declared imports, and not in an implicit solvent`,
+            hint: "Not a local unit, not in declared imports, and not in an implicit solvent",
           });
           continue;
         }

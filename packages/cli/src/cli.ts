@@ -26,9 +26,7 @@ function getVersion(): string {
       if (pkg.name === "@chemag/cli") {
         return pkg.version as string;
       }
-    } catch {
-      continue;
-    }
+    } catch {}
   }
   return "unknown";
 }

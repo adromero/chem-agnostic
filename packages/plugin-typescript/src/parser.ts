@@ -65,7 +65,7 @@ export function resolveModulePath(fromFile: string, moduleSpec: string): string 
   const dir = path.dirname(fromFile);
   const base = path.resolve(dir, moduleSpec);
 
-  const candidates = [base, base + ".ts", base + ".tsx", path.join(base, "index.ts")];
+  const candidates = [base, `${base}.ts`, `${base}.tsx`, path.join(base, "index.ts")];
 
   for (const c of candidates) {
     if (fs.existsSync(c) && fs.statSync(c).isFile()) {

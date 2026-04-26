@@ -1,8 +1,8 @@
 import * as path from "node:path";
-import { loadWorkspace, discoverCompounds } from "@chemag/core/loader";
-import { loadPlugin } from "../plugin-loader.js";
 import { allChecks } from "@chemag/core/checks";
-import type { Diagnostic, CheckOptions } from "@chemag/core/types";
+import { discoverCompounds, loadWorkspace } from "@chemag/core/loader";
+import type { CheckOptions, Diagnostic, LoadedCompound, Workspace } from "@chemag/core/types";
+import { loadPlugin } from "../plugin-loader.js";
 
 const R = "\x1b[0m";
 const RED = "\x1b[31m";
@@ -39,7 +39,7 @@ ${BLD}Options:${R}
   const wsPath = path.resolve(wsArg);
   const wsDir = path.dirname(wsPath);
 
-  let ws;
+  let ws: Workspace;
   try {
     ws = loadWorkspace(wsPath);
   } catch (e: unknown) {
@@ -47,7 +47,7 @@ ${BLD}Options:${R}
     process.exit(2);
   }
 
-  let compounds;
+  let compounds: LoadedCompound[];
   try {
     compounds = discoverCompounds(ws, wsDir);
   } catch (e: unknown) {

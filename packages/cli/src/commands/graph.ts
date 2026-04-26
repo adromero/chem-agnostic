@@ -1,6 +1,7 @@
 import * as path from "node:path";
-import { loadWorkspace, discoverCompounds } from "@chemag/core/loader";
 import { generateMermaid } from "@chemag/core/graph";
+import { discoverCompounds, loadWorkspace } from "@chemag/core/loader";
+import type { LoadedCompound, Workspace } from "@chemag/core/types";
 
 const R = "\x1b[0m";
 const RED = "\x1b[31m";
@@ -34,7 +35,7 @@ a Markdown code block with \`\`\`mermaid fencing.
   const wsPath = path.resolve(wsArg);
   const wsDir = path.dirname(wsPath);
 
-  let ws;
+  let ws: Workspace;
   try {
     ws = loadWorkspace(wsPath);
   } catch (e: unknown) {
@@ -42,7 +43,7 @@ a Markdown code block with \`\`\`mermaid fencing.
     process.exit(2);
   }
 
-  let compounds;
+  let compounds: LoadedCompound[];
   try {
     compounds = discoverCompounds(ws, wsDir);
   } catch (e: unknown) {
