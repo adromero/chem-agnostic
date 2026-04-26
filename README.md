@@ -95,6 +95,18 @@ The `chem-ag` alias works for every command — call it with whichever name you 
 - `TYPE_CHECKING` guard detection
 - The `inferImplements` helper still shells out to `python3` to inspect class bases — this is the only remaining Python subprocess in the plugin and is opt-in (controlled by the `CHEM_PYTHON` env var).
 
+## Vocabulary
+
+`chemag` ships two locales for all user-visible text (diagnostic messages, help blurbs, generated CLAUDE.md): **`standard`** (default; uses domain-driven-design terms like "use-case", "port", "dependency rule") and **`chemistry`** (the original chem metaphor: "reaction", "interface", "bond"). Pick a vocabulary three ways, in this precedence order:
+
+1. CLI flag: `chemag check --vocabulary chemistry workspace.yaml`
+2. Env var: `CHEMAG_VOCABULARY=chemistry chemag check workspace.yaml`
+3. `workspace.yaml` field: `vocabulary: chemistry`
+
+The default is `standard`. The flag and env var win over the workspace field. Adding a new translation key without entries in both locale JSON files will fail CI.
+
+**Limitation:** per-command `--help` text uses Phase-1 vocabulary only (flag, env, or default). Workspace-sourced vocabulary is not applied to help text because help exits before any `workspace.yaml` is loaded.
+
 ## Configuration
 
 Each workspace has a `workspace.yaml` with a `language` field:
