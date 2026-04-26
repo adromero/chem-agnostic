@@ -1,3 +1,5 @@
+import type { DiagnosticCode } from "./diagnostics/codes.js";
+
 // ---------------------------------------------------------------------------
 // Workspace (workspace.yaml)
 // ---------------------------------------------------------------------------
@@ -131,10 +133,18 @@ export interface LoadedCompound {
 export interface Diagnostic {
   level: "error" | "warning";
   check: string;
+  /**
+   * Stable diagnostic code (CHEM-CATEGORY-NNN). Bijective with the
+   * `diagnostic.*` TrKey emitted as the message. See
+   * `./diagnostics/codes.ts` for the registry.
+   */
+  code: DiagnosticCode;
   compound?: string;
   message: string;
   hint?: string;
 }
+
+export type { DiagnosticCode } from "./diagnostics/codes.js";
 
 export type CheckFn = (
   workspace: Workspace,

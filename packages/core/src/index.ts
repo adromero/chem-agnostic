@@ -10,3 +10,4 @@ export * from "./sync.js";
 export * from "./graph.js";
 export * from "./template-claude-md.js";
 export * from "./vocabulary/index.js";
+export * from "./diagnostics/index.js";

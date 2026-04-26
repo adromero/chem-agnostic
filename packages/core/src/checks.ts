@@ -51,6 +51,7 @@ const checkNoDuplicates: CheckFn = (_ws, compounds) => {
       diags.push({
         level: "error",
         check: "no-duplicates",
+        code: "CHEM-MANIFEST-001",
         compound: name,
         message: tr("diagnostic.duplicate_compound", { name }),
         hint: `Also defined in: ${seen.get(name)}`,
@@ -75,6 +76,7 @@ const checkKnownRoles: CheckFn = (ws, compounds) => {
         diags.push({
           level: "error",
           check: "known-roles",
+          code: "CHEM-ROLE-001",
           compound: c.manifest.compound,
           message: tr("diagnostic.unknown_role", { unit: u.name, role: u.role }),
           hint: `Known roles: [${[...known].join(", ")}]`,
@@ -99,6 +101,7 @@ const checkFileExistence: CheckFn = (ws, compounds, opts) => {
         diags.push({
           level: "error",
           check: "file-existence",
+          code: "CHEM-PLACEMENT-001",
           compound: c.manifest.compound,
           message: tr("diagnostic.file_missing_unit", { unit: u.name, file: u.file }),
           hint: `Expected at ${abs}`,
@@ -111,6 +114,7 @@ const checkFileExistence: CheckFn = (ws, compounds, opts) => {
         diags.push({
           level: "error",
           check: "file-existence",
+          code: "CHEM-PLACEMENT-002",
           compound: c.manifest.compound,
           message: tr("diagnostic.file_missing_assay", { assay: a.name, file: a.file }),
           hint: `Expected at ${abs}`,
@@ -140,6 +144,7 @@ const checkPublicSurface: CheckFn = (ws, compounds, opts) => {
       diags.push({
         level: "warning",
         check: "public-surface",
+        code: "CHEM-PUBLIC-001",
         compound: c.manifest.compound,
         message: tr("diagnostic.public_surface_missing", { surface: surfaceFile }),
         hint: `Create ${abs}`,
@@ -171,6 +176,7 @@ const checkRoleFolders: CheckFn = (ws, compounds) => {
         diags.push({
           level: "error",
           check: "role-folders",
+          code: "CHEM-PLACEMENT-003",
           compound: c.manifest.compound,
           message: tr("diagnostic.role_folder_mismatch", {
             unit: u.name,
@@ -209,6 +215,7 @@ const checkExportConsistency: CheckFn = (_ws, compounds) => {
           diags.push({
             level: "error",
             check: "export-consistency",
+            code: "CHEM-EXPORT-001",
             compound: c.manifest.compound,
             message: tr("diagnostic.export_no_unit", { name, key, role }),
             hint: `Add a unit { role: "${role}", name: "${name}", ... } to the units list`,
@@ -233,6 +240,7 @@ const checkImportExistence: CheckFn = (_ws, compounds) => {
         diags.push({
           level: "error",
           check: "import-existence",
+          code: "CHEM-IMPORT-001",
           compound: c.manifest.compound,
           message: tr("diagnostic.import_existence", { compound: imp.compound }),
         });
@@ -261,6 +269,7 @@ const checkImportSpecificity: CheckFn = (_ws, compounds) => {
           diags.push({
             level: "error",
             check: "import-specificity",
+            code: "CHEM-IMPORT-002",
             compound: c.manifest.compound,
             message: tr("diagnostic.import_specificity", { name, compound: imp.compound }),
           });
@@ -293,6 +302,7 @@ const checkCompoundTypeImports: CheckFn = (ws, compounds) => {
         diags.push({
           level: "error",
           check: "compound-type-imports",
+          code: "CHEM-TYPE-001",
           compound: c.manifest.compound,
           message: tr("diagnostic.compound_type_cannot_import", {
             target: imp.compound,
@@ -309,6 +319,7 @@ const checkCompoundTypeImports: CheckFn = (ws, compounds) => {
         diags.push({
           level: "error",
           check: "compound-type-imports",
+          code: "CHEM-TYPE-002",
           compound: c.manifest.compound,
           message: tr("diagnostic.compound_type_target_uniport", {
             target: imp.compound,
@@ -319,6 +330,7 @@ const checkCompoundTypeImports: CheckFn = (ws, compounds) => {
         diags.push({
           level: "error",
           check: "compound-type-imports",
+          code: "CHEM-TYPE-003",
           compound: c.manifest.compound,
           message: tr("diagnostic.compound_type_target_same_type", {
             target: imp.compound,
@@ -381,6 +393,7 @@ const checkBondRules: CheckFn = (ws, compounds) => {
           diags.push({
             level: "error",
             check: "bond-rules",
+            code: "CHEM-BOND-001",
             compound: c.manifest.compound,
             message: tr("diagnostic.bond_unresolved", { src_name: u.name, dep }),
             hint: "Not a local unit, not in declared imports, and not in an implicit solvent",
@@ -392,6 +405,7 @@ const checkBondRules: CheckFn = (ws, compounds) => {
           diags.push({
             level: "error",
             check: "bond-rules",
+            code: "CHEM-BOND-002",
             compound: c.manifest.compound,
             message: tr("diagnostic.bond_violation", {
               src_name: u.name,
@@ -426,6 +440,7 @@ const checkSignalConsistency: CheckFn = (_ws, compounds) => {
         diags.push({
           level: "error",
           check: "signal-consistency",
+          code: "CHEM-SIGNAL-001",
           compound: c.manifest.compound,
           message: tr("diagnostic.signal_emitter_not_reaction", {
             signal: em.signal,
@@ -440,6 +455,7 @@ const checkSignalConsistency: CheckFn = (_ws, compounds) => {
         diags.push({
           level: "error",
           check: "signal-consistency",
+          code: "CHEM-SIGNAL-002",
           compound: c.manifest.compound,
           message: tr("diagnostic.signal_handler_not_reaction", {
             signal: li.signal,
@@ -457,6 +473,7 @@ const checkSignalConsistency: CheckFn = (_ws, compounds) => {
         diags.push({
           level: "warning",
           check: "signal-consistency",
+          code: "CHEM-SIGNAL-003",
           compound: c.manifest.compound,
           message: tr("diagnostic.signal_orphaned_listener", { signal: li.signal }),
           hint: "Emitting compound may not be loaded, or signal name is misspelled",
@@ -483,6 +500,7 @@ const checkWiringValidity: CheckFn = (_ws, compounds) => {
         diags.push({
           level: "error",
           check: "wiring-validity",
+          code: "CHEM-WIRING-001",
           compound: c.manifest.compound,
           message: tr("diagnostic.wiring_compound_missing", { compound: w.compound }),
         });
@@ -497,6 +515,7 @@ const checkWiringValidity: CheckFn = (_ws, compounds) => {
         diags.push({
           level: "error",
           check: "wiring-validity",
+          code: "CHEM-WIRING-002",
           compound: c.manifest.compound,
           message: tr("diagnostic.wiring_interface_missing", {
             iface: w.interface,
@@ -509,6 +528,7 @@ const checkWiringValidity: CheckFn = (_ws, compounds) => {
         diags.push({
           level: "error",
           check: "wiring-validity",
+          code: "CHEM-WIRING-003",
           compound: c.manifest.compound,
           message: tr("diagnostic.wiring_adapter_missing", {
             adapter: w.adapter,
@@ -521,6 +541,7 @@ const checkWiringValidity: CheckFn = (_ws, compounds) => {
         diags.push({
           level: "error",
           check: "wiring-validity",
+          code: "CHEM-WIRING-004",
           compound: c.manifest.compound,
           message: tr("diagnostic.wiring_adapter_no_implements", {
             adapter: w.adapter,
@@ -554,6 +575,7 @@ const checkSingletons: CheckFn = (ws, compounds) => {
       diags.push({
         level: "error",
         check: "singleton",
+        code: "CHEM-MANIFEST-002",
         message: tr("diagnostic.singleton_violated", {
           type,
           count: names.length,
@@ -581,6 +603,7 @@ const checkRoleRestrictions: CheckFn = (ws, compounds) => {
         diags.push({
           level: "error",
           check: "role-restrictions",
+          code: "CHEM-ROLE-002",
           compound: c.manifest.compound,
           message: tr("diagnostic.role_not_allowed_for_type", {
             unit: u.name,
@@ -613,6 +636,7 @@ const checkAssayReferences: CheckFn = (_ws, compounds) => {
           diags.push({
             level: "warning",
             check: "assay-references",
+            code: "CHEM-ASSAY-001",
             compound: c.manifest.compound,
             message: tr("diagnostic.assay_subject_unknown", { assay: a.name, subject: s }),
           });
@@ -623,6 +647,7 @@ const checkAssayReferences: CheckFn = (_ws, compounds) => {
           diags.push({
             level: "warning",
             check: "assay-references",
+            code: "CHEM-ASSAY-002",
             compound: c.manifest.compound,
             message: tr("diagnostic.assay_mock_not_interface", { assay: a.name, mock: m }),
             hint: "Mocks should reference interfaces",

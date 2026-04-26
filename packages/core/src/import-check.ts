@@ -93,6 +93,7 @@ export function checkImports(
         diags.push({
           level: "error",
           check: "import-bonds",
+          code: "CHEM-BOND-003",
           compound: srcCompound.manifest.compound,
           message: tr("diagnostic.import_bond_violation", {
             file: path.basename(abs),
@@ -127,6 +128,7 @@ export function checkImports(
                 diags.push({
                   level: "error",
                   check: "import-undeclared",
+                  code: "CHEM-IMPORT-003",
                   compound: srcCompound.manifest.compound,
                   message: tr("diagnostic.import_undeclared", {
                     file: path.basename(abs),
@@ -140,6 +142,7 @@ export function checkImports(
               diags.push({
                 level: "error",
                 check: "import-bypass",
+                code: "CHEM-IMPORT-004",
                 compound: srcCompound.manifest.compound,
                 message: tr("diagnostic.import_bypass", {
                   file: path.basename(abs),
