@@ -11,7 +11,9 @@ export default defineConfig({
     alias: chemagAliases(repoRoot),
   },
   test: {
-    include: ["test/**/*.test.ts"],
+    // `.bench.ts` runs as part of the regular suite — it asserts on
+    // duration thresholds rather than producing benchmark reports.
+    include: ["test/**/*.test.ts", "test/**/*.bench.ts"],
     testTimeout: 30_000,
   },
 });

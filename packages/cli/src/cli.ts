@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { resolveCliVocabulary, setVocabulary, tr } from "@chemag/core/vocabulary";
 import { setCacheEnabled } from "./cache/cache-state.js";
 import { cmdCheck } from "./commands/check.js";
+import { cmdCheckEdit } from "./commands/check-edit.js";
 import { cmdAnalyze } from "./commands/analyze.js";
 import { cmdScaffold } from "./commands/scaffold.js";
 import { cmdGraph } from "./commands/graph.js";
@@ -70,7 +71,18 @@ export function runCli(argv: string[]): void {
     process.exit(0);
   }
 
-  if (argv.includes("--help") || argv.includes("-h") || argv.length === 0) {
+  // Top-level --help / -h applies only when no subcommand was given. With a
+  // subcommand the flag is forwarded to that command's parser so each
+  // subcommand can emit its own help block. We look at the dispatch argv
+  // (after stripping --vocabulary <v> and --no-cache, both already handled
+  // above) and check whether the first positional is missing.
+  const dispatchArgsForHelpCheck = stripCacheFlag(stripVocabularyFlag(argv));
+  const firstPositional = dispatchArgsForHelpCheck.find((a) => !a.startsWith("-"));
+  if ((argv.includes("--help") || argv.includes("-h")) && firstPositional === undefined) {
+    printHelp();
+    process.exit(0);
+  }
+  if (argv.length === 0) {
     printHelp();
     process.exit(0);
   }
@@ -91,6 +103,9 @@ export function runCli(argv: string[]): void {
       break;
     case "check":
       cmdCheck(commandArgs);
+      break;
+    case "check-edit":
+      cmdCheckEdit(commandArgs);
       break;
     case "analyze":
       cmdAnalyze(commandArgs);
