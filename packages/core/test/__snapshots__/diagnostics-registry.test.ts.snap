@@ -1,0 +1,34 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`DIAGNOSTIC_CODES — snapshot of registered code keys > matches the canonical sorted list (detects accidental removals) 1`] = `
+[
+  "CHEM-ASSAY-001",
+  "CHEM-ASSAY-002",
+  "CHEM-BOND-001",
+  "CHEM-BOND-002",
+  "CHEM-BOND-003",
+  "CHEM-EXPORT-001",
+  "CHEM-IMPORT-001",
+  "CHEM-IMPORT-002",
+  "CHEM-IMPORT-003",
+  "CHEM-IMPORT-004",
+  "CHEM-MANIFEST-001",
+  "CHEM-MANIFEST-002",
+  "CHEM-PLACEMENT-001",
+  "CHEM-PLACEMENT-002",
+  "CHEM-PLACEMENT-003",
+  "CHEM-PUBLIC-001",
+  "CHEM-ROLE-001",
+  "CHEM-ROLE-002",
+  "CHEM-SIGNAL-001",
+  "CHEM-SIGNAL-002",
+  "CHEM-SIGNAL-003",
+  "CHEM-TYPE-001",
+  "CHEM-TYPE-002",
+  "CHEM-TYPE-003",
+  "CHEM-WIRING-001",
+  "CHEM-WIRING-002",
+  "CHEM-WIRING-003",
+  "CHEM-WIRING-004",
+]
+`;

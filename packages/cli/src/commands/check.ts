@@ -1,5 +1,6 @@
 import * as path from "node:path";
 import { allChecks } from "@chemag/core/checks";
+import { explainCode } from "@chemag/core/diagnostics";
 import { discoverCompounds, loadWorkspace } from "@chemag/core/loader";
 import type { CheckOptions, Diagnostic, LoadedCompound, Workspace } from "@chemag/core/types";
 import { applyWorkspaceVocabulary, tr } from "@chemag/core/vocabulary";
@@ -16,8 +17,28 @@ export function cmdCheck(argv: string[]): void {
   if (argv.includes("-h") || argv.includes("--help")) {
     console.log(`\n${BLD}${tr("cli.command.check")}${R}\n`);
     console.log(
-      `${BLD}Options:${R}\n  --manifest-only   Skip filesystem checks\n  --verbose, -v     Show warning details\n  --json            Machine-readable output\n`,
+      `${BLD}Options:${R}\n  --manifest-only       Skip filesystem checks\n  --verbose, -v         Show warning details\n  --json                Machine-readable output\n  --explain CHEM-XXX-NNN  Print metadata for a diagnostic code and exit\n`,
     );
+    process.exit(0);
+  }
+
+  // --explain is a query flag — short-circuit BEFORE any workspace resolution
+  // so `chemag check --explain CHEM-BOND-001` works without a workspace path.
+  // The naive positional scan below (`argv.find(a => !a.startsWith("-"))`)
+  // would otherwise misread the code argument as the workspace path.
+  const explainIdx = argv.indexOf("--explain");
+  if (explainIdx !== -1) {
+    const code = argv[explainIdx + 1];
+    if (!code) {
+      console.error(`${RED}--explain requires a code argument (e.g. CHEM-BOND-001)${R}`);
+      process.exit(2);
+    }
+    const out = explainCode(code);
+    if (out === null) {
+      console.error(`${RED}Unknown diagnostic code:${R} ${code}`);
+      process.exit(2);
+    }
+    console.log(out);
     process.exit(0);
   }
 
