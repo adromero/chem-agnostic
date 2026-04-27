@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { resolveCliVocabulary, setVocabulary, tr } from "@chemag/core/vocabulary";
+import { resolveCliVocabulary, setVocabulary } from "@chemag/core/vocabulary";
 import {
   defaultConsentIO,
   flushQueue,
@@ -24,6 +24,8 @@ import { cmdSync } from "./commands/sync.js";
 import { cmdInit } from "./commands/init.js";
 import { cmdAdd } from "./commands/add.js";
 import { cmdConfig } from "./commands/config.js";
+import { cmdCompletion } from "./commands/completion.js";
+import { buildCommandTree, renderHelp } from "./cli-meta.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -51,13 +53,17 @@ function getVersion(): string {
  * choices propagate to help output. Workspace-sourced vocabulary is NOT
  * applied here because help exits before any workspace is loaded — this is
  * a documented limitation.
+ *
+ * Layout is rendered by `renderHelp(buildCommandTree(...))` from `cli-meta.ts`,
+ * which walks the citty `defineCommand` tree. The framework owns layout +
+ * completion-script generation; dispatch and global-flag handling stay in
+ * this file. See `docs/adrs/0003-cli-framework.md`.
  */
 function printHelp(): void {
-  const intro = tr("cli.help.intro", { version: getVersion() });
-  const usage = tr("cli.help.usage");
-  const options = tr("cli.help.options");
-  const commands = tr("cli.help.commands");
-  console.log(`${intro}\n\n${usage}\n\n${options}\n\n${commands}\n`);
+  // The command tree is built lazily AFTER Phase-1 vocabulary resolution so
+  // tr() reads the right locale. We re-build per call (cheap; just builds
+  // a small object literal).
+  console.log(renderHelp(buildCommandTree(getVersion())));
 }
 
 /**
@@ -140,6 +146,9 @@ export function runCli(argv: string[]): void {
       break;
     case "config":
       cmdConfig(commandArgs);
+      break;
+    case "completion":
+      cmdCompletion(commandArgs);
       break;
     default:
       console.error(`Unknown command: ${command}`);
@@ -249,7 +258,16 @@ export async function runCliBootstrap(argv: string[]): Promise<void> {
   // Load consent + flush any prior-run queue (best-effort).
   await initTelemetry();
 
-  runCli(argv);
+  // Wrap runCli in try/finally so a synchronous throw before a command's own
+  // per-event flush completes still gets one last best-effort drain. Note:
+  // process.exit() short-circuits `finally` in Node, so this only fires on
+  // the unusual path where dispatch throws before exiting. The normal path
+  // (commands call process.exit; the per-event flush ran first) is unchanged.
+  try {
+    runCli(argv);
+  } finally {
+    await flushTelemetryOnExit();
+  }
 }
 
 /**
