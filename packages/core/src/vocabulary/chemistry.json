@@ -58,6 +58,9 @@
   "diagnostic.mcp_client_unknown": "Unknown --client reagent \"{client}\". Supported: {supported}.",
   "diagnostic.mcp_client_config_invalid_json": "MCP client precipitate is not valid JSON: {path} ({reason})",
   "diagnostic.mcp_client_cli_failed": "Client CLI \"{cli}\" exited with code {exitCode}: {stderr}",
+  "diagnostic.resource_uri_invalid": "Invalid reagent URI \"{uri}\": {reason}",
+  "diagnostic.resource_compound_not_found": "Compound \"{name}\" not present in this workspace.",
+  "diagnostic.resource_docs_section_unknown": "Unknown docs section \"{section}\". Supported: {supported}.",
 
   "diagnostic.tool_not_yet_implemented": "Reagent \"{tool}\" is not yet bonded into chemag install-hooks. Currently supported: claude, cursor, codex, aider, cline, copilot.",
   "diagnostic.settings_file_invalid_json": "Settings precipitate is not valid JSON: {path} ({reason})",

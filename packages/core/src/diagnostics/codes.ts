@@ -12,6 +12,8 @@
 //     surfaced through MCP responses rather than CLI runs).
 //   * 201..299 — third block (MCP-client-registration diagnostics, surfaced
 //     through chemag mcp install/uninstall/status).
+//   * 301..399 — fourth block (MCP resource-read diagnostics, surfaced
+//     through resource reads/subscriptions on the MCP server).
 // Within a block the numbering is contiguous: 001, 002, 003, ..., or
 // 101, 102, 103, .... Gaps WITHIN a block are permitted only when a code
 // has been deprecated (mark the entry with `deprecated: { since, replacement }`);
@@ -97,6 +99,9 @@ export type DiagnosticCode =
   | "CHEM-MCP-201"
   | "CHEM-MCP-202"
   | "CHEM-MCP-203"
+  | "CHEM-MCP-301"
+  | "CHEM-MCP-302"
+  | "CHEM-MCP-303"
   // ---- INSTALL-HOOKS ----
   | "CHEM-INSTALL-HOOKS-001"
   | "CHEM-INSTALL-HOOKS-002"
@@ -442,6 +447,27 @@ export const DIAGNOSTIC_CODES: Record<DiagnosticCode, DiagnosticCodeMeta> = {
     level: "error",
     trKey: "diagnostic.mcp_client_cli_failed",
     helpFragment: "chem-mcp-203-mcp-client-cli-failed",
+  },
+  "CHEM-MCP-301": {
+    code: "CHEM-MCP-301",
+    category: "MCP",
+    level: "error",
+    trKey: "diagnostic.resource_uri_invalid",
+    helpFragment: "chem-mcp-301-resource-uri-invalid",
+  },
+  "CHEM-MCP-302": {
+    code: "CHEM-MCP-302",
+    category: "MCP",
+    level: "error",
+    trKey: "diagnostic.resource_compound_not_found",
+    helpFragment: "chem-mcp-302-resource-compound-not-found",
+  },
+  "CHEM-MCP-303": {
+    code: "CHEM-MCP-303",
+    category: "MCP",
+    level: "error",
+    trKey: "diagnostic.resource_docs_section_unknown",
+    helpFragment: "chem-mcp-303-resource-docs-section-unknown",
   },
 
   // ---- INSTALL-HOOKS ----

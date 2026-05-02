@@ -74,6 +74,22 @@ export interface ManifestCache {
 
   /** Persist a parsed compound alongside its content hash. */
   setCompound(manifestPath: string, loaded: LoadedCompound, sourceHash: string): void;
+
+  /**
+   * Drop the cached entry for a single compound. Called by the MCP file
+   * watcher (WP-016) when a compound.yaml changes, so the next read is
+   * forced to re-parse from source. Idempotent: deleting a missing entry
+   * is a no-op. Resolves the manifest path against the workspace
+   * `paths.compounds` if provided as a bare compound name; otherwise
+   * accepts an absolute manifest path directly.
+   */
+  invalidateCompound(manifestPath: string): void;
+
+  /**
+   * Drop the cached workspace.yaml entry. Called by the MCP file watcher
+   * when workspace.yaml itself changes. Idempotent.
+   */
+  invalidateWorkspace(workspacePath: string): void;
 }
 
 /** Construct a ManifestCache rooted at the given workspace directory. */
@@ -123,6 +139,27 @@ class DiskManifestCache implements ManifestCache {
     const file = this.compoundCacheFile(manifestPath);
     const record: CompoundCacheRecord = { contentHash: sourceHash, loaded };
     atomicWriteJson(file, record);
+  }
+
+  invalidateCompound(manifestPath: string): void {
+    // No-op when caching is disabled — there's nothing to drop.
+    if (!isCacheEnabled()) return;
+    const file = this.compoundCacheFile(manifestPath);
+    try {
+      rmSync(file, { force: true });
+    } catch {
+      // Best-effort: nothing to do if the file already disappeared.
+    }
+  }
+
+  invalidateWorkspace(workspacePath: string): void {
+    if (!isCacheEnabled()) return;
+    const file = this.workspaceCacheFile(workspacePath);
+    try {
+      rmSync(file, { force: true });
+    } catch {
+      // Best-effort.
+    }
   }
 
   // -------------------------------------------------------------------------

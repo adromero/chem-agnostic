@@ -81,6 +81,10 @@ export type TrKey =
   | "diagnostic.mcp_client_unknown" // params: { client, supported }
   | "diagnostic.mcp_client_config_invalid_json" // params: { path, reason }
   | "diagnostic.mcp_client_cli_failed" // params: { cli, exitCode, stderr }
+  // mcp-server resource reads (CHEM-MCP-301/302/303)
+  | "diagnostic.resource_uri_invalid" // params: { uri, reason }
+  | "diagnostic.resource_compound_not_found" // params: { name }
+  | "diagnostic.resource_docs_section_unknown" // params: { section, supported }
   // install-hooks (CHEM-INSTALL-HOOKS-001..010)
   | "diagnostic.tool_not_yet_implemented" // params: { tool }
   | "diagnostic.settings_file_invalid_json" // params: { path, reason }
@@ -194,6 +198,9 @@ export const ALL_TR_KEYS: readonly TrKey[] = [
   "diagnostic.mcp_client_unknown",
   "diagnostic.mcp_client_config_invalid_json",
   "diagnostic.mcp_client_cli_failed",
+  "diagnostic.resource_uri_invalid",
+  "diagnostic.resource_compound_not_found",
+  "diagnostic.resource_docs_section_unknown",
   "diagnostic.tool_not_yet_implemented",
   "diagnostic.settings_file_invalid_json",
   "diagnostic.hooks_already_installed_no_force",
