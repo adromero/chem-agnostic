@@ -16,14 +16,16 @@
     "dist/**/*.d.ts",
     "dist/**/*.d.ts.map",
     "dist/**/*.js.map",
-    "dist/completions/**"
+    "dist/completions/**",
+    "dist/installers/scripts/**"
   ],
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build:version": "node ./scripts/build-version.mjs",
     "build:completions": "node ./scripts/copy-completions.mjs",
+    "build:installer-scripts": "node ./scripts/copy-installer-scripts.mjs",
     "prebuild": "npm run build:version",
-    "postbuild": "npm run build:completions",
+    "postbuild": "npm run build:completions && npm run build:installer-scripts",
     "build": "tsc -p tsconfig.json",
     "gen:completions": "tsx ./scripts/gen-completions.ts",
     "test": "vitest run",
