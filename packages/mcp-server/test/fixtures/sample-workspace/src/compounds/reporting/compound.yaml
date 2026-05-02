@@ -1,0 +1,13 @@
+compound: reporting
+description: Generate and store financial reports for accounting reconciliation.
+exports:
+  interfaces: [ReportRepository]
+imports: []
+units:
+  - role: element
+    name: ReportId
+    file: ./elements/ReportId.ts
+  - role: interface
+    name: ReportRepository
+    file: ./interfaces/ReportRepository.ts
+assays: []

@@ -1,0 +1,13 @@
+compound: identity
+description: User identity, authentication, and session management.
+exports:
+  interfaces: [UserRepository]
+imports: []
+units:
+  - role: element
+    name: UserId
+    file: ./elements/UserId.ts
+  - role: interface
+    name: UserRepository
+    file: ./interfaces/UserRepository.ts
+assays: []

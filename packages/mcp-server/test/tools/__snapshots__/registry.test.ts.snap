@@ -1,0 +1,14 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`tool registry — description snapshot (vocabulary-invariant) > matches the canonical description map 1`] = `
+{
+  "explain_diagnostic": "Look up a chemag diagnostic code (CHEM-CATEGORY-NNN) and return its plain-English description, severity level, and a docs URL. The \`examples\` array is reserved for a future docs stage and currently returns an empty array.",
+  "find_violations": "Run manifest validation and import analysis across the workspace. Optionally filter to a single compound, or to files that changed since a git revision (via git diff --name-only).",
+  "get_bond_rules": "Return the workspace's role catalog, bond (dependency) map, compound-type definitions, and the cross-compound import rule. Optional vocabulary override switches the role labels in the output.",
+  "get_compound": "Return a full description of a single compound: type, exports, imports, units, signals, and a Mermaid subgraph filtered to the compound and its 1-hop neighbours. Errors if the compound does not exist.",
+  "list_compounds": "List all compounds in the workspace, optionally filtered by container type. Each entry summarizes the compound's type, description, public surface path, the set of roles it currently uses, and its unit count.",
+  "scaffold_unit": "Add a new unit to a compound: patch compound.yaml, scaffold the stub source file via the active language plugin, and return a unified-diff of the manifest change. Equivalent to running \`chemag add unit <compound> <role> <name>\`.",
+  "validate_edit": "Validate a single file edit against Chem architecture rules (bond rules, cross-compound import rules, role-folder placement). Returns diagnostics with structured remediation hints.",
+  "where_should_this_go": "Suggest one or more (compound, role) placements for a free-form feature description, or resolve a file path to its (compound, role) directly. Returns ranked suggestions with rationales drawn from existing units.",
+}
+`;

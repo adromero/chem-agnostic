@@ -21,6 +21,7 @@ import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import type { ServerCapabilities } from "@modelcontextprotocol/sdk/types.js";
 import type { VocabularyName } from "@chemag/core/vocabulary";
 import { Session, type SessionOptions } from "./context.js";
+import { registerTools } from "./tools/index.js";
 import { VERSION } from "./version.js";
 
 /** Options accepted by `createServer`. */
@@ -105,8 +106,11 @@ export function createServer(opts: CreateServerOptions = {}): ServerHandle {
   // Likewise, an empty `prompts/list` so prompt-capable clients don't hang.
   server.server.setRequestHandler(EmptyPromptListSchema, async () => ({ prompts: [] }));
 
-  // Likewise, an empty `tools/list` so tool-capable clients don't hang.
-  server.server.setRequestHandler(EmptyToolListSchema, async () => ({ tools: [] }));
+  // Wire the tool registry — this installs the SDK's own `tools/list` and
+  // `tools/call` handlers via `setToolRequestHandlers`. Do NOT also call
+  // `setRequestHandler('tools/list', ...)` here; the SDK's installation is
+  // authoritative.
+  registerTools(server, session);
 
   return {
     server,
@@ -139,7 +143,6 @@ export function createServer(opts: CreateServerOptions = {}): ServerHandle {
 
 const EmptyResourceListSchema = makeMethodSchema("resources/list");
 const EmptyPromptListSchema = makeMethodSchema("prompts/list");
-const EmptyToolListSchema = makeMethodSchema("tools/list");
 
 function makeMethodSchema(method: string) {
   // Cast: the SDK accepts any object schema with a `parse` method whose

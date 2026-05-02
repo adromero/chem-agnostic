@@ -1,0 +1,35 @@
+workspace: sample
+language: typescript
+roles:
+  element:
+    description: Immutable value object
+    folder: elements
+  molecule:
+    description: Domain entity composed of value objects
+    folder: molecules
+  reaction:
+    description: Workflow that orchestrates ports to fulfil a use case
+    folder: reactions
+  interface:
+    description: Port contract describing an external capability
+    folder: interfaces
+  adapter:
+    description: Adapter implementing a port against a real infrastructure backend like Stripe or Postgres
+    folder: adapters
+  buffer:
+    description: Middleware that wraps reactions for cross-cutting concerns
+    folder: buffers
+bonds:
+  element: [element]
+  molecule: [element, molecule]
+  reaction: [element, molecule, interface]
+  interface: [element, molecule]
+  adapter: [element, molecule, interface, adapter]
+  buffer: [element, molecule, interface]
+paths:
+  compounds: ./src/compounds
+rules:
+  cross_compound_imports: public_only
+  role_from_path: true
+  public_surface: public.ts
+  manifest_filename: compound.yaml

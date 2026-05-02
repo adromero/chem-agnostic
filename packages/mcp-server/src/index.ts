@@ -25,3 +25,5 @@ export {
 export type { McpServer, Transport } from "./protocol.js";
 
 export { VERSION } from "./version.js";
+
+export { ALL_TOOLS, registerTools } from "./tools/index.js";

@@ -1,0 +1,22 @@
+compound: payments
+description: Payment processing flows including Stripe charges, refunds, and webhook handling.
+exports:
+  interfaces: [PaymentGateway]
+  reactions: [chargeCustomer]
+imports: []
+units:
+  - role: element
+    name: Money
+    file: ./elements/Money.ts
+  - role: interface
+    name: PaymentGateway
+    file: ./interfaces/PaymentGateway.ts
+  - role: adapter
+    name: StripeGateway
+    file: ./adapters/StripeGateway.ts
+    implements: [PaymentGateway]
+  - role: reaction
+    name: chargeCustomer
+    file: ./reactions/chargeCustomer.ts
+    depends_on: [Money, PaymentGateway]
+assays: []
