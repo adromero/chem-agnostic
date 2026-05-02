@@ -56,12 +56,14 @@
   "diagnostic.tool_unknown": "Unknown MCP tool: \"{tool}\"",
   "diagnostic.tool_handler_failed": "MCP tool \"{tool}\" handler failed: {reason}",
 
-  "diagnostic.tool_not_yet_implemented": "Tool \"{tool}\" is not yet supported by chemag install-hooks. Currently supported: claude.",
+  "diagnostic.tool_not_yet_implemented": "Tool \"{tool}\" is not yet supported by chemag install-hooks. Currently supported: claude, cursor.",
   "diagnostic.settings_file_invalid_json": "Settings file is not valid JSON: {path} ({reason})",
   "diagnostic.hooks_already_installed_no_force": "chemag hooks already present in {path}; use --uninstall first or pass --overwrite (reserved).",
   "diagnostic.unknown_scope": "Unknown --scope value \"{scope}\". Use user|project.",
   "diagnostic.no_chemag_entries_to_uninstall": "No chemag-tagged hook entries found in {path}; nothing to uninstall.",
   "diagnostic.hook_stdin_unparseable": "Hook stdin could not be parsed ({reason}); falling back to allow.",
+  "diagnostic.cursor_husky_not_detected": "husky is not set up in {workspace}. Run `pnpm add -D husky && pnpm husky init` (or the equivalent for your package manager) before re-running chemag install-hooks --tool cursor.",
+  "diagnostic.cursor_precommit_unparseable": "Existing .husky/pre-commit at {path} cannot be safely modified ({reason}). Resolve the conflict by hand or remove the file before re-running.",
 
   "cli.help.intro": "chemag v{version} — language-agnostic module architecture toolkit",
   "cli.help.usage": "Usage: chemag [options] [command]\n       chem-ag [options] [command]   (alias)",
@@ -81,7 +83,7 @@
   "cli.help.mcp.workspace": "--workspace <path>   Workspace directory containing workspace.yaml (defaults to cwd)",
   "cli.help.mcp.transport": "--transport <name>   Transport to expose the server on (stdio; sse is reserved for v1.0.x)",
   "cli.command.install_hooks": "install-hooks — install or uninstall AI-editor hook integrations that call chemag check-edit / analyze around tool edits.\nUsage: chemag install-hooks --tool <claude|cursor|codex|aider|cline|copilot|all> [--scope user|project] [--mode block|warn|context-only] [--uninstall] [--restore] [--dry-run]",
-  "cli.help.install_hooks.tool": "--tool <name>        Editor / agent target (claude implemented; others coming soon)",
+  "cli.help.install_hooks.tool": "--tool <name>        Editor / agent target (claude, cursor implemented; others coming soon)",
   "cli.help.install_hooks.scope": "--scope <user|project>  Where to install the hook (defaults to project)",
   "cli.help.install_hooks.mode": "--mode <block|warn|context-only>  block (default), warn (downgrade deny→ask), or context-only (PostToolUse only)",
 

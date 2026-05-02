@@ -77,13 +77,15 @@ export type TrKey =
   | "diagnostic.tool_input_invalid" // params: { tool, reason }
   | "diagnostic.tool_unknown" // params: { tool }
   | "diagnostic.tool_handler_failed" // params: { tool, reason }
-  // install-hooks (CHEM-INSTALL-HOOKS-001..006)
+  // install-hooks (CHEM-INSTALL-HOOKS-001..008)
   | "diagnostic.tool_not_yet_implemented" // params: { tool }
   | "diagnostic.settings_file_invalid_json" // params: { path, reason }
   | "diagnostic.hooks_already_installed_no_force" // params: { path }
   | "diagnostic.unknown_scope" // params: { scope }
   | "diagnostic.no_chemag_entries_to_uninstall" // params: { path }
   | "diagnostic.hook_stdin_unparseable" // params: { reason }
+  | "diagnostic.cursor_husky_not_detected" // params: { workspace }
+  | "diagnostic.cursor_precommit_unparseable" // params: { path, reason }
   // ---- CLI help (top-level + per-command) ----
   | "cli.help.intro" // params: { version }
   | "cli.help.usage"
@@ -175,6 +177,8 @@ export const ALL_TR_KEYS: readonly TrKey[] = [
   "diagnostic.unknown_scope",
   "diagnostic.no_chemag_entries_to_uninstall",
   "diagnostic.hook_stdin_unparseable",
+  "diagnostic.cursor_husky_not_detected",
+  "diagnostic.cursor_precommit_unparseable",
   "cli.help.intro",
   "cli.help.usage",
   "cli.help.commands",

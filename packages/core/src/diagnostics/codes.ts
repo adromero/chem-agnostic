@@ -99,7 +99,9 @@ export type DiagnosticCode =
   | "CHEM-INSTALL-HOOKS-003"
   | "CHEM-INSTALL-HOOKS-004"
   | "CHEM-INSTALL-HOOKS-005"
-  | "CHEM-INSTALL-HOOKS-006";
+  | "CHEM-INSTALL-HOOKS-006"
+  | "CHEM-INSTALL-HOOKS-007"
+  | "CHEM-INSTALL-HOOKS-008";
 
 /** Subset of `TrKey` containing only `diagnostic.*` keys. */
 export type DiagnosticTrKey = Extract<TrKey, `diagnostic.${string}`>;
@@ -457,6 +459,20 @@ export const DIAGNOSTIC_CODES: Record<DiagnosticCode, DiagnosticCodeMeta> = {
     level: "warning",
     trKey: "diagnostic.hook_stdin_unparseable",
     helpFragment: "chem-install-hooks-006-hook-stdin-unparseable",
+  },
+  "CHEM-INSTALL-HOOKS-007": {
+    code: "CHEM-INSTALL-HOOKS-007",
+    category: "INSTALL-HOOKS",
+    level: "error",
+    trKey: "diagnostic.cursor_husky_not_detected",
+    helpFragment: "chem-install-hooks-007-cursor-husky-not-detected",
+  },
+  "CHEM-INSTALL-HOOKS-008": {
+    code: "CHEM-INSTALL-HOOKS-008",
+    category: "INSTALL-HOOKS",
+    level: "error",
+    trKey: "diagnostic.cursor_precommit_unparseable",
+    helpFragment: "chem-install-hooks-008-cursor-precommit-unparseable",
   },
 };
 

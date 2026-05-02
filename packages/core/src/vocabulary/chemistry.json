@@ -56,12 +56,14 @@
   "diagnostic.tool_unknown": "Unknown MCP reagent: \"{tool}\"",
   "diagnostic.tool_handler_failed": "MCP reagent \"{tool}\" reaction failed: {reason}",
 
-  "diagnostic.tool_not_yet_implemented": "Reagent \"{tool}\" is not yet bonded into chemag install-hooks. Currently supported: claude.",
+  "diagnostic.tool_not_yet_implemented": "Reagent \"{tool}\" is not yet bonded into chemag install-hooks. Currently supported: claude, cursor.",
   "diagnostic.settings_file_invalid_json": "Settings precipitate is not valid JSON: {path} ({reason})",
   "diagnostic.hooks_already_installed_no_force": "chemag hooks already crystallized in {path}; pass --uninstall first or --overwrite (reserved).",
   "diagnostic.unknown_scope": "Unknown --scope reagent \"{scope}\". Use user|project.",
   "diagnostic.no_chemag_entries_to_uninstall": "No chemag-tagged hooks present in {path}; nothing to dissolve.",
   "diagnostic.hook_stdin_unparseable": "Hook stdin could not be distilled ({reason}); falling back to allow.",
+  "diagnostic.cursor_husky_not_detected": "husky has not crystallized in {workspace}. Run `pnpm add -D husky && pnpm husky init` (or your package manager's equivalent) before re-bonding chemag install-hooks --tool cursor.",
+  "diagnostic.cursor_precommit_unparseable": "Existing .husky/pre-commit precipitate at {path} cannot be safely transmuted ({reason}). Resolve the impurity by hand or remove the file before re-running.",
 
   "cli.help.intro": "chemag v{version} — language-agnostic Chem architecture toolkit",
   "cli.help.usage": "Usage: chemag [options] [command]\n       chem-ag [options] [command]   (alias)",
@@ -81,7 +83,7 @@
   "cli.help.mcp.workspace": "--workspace <path>   Workspace directory containing workspace.yaml (defaults to cwd)",
   "cli.help.mcp.transport": "--transport <name>   Transport to bond the reactor through (stdio; sse is reserved for v1.0.x)",
   "cli.command.install_hooks": "install-hooks — bond AI-editor hook integrations that catalyze chemag check-edit / analyze around tool edits.\nUsage: chemag install-hooks --tool <claude|cursor|codex|aider|cline|copilot|all> [--scope user|project] [--mode block|warn|context-only] [--uninstall] [--restore] [--dry-run]",
-  "cli.help.install_hooks.tool": "--tool <name>        Editor / agent reagent (claude bonded; others coming soon)",
+  "cli.help.install_hooks.tool": "--tool <name>        Editor / agent reagent (claude, cursor bonded; others coming soon)",
   "cli.help.install_hooks.scope": "--scope <user|project>  Where to crystallize the hook (defaults to project)",
   "cli.help.install_hooks.mode": "--mode <block|warn|context-only>  block (default), warn (downgrade deny→ask), or context-only (PostToolUse only)",
 
