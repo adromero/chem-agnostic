@@ -73,6 +73,13 @@ export type TrKey =
   | "diagnostic.mcp_workspace_required"
   | "diagnostic.mcp_transport_unsupported" // params: { transport }
   | "diagnostic.mcp_initialize_failed" // params: { reason }
+  // install-hooks (CHEM-INSTALL-HOOKS-001..006)
+  | "diagnostic.tool_not_yet_implemented" // params: { tool }
+  | "diagnostic.settings_file_invalid_json" // params: { path, reason }
+  | "diagnostic.hooks_already_installed_no_force" // params: { path }
+  | "diagnostic.unknown_scope" // params: { scope }
+  | "diagnostic.no_chemag_entries_to_uninstall" // params: { path }
+  | "diagnostic.hook_stdin_unparseable" // params: { reason }
   // ---- CLI help (top-level + per-command) ----
   | "cli.help.intro" // params: { version }
   | "cli.help.usage"
@@ -88,8 +95,12 @@ export type TrKey =
   | "cli.command.sync"
   | "cli.command.emit_rules"
   | "cli.command.mcp"
+  | "cli.command.install_hooks"
   | "cli.help.mcp.transport"
   | "cli.help.mcp.workspace"
+  | "cli.help.install_hooks.tool"
+  | "cli.help.install_hooks.scope"
+  | "cli.help.install_hooks.mode"
   // ---- CLAUDE.md template sections ----
   | "claude_md.intro"
   | "claude_md.roles_table"
@@ -151,6 +162,12 @@ export const ALL_TR_KEYS: readonly TrKey[] = [
   "diagnostic.mcp_workspace_required",
   "diagnostic.mcp_transport_unsupported",
   "diagnostic.mcp_initialize_failed",
+  "diagnostic.tool_not_yet_implemented",
+  "diagnostic.settings_file_invalid_json",
+  "diagnostic.hooks_already_installed_no_force",
+  "diagnostic.unknown_scope",
+  "diagnostic.no_chemag_entries_to_uninstall",
+  "diagnostic.hook_stdin_unparseable",
   "cli.help.intro",
   "cli.help.usage",
   "cli.help.commands",
@@ -165,8 +182,12 @@ export const ALL_TR_KEYS: readonly TrKey[] = [
   "cli.command.sync",
   "cli.command.emit_rules",
   "cli.command.mcp",
+  "cli.command.install_hooks",
   "cli.help.mcp.transport",
   "cli.help.mcp.workspace",
+  "cli.help.install_hooks.tool",
+  "cli.help.install_hooks.scope",
+  "cli.help.install_hooks.mode",
   "claude_md.intro",
   "claude_md.roles_table",
   "claude_md.bonds_table",

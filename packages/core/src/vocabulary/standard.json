@@ -53,6 +53,13 @@
   "diagnostic.mcp_transport_unsupported": "MCP transport \"{transport}\" is not supported. Use --transport stdio.",
   "diagnostic.mcp_initialize_failed": "MCP server failed to initialize: {reason}",
 
+  "diagnostic.tool_not_yet_implemented": "Tool \"{tool}\" is not yet supported by chemag install-hooks. Currently supported: claude.",
+  "diagnostic.settings_file_invalid_json": "Settings file is not valid JSON: {path} ({reason})",
+  "diagnostic.hooks_already_installed_no_force": "chemag hooks already present in {path}; use --uninstall first or pass --overwrite (reserved).",
+  "diagnostic.unknown_scope": "Unknown --scope value \"{scope}\". Use user|project.",
+  "diagnostic.no_chemag_entries_to_uninstall": "No chemag-tagged hook entries found in {path}; nothing to uninstall.",
+  "diagnostic.hook_stdin_unparseable": "Hook stdin could not be parsed ({reason}); falling back to allow.",
+
   "cli.help.intro": "chemag v{version} — language-agnostic module architecture toolkit",
   "cli.help.usage": "Usage: chemag [options] [command]\n       chem-ag [options] [command]   (alias)",
   "cli.help.commands": "Commands:\n  init         Bootstrap a new workspace\n  add          Add a module or unit\n  check        Validate manifests and file structure\n  analyze      Check real imports against dependency rules\n  scaffold     Generate stub files from manifests\n  graph        Output Mermaid dependency diagram\n  sync         Generate manifests from existing code",
@@ -70,6 +77,10 @@
   "cli.command.mcp": "mcp — run an MCP server exposing chemag tools to MCP-aware clients.\nUsage: chemag mcp [--workspace <path>] [--transport stdio]",
   "cli.help.mcp.workspace": "--workspace <path>   Workspace directory containing workspace.yaml (defaults to cwd)",
   "cli.help.mcp.transport": "--transport <name>   Transport to expose the server on (stdio; sse is reserved for v1.0.x)",
+  "cli.command.install_hooks": "install-hooks — install or uninstall AI-editor hook integrations that call chemag check-edit / analyze around tool edits.\nUsage: chemag install-hooks --tool <claude|cursor|codex|aider|cline|copilot|all> [--scope user|project] [--mode block|warn|context-only] [--uninstall] [--restore] [--dry-run]",
+  "cli.help.install_hooks.tool": "--tool <name>        Editor / agent target (claude implemented; others coming soon)",
+  "cli.help.install_hooks.scope": "--scope <user|project>  Where to install the hook (defaults to project)",
+  "cli.help.install_hooks.mode": "--mode <block|warn|context-only>  block (default), warn (downgrade deny→ask), or context-only (PostToolUse only)",
 
   "claude_md.intro": "# {name} — Module Architecture\n\nThis project uses a chemistry-inspired module architecture (presented here in standard vocabulary). Read this entire file before writing any code.\n\n## Core Concept\n\nCode is organized into **modules** (feature units). Each module contains **units** — source files with assigned **roles**. Roles determine what a unit can depend on. These dependency rules are called **dependency rules**.\n\nEvery module has a manifest (`compound.yaml`) declaring its units, exports, and imports. The workspace config (`workspace.yaml`) defines the global rules.\n\n**Before writing any code**: read `workspace.yaml`, then the target module's `compound.yaml`.",
   "claude_md.roles_table": "## Roles — What Each Unit Type Means\n\n| Role | What it is | Examples |\n|------|-----------|----------|\n| **value-object** | Immutable value object. The simplest building block. | `UserId`, `Email`, `Money`, `DateRange` |\n| **entity** | Domain state composed of value-objects/entities. | `UserProfile`, `Order`, `ReportDocument` |\n| **use-case** | Workflow. Orchestrates state through ports. | `createOrder`, `generateReport`, `processPayment` |\n| **port** | Contract / port. Defines a capability without implementation. | `OrderRepository`, `PaymentGateway`, `EmailSender` |\n| **adapter** | Concrete implementation of a port. Touches the outside world. | `PgOrderRepository`, `StripeGateway`, `SmtpEmailSender` |\n| **middleware** | Wraps use-cases for cross-cutting concerns. | `authGuard`, `rateLimiter`, `validateInput` |",

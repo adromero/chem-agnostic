@@ -27,7 +27,8 @@ export type DiagnosticCategory =
   | "ROLE"
   | "PLACEMENT"
   | "EMIT-RULES"
-  | "MCP";
+  | "MCP"
+  | "INSTALL-HOOKS";
 
 /**
  * String-literal union of every emitted diagnostic code. Adding a new code
@@ -82,7 +83,14 @@ export type DiagnosticCode =
   // ---- MCP ----
   | "CHEM-MCP-001"
   | "CHEM-MCP-002"
-  | "CHEM-MCP-003";
+  | "CHEM-MCP-003"
+  // ---- INSTALL-HOOKS ----
+  | "CHEM-INSTALL-HOOKS-001"
+  | "CHEM-INSTALL-HOOKS-002"
+  | "CHEM-INSTALL-HOOKS-003"
+  | "CHEM-INSTALL-HOOKS-004"
+  | "CHEM-INSTALL-HOOKS-005"
+  | "CHEM-INSTALL-HOOKS-006";
 
 /** Subset of `TrKey` containing only `diagnostic.*` keys. */
 export type DiagnosticTrKey = Extract<TrKey, `diagnostic.${string}`>;
@@ -375,6 +383,50 @@ export const DIAGNOSTIC_CODES: Record<DiagnosticCode, DiagnosticCodeMeta> = {
     level: "error",
     trKey: "diagnostic.mcp_initialize_failed",
     helpFragment: "chem-mcp-003-mcp-initialize-failed",
+  },
+
+  // ---- INSTALL-HOOKS ----
+  "CHEM-INSTALL-HOOKS-001": {
+    code: "CHEM-INSTALL-HOOKS-001",
+    category: "INSTALL-HOOKS",
+    level: "error",
+    trKey: "diagnostic.tool_not_yet_implemented",
+    helpFragment: "chem-install-hooks-001-tool-not-yet-implemented",
+  },
+  "CHEM-INSTALL-HOOKS-002": {
+    code: "CHEM-INSTALL-HOOKS-002",
+    category: "INSTALL-HOOKS",
+    level: "error",
+    trKey: "diagnostic.settings_file_invalid_json",
+    helpFragment: "chem-install-hooks-002-settings-file-invalid-json",
+  },
+  "CHEM-INSTALL-HOOKS-003": {
+    code: "CHEM-INSTALL-HOOKS-003",
+    category: "INSTALL-HOOKS",
+    level: "warning",
+    trKey: "diagnostic.hooks_already_installed_no_force",
+    helpFragment: "chem-install-hooks-003-hooks-already-installed-no-force",
+  },
+  "CHEM-INSTALL-HOOKS-004": {
+    code: "CHEM-INSTALL-HOOKS-004",
+    category: "INSTALL-HOOKS",
+    level: "error",
+    trKey: "diagnostic.unknown_scope",
+    helpFragment: "chem-install-hooks-004-unknown-scope",
+  },
+  "CHEM-INSTALL-HOOKS-005": {
+    code: "CHEM-INSTALL-HOOKS-005",
+    category: "INSTALL-HOOKS",
+    level: "warning",
+    trKey: "diagnostic.no_chemag_entries_to_uninstall",
+    helpFragment: "chem-install-hooks-005-no-chemag-entries-to-uninstall",
+  },
+  "CHEM-INSTALL-HOOKS-006": {
+    code: "CHEM-INSTALL-HOOKS-006",
+    category: "INSTALL-HOOKS",
+    level: "warning",
+    trKey: "diagnostic.hook_stdin_unparseable",
+    helpFragment: "chem-install-hooks-006-hook-stdin-unparseable",
   },
 };
 
