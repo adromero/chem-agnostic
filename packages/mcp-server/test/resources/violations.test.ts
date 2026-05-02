@@ -46,9 +46,7 @@ describe("architecture://violations", () => {
   it("returns the SAME diagnostics array as find_violations for the same workspace", async () => {
     const session = new Session({ workspaceDir: SAMPLE });
     const resource = await readViolations(session);
-    const fromResource = (
-      JSON.parse(resource.text) as { diagnostics: unknown[] }
-    ).diagnostics;
+    const fromResource = (JSON.parse(resource.text) as { diagnostics: unknown[] }).diagnostics;
     const tool = await findViolationsTool.handler({}, session);
     expect(fromResource).toEqual(tool.diagnostics);
   });

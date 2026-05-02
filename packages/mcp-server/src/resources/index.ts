@@ -18,25 +18,14 @@
 // text remains the most consumer-portable.)
 // ---------------------------------------------------------------------------
 
-import {
-  McpError,
-  ErrorCode,
-} from "@modelcontextprotocol/sdk/types.js";
-import {
-  ResourceTemplate,
-  type McpServer,
-} from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ResourceTemplate, type McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { tr } from "@chemag/core/vocabulary";
 import type { Session } from "../context.js";
 import type { SubscriptionManager } from "../subscriptions.js";
 import type { Watcher, WatcherChange } from "../watcher.js";
 import { compoundUri, ResourceCompoundNotFoundError, readCompound } from "./compound.js";
-import {
-  DOCS_SECTIONS,
-  ResourceDocsSectionUnknownError,
-  docsUri,
-  readDocs,
-} from "./docs.js";
+import { DOCS_SECTIONS, ResourceDocsSectionUnknownError, docsUri, readDocs } from "./docs.js";
 import { GRAPH_URI, readGraph } from "./graph.js";
 import { publicSurfaceUri, readPublicSurface } from "./public-surface.js";
 import { VIOLATIONS_URI, readViolations } from "./violations.js";
@@ -65,11 +54,7 @@ function asError(err: unknown): { code: string; message: string } {
   }
   // Generic failure — surface as CHEM-MCP-301 with a best-effort message.
   const message =
-    err instanceof Error
-      ? err.message
-      : typeof err === "string"
-        ? err
-        : "unknown error";
+    err instanceof Error ? err.message : typeof err === "string" ? err : "unknown error";
   return { code: "CHEM-MCP-301", message };
 }
 

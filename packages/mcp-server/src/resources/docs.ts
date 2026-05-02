@@ -25,14 +25,7 @@ import { ALL_TOOLS } from "../tools/index.js";
 
 export const DOCS_URI_TEMPLATE = "architecture://docs/{section}";
 
-export const DOCS_SECTIONS = [
-  "roles",
-  "bonds",
-  "types",
-  "workflow",
-  "tools",
-  "ai_rules",
-] as const;
+export const DOCS_SECTIONS = ["roles", "bonds", "types", "workflow", "tools", "ai_rules"] as const;
 
 export type DocsSection = (typeof DOCS_SECTIONS)[number];
 
@@ -116,9 +109,7 @@ function renderRoles(
   return `${lines.join("\n")}\n`;
 }
 
-function renderTypes(
-  types: Record<string, { description: string }> | undefined,
-): string {
+function renderTypes(types: Record<string, { description: string }> | undefined): string {
   const lines: string[] = [];
   lines.push("## Compound types\n");
   if (!types || Object.keys(types).length === 0) {

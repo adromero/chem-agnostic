@@ -158,8 +158,6 @@ class InMemorySubscriptionManager implements SubscriptionManager {
  * dependency — it only knows how to call the supplied `notifier(uri)` when a
  * subscribed URI's underlying resource changes.
  */
-export function createSubscriptionManager(
-  opts: SubscriptionManagerOptions,
-): SubscriptionManager {
+export function createSubscriptionManager(opts: SubscriptionManagerOptions): SubscriptionManager {
   return new InMemorySubscriptionManager(opts);
 }

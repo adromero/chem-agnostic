@@ -62,14 +62,19 @@ describe("watcher — workspace.yaml change", () => {
     writeWorkspace(tmpRoot);
     const watcher = createWatcher(tmpRoot, { debounceMs: 50, usePolling: true });
     await watcher.ready();
+    // Brief settle period so chokidar's polling thread captures the
+    // baseline mtime before we mutate the file.
+    await tick(150);
 
     const events: WatcherChange[] = [];
     watcher.onChange((c) => events.push(c));
 
-    fs.writeFileSync(path.join(tmpRoot, "workspace.yaml"), "workspace: t\nupdated: true\n", "utf-8");
-    // Generous window: chokidar's awaitWriteFinish + polling can delay
-    // first-emit on fresh watchers.
-    const deadline = Date.now() + 1500;
+    fs.writeFileSync(
+      path.join(tmpRoot, "workspace.yaml"),
+      "workspace: t\nupdated: true\n",
+      "utf-8",
+    );
+    const deadline = Date.now() + 2500;
     while (events.filter((e) => e.type === "workspace").length === 0 && Date.now() < deadline) {
       await tick(50);
     }
@@ -77,7 +82,7 @@ describe("watcher — workspace.yaml change", () => {
 
     const ws = events.filter((e) => e.type === "workspace");
     expect(ws.length).toBeGreaterThanOrEqual(1);
-  }, 5000);
+  }, 6000);
 });
 
 describe("watcher — compound.yaml change", () => {
@@ -86,20 +91,24 @@ describe("watcher — compound.yaml change", () => {
     const cpath = writeCompound(tmpRoot, "alpha");
     const watcher = createWatcher(tmpRoot, { debounceMs: 50, usePolling: true });
     await watcher.ready();
+    await tick(150);
 
     const events: WatcherChange[] = [];
     watcher.onChange((c) => events.push(c));
 
     fs.writeFileSync(cpath, "compound: alpha\nupdated: true\n", "utf-8");
-    await tick(400);
+    const deadline = Date.now() + 2500;
+    while (events.filter((e) => e.type === "compound").length === 0 && Date.now() < deadline) {
+      await tick(50);
+    }
     await watcher.close();
 
-    const compoundEvents = events.filter((e): e is Extract<WatcherChange, { type: "compound" }> =>
-      e.type === "compound",
+    const compoundEvents = events.filter(
+      (e): e is Extract<WatcherChange, { type: "compound" }> => e.type === "compound",
     );
     expect(compoundEvents.length).toBeGreaterThanOrEqual(1);
     expect(compoundEvents[0].name).toBe("alpha");
-  }, 5000);
+  }, 6000);
 });
 
 describe("watcher — debounce", () => {
@@ -107,6 +116,7 @@ describe("watcher — debounce", () => {
     writeWorkspace(tmpRoot);
     const watcher = createWatcher(tmpRoot, { debounceMs: 200, usePolling: true });
     await watcher.ready();
+    await tick(150);
 
     const events: WatcherChange[] = [];
     watcher.onChange((c) => events.push(c));
@@ -116,7 +126,12 @@ describe("watcher — debounce", () => {
       fs.writeFileSync(path.join(tmpRoot, "workspace.yaml"), `workspace: t\nv: ${i}\n`, "utf-8");
       await tick(20);
     }
-    await tick(500);
+    // Wait for at least one event to land, then close.
+    const deadline = Date.now() + 2500;
+    while (events.filter((e) => e.type === "workspace").length === 0 && Date.now() < deadline) {
+      await tick(50);
+    }
+    await tick(300);
     await watcher.close();
 
     const ws = events.filter((e) => e.type === "workspace");
@@ -124,7 +139,7 @@ describe("watcher — debounce", () => {
     // emits split inotify events for the rapid rewrites.
     expect(ws.length).toBeGreaterThanOrEqual(1);
     expect(ws.length).toBeLessThanOrEqual(2);
-  }, 5000);
+  }, 6000);
 });
 
 describe("watcher — close()", () => {
@@ -153,6 +168,7 @@ describe("watcher — isolation", () => {
       const w1 = createWatcher(tmpRoot, { debounceMs: 50, usePolling: true });
       const w2 = createWatcher(root2, { debounceMs: 50, usePolling: true });
       await Promise.all([w1.ready(), w2.ready()]);
+      await tick(150);
 
       const events1: WatcherChange[] = [];
       const events2: WatcherChange[] = [];
@@ -160,7 +176,10 @@ describe("watcher — isolation", () => {
       w2.onChange((c) => events2.push(c));
 
       fs.writeFileSync(path.join(tmpRoot, "workspace.yaml"), "workspace: t\nx:1\n", "utf-8");
-      await tick(400);
+      const deadline = Date.now() + 2500;
+      while (events1.length === 0 && Date.now() < deadline) {
+        await tick(50);
+      }
       await Promise.all([w1.close(), w2.close()]);
 
       expect(events1.length).toBeGreaterThanOrEqual(1);

@@ -97,15 +97,17 @@ export function createWatcher(workspaceRoot: string, opts: WatcherOptions = {}):
 
   const dispatch = (rawPath: string): void => {
     if (closed) return;
-    const abs = path.resolve(rawPath);
+    // chokidar's path may or may not be absolute; resolve relative to the
+    // process cwd. We compare via path.relative against `root` to be robust
+    // against /tmp vs /private/tmp differences and trailing-slash quirks.
+    const abs = path.isAbsolute(rawPath) ? rawPath : path.resolve(rawPath);
     const base = path.basename(abs);
+    const rel = path.relative(root, abs);
+    const isUnderRoot = !rel.startsWith("..") && !path.isAbsolute(rel);
 
     let change: WatcherChange | null = null;
-    if (abs === path.join(root, "workspace.yaml") || base === "workspace.yaml") {
-      // Only treat the *root* workspace.yaml as the workspace event.
-      if (abs === path.join(root, "workspace.yaml")) {
-        change = { type: "workspace", path: abs };
-      }
+    if (isUnderRoot && rel === "workspace.yaml") {
+      change = { type: "workspace", path: abs };
     } else if (base === manifestFilename) {
       const compoundDir = path.dirname(abs);
       change = { type: "compound", name: path.basename(compoundDir), path: abs };

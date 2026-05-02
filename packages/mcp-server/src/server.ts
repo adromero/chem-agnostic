@@ -32,10 +32,7 @@ import {
 import type { VocabularyName } from "@chemag/core/vocabulary";
 import { Session, type SessionOptions } from "./context.js";
 import { registerResources } from "./resources/index.js";
-import {
-  createSubscriptionManager,
-  type SubscriptionManager,
-} from "./subscriptions.js";
+import { createSubscriptionManager, type SubscriptionManager } from "./subscriptions.js";
 import { registerTools } from "./tools/index.js";
 import { VERSION } from "./version.js";
 import { createWatcher, type Watcher } from "./watcher.js";
@@ -138,11 +135,9 @@ export function createServer(opts: CreateServerOptions = {}): ServerHandle {
   const subscriptionManager = createSubscriptionManager({
     notifier: (uri) => {
       // Fire-and-forget; the transport may be closing. Swallow + ignore.
-      server.server
-        .sendResourceUpdated({ uri })
-        .catch(() => {
-          // Transport hiccup — non-fatal.
-        });
+      server.server.sendResourceUpdated({ uri }).catch(() => {
+        // Transport hiccup — non-fatal.
+      });
     },
   });
 

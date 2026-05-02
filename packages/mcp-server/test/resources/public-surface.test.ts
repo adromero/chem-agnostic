@@ -9,10 +9,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { Session } from "../../src/index.js";
 import { ResourceCompoundNotFoundError } from "../../src/resources/compound.js";
-import {
-  publicSurfaceUri,
-  readPublicSurface,
-} from "../../src/resources/public-surface.js";
+import { publicSurfaceUri, readPublicSurface } from "../../src/resources/public-surface.js";
 import { __resetForTesting as __resetVocabularyForTesting } from "@chemag/core/vocabulary";
 import { __resetCacheStateForTesting } from "@chemag/core/cache";
 
