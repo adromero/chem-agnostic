@@ -14,7 +14,7 @@ import {
   saveConfig,
   setTelemetryEnabledForRun,
 } from "@chemag/telemetry";
-import { setCacheEnabled } from "./cache/cache-state.js";
+import { setCacheEnabled } from "@chemag/core/cache";
 import { cmdCheck } from "./commands/check.js";
 import { cmdCheckEdit } from "./commands/check-edit.js";
 import { cmdAnalyze } from "./commands/analyze.js";

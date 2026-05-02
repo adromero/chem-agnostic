@@ -37,7 +37,7 @@
 
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import type { LoadedCompound, Workspace } from "@chemag/core/types";
+import type { LoadedCompound, Workspace } from "../types.js";
 import { isCacheEnabled } from "./cache-state.js";
 import { resolveCacheDir } from "./cache-dir.js";
 import { contentHash } from "./content-hash.js";

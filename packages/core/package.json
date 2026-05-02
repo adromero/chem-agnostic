@@ -62,6 +62,10 @@
     "./diagnostics": {
       "types": "./dist/diagnostics/index.d.ts",
       "default": "./dist/diagnostics/index.js"
+    },
+    "./cache": {
+      "types": "./dist/cache/index.d.ts",
+      "default": "./dist/cache/index.js"
     }
   },
   "files": [
@@ -78,10 +82,12 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "proper-lockfile": "^4.1.2",
     "yaml": "^2.7.0"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
+    "@types/proper-lockfile": "^4.1.4",
     "typescript": "^5.7.0",
     "vitest": "^3.1.0"
   }

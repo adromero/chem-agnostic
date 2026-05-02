@@ -11,7 +11,7 @@
 // ---------------------------------------------------------------------------
 
 import { join } from "node:path";
-import type { ParsedImport } from "@chemag/core/types";
+import type { ParsedImport } from "../types.js";
 import { atomicWriteJson, readJsonSafe } from "./manifest-cache.js";
 import { isCacheEnabled } from "./cache-state.js";
 import { resolveCacheDir } from "./cache-dir.js";

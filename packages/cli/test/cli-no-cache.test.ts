@@ -4,13 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import { runCli, stripCacheFlag } from "../../src/cli.js";
-import {
-  __resetCacheStateForTesting,
-  isCacheEnabled,
-  setCacheEnabled,
-} from "../../src/cache/cache-state.js";
-import * as checkCmd from "../../src/commands/check.js";
+import { runCli, stripCacheFlag } from "../src/cli.js";
+import { __resetCacheStateForTesting, isCacheEnabled, setCacheEnabled } from "@chemag/core/cache";
+import * as checkCmd from "../src/commands/check.js";
 import { __resetForTesting } from "@chemag/core/vocabulary";
 
 let tmpDir: string;

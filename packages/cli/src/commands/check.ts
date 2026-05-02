@@ -6,8 +6,7 @@ import type { CheckOptions, Diagnostic, LoadedCompound, Workspace } from "@chema
 import { applyWorkspaceVocabulary, tr } from "@chemag/core/vocabulary";
 import { emit as emitTelemetry } from "@chemag/telemetry";
 import { readFileSync } from "node:fs";
-import { createManifestCache } from "../cache/manifest-cache.js";
-import { contentHash } from "../cache/content-hash.js";
+import { contentHash, createManifestCache } from "@chemag/core/cache";
 import { loadPlugin } from "../plugin-loader.js";
 import {
   formatDiagnostics,

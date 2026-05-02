@@ -15,7 +15,7 @@ import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { stringify as yamlStringify } from "yaml";
 import { runCli } from "../../src/cli.js";
-import { __resetCacheStateForTesting, setCacheEnabled } from "../../src/cache/cache-state.js";
+import { __resetCacheStateForTesting, setCacheEnabled } from "@chemag/core/cache";
 import {
   __resetStdinReaderForTesting,
   __setStdinReaderForTesting,

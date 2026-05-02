@@ -10,6 +10,7 @@ export function chemagAliases(repoRoot: string): Record<string, string> {
     "@chemag/core/loader": r("packages/core/src/loader.ts"),
     "@chemag/core/checks": r("packages/core/src/checks.ts"),
     "@chemag/core/check-edit": r("packages/core/src/check-edit.ts"),
+    "@chemag/core/cache": r("packages/core/src/cache/index.ts"),
     "@chemag/core/import-check": r("packages/core/src/import-check.ts"),
     "@chemag/core/scaffold": r("packages/core/src/scaffold.ts"),
     "@chemag/core/sync": r("packages/core/src/sync.ts"),

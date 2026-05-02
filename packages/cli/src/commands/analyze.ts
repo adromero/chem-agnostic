@@ -6,9 +6,7 @@ import type { LanguagePlugin } from "@chemag/core/plugin-interface";
 import type { Diagnostic, LoadedCompound, ParsedImport, Workspace } from "@chemag/core/types";
 import { applyWorkspaceVocabulary, tr } from "@chemag/core/vocabulary";
 import { emit as emitTelemetry } from "@chemag/telemetry";
-import { contentHash } from "../cache/content-hash.js";
-import { createImportCache } from "../cache/import-cache.js";
-import { createManifestCache } from "../cache/manifest-cache.js";
+import { contentHash, createImportCache, createManifestCache } from "@chemag/core/cache";
 import { loadPlugin } from "../plugin-loader.js";
 import {
   formatDiagnostics,

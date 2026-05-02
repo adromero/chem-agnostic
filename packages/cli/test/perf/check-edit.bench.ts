@@ -22,7 +22,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { stringify as yamlStringify } from "yaml";
 import { runCli } from "../../src/cli.js";
-import { __resetCacheStateForTesting, setCacheEnabled } from "../../src/cache/cache-state.js";
+import { __resetCacheStateForTesting, setCacheEnabled } from "@chemag/core/cache";
 import { __resetForTesting } from "@chemag/core/vocabulary";
 
 const WARM_BUDGET_MS = 100;
