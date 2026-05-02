@@ -30,6 +30,7 @@ const COMMAND_GROUPS: { title: string; commands: string[] }[] = [
   { title: "Workspace", commands: ["init", "add"] },
   { title: "Validation", commands: ["check", "check-edit", "analyze"] },
   { title: "Generation", commands: ["scaffold", "graph", "sync", "emit-rules"] },
+  { title: "Integrations", commands: ["mcp"] },
   { title: "Utilities", commands: ["config", "completion"] },
 ];
 
@@ -204,6 +205,28 @@ export function buildCommandTree(version: string): CommandDef {
             description: "Allow replacing files without chemag markers",
           },
         },
+      }),
+
+      mcp: defineCommand({
+        meta: {
+          name: "mcp",
+          description: firstLine(tr("cli.command.mcp")),
+        },
+        args: {
+          workspace: {
+            type: "string",
+            description: "Workspace directory (defaults to cwd)",
+          },
+          transport: {
+            type: "enum",
+            description: "Transport (stdio; sse reserved for v1.0.x)",
+            options: ["stdio", "sse"],
+          },
+        },
+        // WP-017 will populate install/uninstall/status here. Empty
+        // placeholder keeps the parent shape stable so adding subcommands
+        // doesn't require restructuring the meta declaration.
+        subCommands: {},
       }),
 
       config: defineCommand({

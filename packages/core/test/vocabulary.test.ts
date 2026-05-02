@@ -336,3 +336,42 @@ describe("end-to-end precedence", () => {
     expect(getVocabulary()).toBe("standard");
   });
 });
+
+// ---------------------------------------------------------------------------
+// "session" source (WP-014) — sits between default and workspace so workspace
+// still wins, but a client-supplied vocabulary outranks the unset default.
+// ---------------------------------------------------------------------------
+
+describe('"session" source precedence (WP-014 MCP)', () => {
+  function ws(vocabulary?: "standard" | "chemistry"): Workspace {
+    return {
+      workspace: "demo",
+      language: "typescript",
+      roles: {},
+      bonds: {},
+      paths: { compounds: "./src" },
+      vocabulary,
+    };
+  }
+
+  it("session overrides the default source", () => {
+    expect(getVocabularySource()).toBe("default");
+    expect(setVocabulary("chemistry", "session")).toBe(true);
+    expect(getVocabulary()).toBe("chemistry");
+    expect(getVocabularySource()).toBe("session");
+  });
+
+  it("workspace beats session — workspace.yaml is the source of truth", () => {
+    setVocabulary("chemistry", "session");
+    applyWorkspaceVocabulary(ws("standard"));
+    expect(getVocabulary()).toBe("standard");
+    expect(getVocabularySource()).toBe("workspace");
+  });
+
+  it("flag beats session — operator override stays sticky", () => {
+    setVocabulary("chemistry", "flag");
+    expect(setVocabulary("standard", "session")).toBe(false);
+    expect(getVocabulary()).toBe("chemistry");
+    expect(getVocabularySource()).toBe("flag");
+  });
+});

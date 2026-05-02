@@ -7,11 +7,5 @@
   },
   "include": ["src/**/*.ts"],
   "exclude": ["dist", "node_modules", "test"],
-  "references": [
-    { "path": "../core" },
-    { "path": "../mcp-server" },
-    { "path": "../plugin-typescript" },
-    { "path": "../plugin-python" },
-    { "path": "../telemetry" }
-  ]
+  "references": [{ "path": "../core" }]
 }

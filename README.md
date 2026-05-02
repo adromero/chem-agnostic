@@ -85,6 +85,29 @@ chemag emit-rules --overwrite              # replace files that lack chemag mark
 
 Generated files: `AGENTS.md`, `CLAUDE.md`, `.cursor/rules/architecture.mdc`, `.github/copilot-instructions.md`, `.aider/CONVENTIONS.md`, `.clinerules`.
 
+### MCP server
+
+`chemag mcp` boots a [Model Context Protocol](https://modelcontextprotocol.io/) server that exposes chemag's check / analyze / scaffold tooling to MCP-aware clients (Claude Desktop, Cursor, IDE plugins). The current scaffold registers the capability surface (tools, resources, prompts) and the initialize handshake; concrete tool handlers ship in subsequent work packages.
+
+```bash
+chemag mcp --workspace /path/to/repo                 # stdio transport (default)
+chemag mcp --workspace /path/to/repo --transport stdio
+```
+
+Add the server to Claude Code or Claude Desktop:
+
+```bash
+claude mcp add chemag chemag mcp --workspace /path/to/repo
+```
+
+For a manual smoke check the official [MCP Inspector](https://github.com/modelcontextprotocol/inspector) works:
+
+```bash
+npx @modelcontextprotocol/inspector chemag mcp --workspace /path/to/repo
+```
+
+The server intentionally does **not** emit telemetry per tool call. Only the CLI's `chemag mcp` startup may emit a single (opt-in) telemetry event. SSE/HTTP transport is reserved for v1.0.x.
+
 ## Plugin System
 
 `chemag` uses a 16-member `LanguagePlugin` interface covering:
@@ -158,7 +181,8 @@ This repo is a pnpm + Turborepo monorepo:
 ```
 packages/
   cli/                 @chemag/cli — the chemag binary
-  core/                @chemag/core — shared engine (types, loader, checks, ...)
+  core/                @chemag/core — shared engine (types, loader, checks, cache, ...)
+  mcp-server/          @chemag/mcp-server — Model Context Protocol server
   plugin-typescript/   @chemag/plugin-typescript
   plugin-python/       @chemag/plugin-python
   telemetry/           @chemag/telemetry (placeholder; WP-006)

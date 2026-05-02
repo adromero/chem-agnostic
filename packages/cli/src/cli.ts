@@ -26,6 +26,7 @@ import { cmdAdd } from "./commands/add.js";
 import { cmdConfig } from "./commands/config.js";
 import { cmdCompletion } from "./commands/completion.js";
 import { cmdEmitRules } from "./commands/emit-rules.js";
+import { cmdMcp } from "./commands/mcp.js";
 import { buildCommandTree, renderHelp } from "./cli-meta.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -156,6 +157,11 @@ export function runCli(argv: string[]): void {
     case "completion":
       cmdCompletion(commandArgs);
       break;
+    case "mcp": {
+      const code = cmdMcp(commandArgs);
+      if (code !== 0) process.exit(code);
+      break;
+    }
     default:
       console.error(`Unknown command: ${command}`);
       console.error(`Run 'chemag --help' for a list of available commands.`);

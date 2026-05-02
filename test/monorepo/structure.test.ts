@@ -47,7 +47,7 @@ describe("monorepo structure", () => {
   });
 
   describe("packages/", () => {
-    const pkgs = ["cli", "core", "plugin-typescript", "plugin-python", "telemetry"];
+    const pkgs = ["cli", "core", "mcp-server", "plugin-typescript", "plugin-python", "telemetry"];
     it.each(pkgs.map((p) => [p]))("package %s has package.json + tsconfig.json + src/", (pkg) => {
       expect(existsSync(abs(`packages/${pkg}/package.json`))).toBe(true);
       expect(existsSync(abs(`packages/${pkg}/tsconfig.json`))).toBe(true);
@@ -75,6 +75,7 @@ describe("monorepo structure", () => {
         "./scaffold": expect.any(Object),
         "./graph": expect.any(Object),
         "./sync": expect.any(Object),
+        "./cache": expect.any(Object),
       });
     });
   });

@@ -1,0 +1,10 @@
+workspace: mcp-fixture
+language: typescript
+roles:
+  element:
+    description: Immutable value object
+    folder: elements
+bonds:
+  element: [element]
+paths:
+  compounds: ./src/compounds

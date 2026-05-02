@@ -49,6 +49,9 @@
   "diagnostic.markers_missing_no_overwrite": "Refusing to recrystallize \"{path}\": chemag markers are missing. Pass --overwrite to replace the existing precipitate.",
   "diagnostic.line_budget_exceeded": "Emitted {tool} block is {actual} lines (budget {budget}). Distill the sections or raise the budget.",
   "diagnostic.unknown_emitter_tool": "Unknown --tool reagent \"{tool}\". Supported: {supported}.",
+  "diagnostic.mcp_workspace_required": "chemag mcp requires a Chem workspace. Pass --workspace <path> or run from a directory containing workspace.yaml.",
+  "diagnostic.mcp_transport_unsupported": "MCP transport \"{transport}\" is not supported. Use --transport stdio.",
+  "diagnostic.mcp_initialize_failed": "MCP server failed to crystallize: {reason}",
 
   "cli.help.intro": "chemag v{version} — language-agnostic Chem architecture toolkit",
   "cli.help.usage": "Usage: chemag [options] [command]\n       chem-ag [options] [command]   (alias)",
@@ -64,6 +67,9 @@
   "cli.command.graph": "graph — output a Mermaid dependency diagram.\nUsage: chemag graph <workspace.yaml>",
   "cli.command.sync": "sync — generate manifests from existing code.\nUsage: chemag sync <workspace.yaml> [--dry-run]",
   "cli.command.emit_rules": "emit-rules — synthesize AI-editor rule precipitates (AGENTS.md, CLAUDE.md, .cursor/rules, .github/copilot-instructions.md, .aider/CONVENTIONS.md, .clinerules) from workspace.yaml.\nUsage: chemag emit-rules [--tool <name>] [--out-dir <path>] [--include-violations] [--dry-run] [--diff] [--overwrite]",
+  "cli.command.mcp": "mcp — distill a reactor exposing chemag tools to MCP-aware clients.\nUsage: chemag mcp [--workspace <path>] [--transport stdio]",
+  "cli.help.mcp.workspace": "--workspace <path>   Workspace directory containing workspace.yaml (defaults to cwd)",
+  "cli.help.mcp.transport": "--transport <name>   Transport to bond the reactor through (stdio; sse is reserved for v1.0.x)",
 
   "claude_md.intro": "# {name} — Chem Architecture\n\nThis project uses **Chem**, a chemistry-inspired software architecture. Read this entire file before writing any code.\n\n## Core Concept\n\nCode is organized into **compounds** (feature modules). Each compound contains **units** — source files with assigned **roles**. Roles determine what a unit can depend on. These dependency rules are called **bonds**.\n\nEvery compound has a manifest (`compound.yaml`) declaring its units, exports, and imports. The workspace config (`workspace.yaml`) defines the global rules.\n\n**Before writing any code**: read `workspace.yaml`, then the target compound's `compound.yaml`.",
   "claude_md.roles_table": "## Roles — What Each Unit Type Means\n\n| Role | What it is | Examples |\n|------|-----------|----------|\n| **element** | Immutable value object. The simplest building block. | `UserId`, `Email`, `Money`, `DateRange` |\n| **molecule** | Domain state composed of elements/molecules. | `UserProfile`, `Order`, `ReportDocument` |\n| **reaction** | Workflow or use case. Orchestrates state through interfaces. | `createOrder`, `generateReport`, `processPayment` |\n| **interface** | Contract / port. Defines a capability without implementation. | `OrderRepository`, `PaymentGateway`, `EmailSender` |\n| **adapter** | Concrete implementation of an interface. Touches the outside world. | `PgOrderRepository`, `StripeGateway`, `SmtpEmailSender` |\n| **buffer** | Middleware. Wraps reactions for cross-cutting concerns. | `authGuard`, `rateLimiter`, `validateInput` |",

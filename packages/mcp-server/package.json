@@ -1,0 +1,52 @@
+{
+  "name": "@chemag/mcp-server",
+  "version": "0.0.0",
+  "description": "Model Context Protocol server for the Chem toolkit — exposes chemag tooling to MCP-aware clients (Claude Desktop, Cursor, IDE plugins) over stdio. Per-session vocabulary + manifest cache; never depends on @chemag/cli to keep the dep graph acyclic.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./test-helpers": {
+      "types": "./dist/test-helpers.d.ts",
+      "default": "./dist/test-helpers.js"
+    }
+  },
+  "files": ["dist/**/*.js", "dist/**/*.d.ts", "dist/**/*.d.ts.map", "dist/**/*.js.map"],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build:version": "node ./scripts/build-version.mjs",
+    "prebuild": "npm run build:version",
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "prepublishOnly": "pnpm run build"
+  },
+  "keywords": ["mcp", "model-context-protocol", "chem", "chemag", "architecture"],
+  "dependencies": {
+    "@chemag/core": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  },
+  "peerDependencies": {
+    "@chemag/plugin-python": "workspace:*",
+    "@chemag/plugin-typescript": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@chemag/plugin-typescript": {
+      "optional": true
+    },
+    "@chemag/plugin-python": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@chemag/plugin-python": "workspace:*",
+    "@chemag/plugin-typescript": "workspace:*",
+    "@types/node": "^22.9.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.1.0"
+  }
+}

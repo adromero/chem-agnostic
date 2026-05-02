@@ -26,7 +26,8 @@ export type DiagnosticCategory =
   | "PUBLIC"
   | "ROLE"
   | "PLACEMENT"
-  | "EMIT-RULES";
+  | "EMIT-RULES"
+  | "MCP";
 
 /**
  * String-literal union of every emitted diagnostic code. Adding a new code
@@ -77,7 +78,11 @@ export type DiagnosticCode =
   // ---- EMIT-RULES ----
   | "CHEM-EMIT-RULES-001"
   | "CHEM-EMIT-RULES-002"
-  | "CHEM-EMIT-RULES-003";
+  | "CHEM-EMIT-RULES-003"
+  // ---- MCP ----
+  | "CHEM-MCP-001"
+  | "CHEM-MCP-002"
+  | "CHEM-MCP-003";
 
 /** Subset of `TrKey` containing only `diagnostic.*` keys. */
 export type DiagnosticTrKey = Extract<TrKey, `diagnostic.${string}`>;
@@ -347,6 +352,29 @@ export const DIAGNOSTIC_CODES: Record<DiagnosticCode, DiagnosticCodeMeta> = {
     level: "error",
     trKey: "diagnostic.unknown_emitter_tool",
     helpFragment: "chem-emit-rules-003-unknown-emitter-tool",
+  },
+
+  // ---- MCP ----
+  "CHEM-MCP-001": {
+    code: "CHEM-MCP-001",
+    category: "MCP",
+    level: "error",
+    trKey: "diagnostic.mcp_workspace_required",
+    helpFragment: "chem-mcp-001-mcp-workspace-required",
+  },
+  "CHEM-MCP-002": {
+    code: "CHEM-MCP-002",
+    category: "MCP",
+    level: "error",
+    trKey: "diagnostic.mcp_transport_unsupported",
+    helpFragment: "chem-mcp-002-mcp-transport-unsupported",
+  },
+  "CHEM-MCP-003": {
+    code: "CHEM-MCP-003",
+    category: "MCP",
+    level: "error",
+    trKey: "diagnostic.mcp_initialize_failed",
+    helpFragment: "chem-mcp-003-mcp-initialize-failed",
   },
 };
 

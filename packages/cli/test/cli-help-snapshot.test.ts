@@ -60,6 +60,7 @@ describe("help — standard vocabulary", () => {
     expect(text).toContain("WORKSPACE:");
     expect(text).toContain("VALIDATION:");
     expect(text).toContain("GENERATION:");
+    expect(text).toContain("INTEGRATIONS:");
     expect(text).toContain("UTILITIES:");
 
     // Commands (each must show up exactly once with its description)
@@ -72,6 +73,7 @@ describe("help — standard vocabulary", () => {
     expect(text).toMatch(/\bgraph\b/);
     expect(text).toMatch(/\bsync\b/);
     expect(text).toMatch(/\bemit-rules\b/);
+    expect(text).toMatch(/\bmcp\b/);
     expect(text).toMatch(/\bconfig\b/);
     expect(text).toMatch(/\bcompletion\b/);
 

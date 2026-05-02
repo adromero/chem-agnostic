@@ -10,18 +10,29 @@
 // --------------------
 // The CLI dispatcher exits before any workspace is loaded for --help/--version
 // and dispatches to commands which call loadWorkspace themselves. So precedence
-// (flag > env > workspace.yaml > default) is split into two phases:
+// (flag > env > workspace.yaml > session > default) is split into two phases
+// (with an optional Phase 1.5 layered in by the MCP server):
 //
 //   Phase 1 — cli.ts (always runs):
 //     resolveCliVocabulary(argv, env) computes flag/env/default, then
 //     setVocabulary(name, source) is called once before dispatch. This is what
 //     --help, --version, and any pre-workspace error messages render with.
 //
+//   Phase 1.5 — @chemag/mcp-server only:
+//     when an MCP client sends a `vocabulary` initialize parameter, the
+//     server's Session constructor calls setVocabulary(name, "session"). The
+//     "session" source sits between "default" and "workspace" so that a
+//     workspace.yaml-declared vocabulary still wins over the client hint —
+//     preserving the WP-002 invariant that the project on disk is the source
+//     of truth. Env and flag continue to outrank everything (operator override
+//     beats project declaration beats client hint beats default).
+//
 //   Phase 2 — commands that load a workspace:
 //     after a successful loadWorkspace(), the command calls
-//     applyWorkspaceVocabulary(workspace). If Phase 1 already saw a flag or
-//     env source, this call is a no-op (those outrank the workspace.yaml
-//     field). Otherwise it sets the vocabulary from workspace.vocabulary.
+//     applyWorkspaceVocabulary(workspace). If Phase 1 (or Phase 1.5) already
+//     saw a stronger source (flag or env), this call is a no-op. Otherwise it
+//     sets the vocabulary from workspace.vocabulary, which outranks any
+//     Phase-1.5 session value.
 //
 // Per-command --help text uses Phase-1 vocabulary only — workspace-sourced
 // vocabulary is never applied to help text because help exits before any
@@ -34,15 +45,21 @@ import type { TrKey } from "./keys.js";
 import type { VocabularyName, Workspace } from "../types.js";
 
 export type { VocabularyName } from "../types.js";
-export type VocabularySource = "flag" | "env" | "workspace" | "default";
+export type VocabularySource = "flag" | "env" | "workspace" | "session" | "default";
 
 // Higher number = stronger source. setVocabulary only accepts a write if the
 // caller's source is >= the source already recorded.
+//
+// Rank rationale: "session" sits between "default" and "workspace" so that a
+// workspace.yaml-declared vocabulary still wins over a client-supplied session
+// value (preserves the WP-002 invariant that workspace is source of truth).
+// Env and flag continue to outrank everything.
 const SOURCE_RANK: Record<VocabularySource, number> = {
   default: 0,
-  workspace: 1,
-  env: 2,
-  flag: 3,
+  session: 1,
+  workspace: 2,
+  env: 3,
+  flag: 4,
 };
 
 const LOCALES: Record<VocabularyName, Record<string, string>> = {

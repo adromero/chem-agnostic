@@ -13,6 +13,7 @@ function __chemag_no_subcommand
       case emit-rules; return 1
       case graph; return 1
       case init; return 1
+      case mcp; return 1
       case scaffold; return 1
       case sync; return 1
     end
@@ -38,6 +39,8 @@ complete -c chemag -n __chemag_no_subcommand -f -a graph -d "graph — output a 
 complete -c chem-ag -n __chemag_no_subcommand -f -a graph -d "graph — output a Mermaid dependency diagram."
 complete -c chemag -n __chemag_no_subcommand -f -a init -d "init — bootstrap a new workspace."
 complete -c chem-ag -n __chemag_no_subcommand -f -a init -d "init — bootstrap a new workspace."
+complete -c chemag -n __chemag_no_subcommand -f -a mcp -d "mcp — run an MCP server exposing chemag tools to MCP-aware clients."
+complete -c chem-ag -n __chemag_no_subcommand -f -a mcp -d "mcp — run an MCP server exposing chemag tools to MCP-aware clients."
 complete -c chemag -n __chemag_no_subcommand -f -a scaffold -d "scaffold — generate stub files from manifests."
 complete -c chem-ag -n __chemag_no_subcommand -f -a scaffold -d "scaffold — generate stub files from manifests."
 complete -c chemag -n __chemag_no_subcommand -f -a sync -d "sync — generate manifests from existing code."

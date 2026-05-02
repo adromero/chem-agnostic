@@ -69,6 +69,10 @@ export type TrKey =
   | "diagnostic.markers_missing_no_overwrite" // params: { path }
   | "diagnostic.line_budget_exceeded" // params: { tool, actual, budget }
   | "diagnostic.unknown_emitter_tool" // params: { tool, supported }
+  // mcp-server (CHEM-MCP-001/002/003)
+  | "diagnostic.mcp_workspace_required"
+  | "diagnostic.mcp_transport_unsupported" // params: { transport }
+  | "diagnostic.mcp_initialize_failed" // params: { reason }
   // ---- CLI help (top-level + per-command) ----
   | "cli.help.intro" // params: { version }
   | "cli.help.usage"
@@ -83,6 +87,9 @@ export type TrKey =
   | "cli.command.graph"
   | "cli.command.sync"
   | "cli.command.emit_rules"
+  | "cli.command.mcp"
+  | "cli.help.mcp.transport"
+  | "cli.help.mcp.workspace"
   // ---- CLAUDE.md template sections ----
   | "claude_md.intro"
   | "claude_md.roles_table"
@@ -141,6 +148,9 @@ export const ALL_TR_KEYS: readonly TrKey[] = [
   "diagnostic.markers_missing_no_overwrite",
   "diagnostic.line_budget_exceeded",
   "diagnostic.unknown_emitter_tool",
+  "diagnostic.mcp_workspace_required",
+  "diagnostic.mcp_transport_unsupported",
+  "diagnostic.mcp_initialize_failed",
   "cli.help.intro",
   "cli.help.usage",
   "cli.help.commands",
@@ -154,6 +164,9 @@ export const ALL_TR_KEYS: readonly TrKey[] = [
   "cli.command.graph",
   "cli.command.sync",
   "cli.command.emit_rules",
+  "cli.command.mcp",
+  "cli.help.mcp.transport",
+  "cli.help.mcp.workspace",
   "claude_md.intro",
   "claude_md.roles_table",
   "claude_md.bonds_table",
