@@ -238,7 +238,7 @@ export function buildCommandTree(version: string): CommandDef {
           tool: {
             type: "string",
             description:
-              "Editor / agent target: claude (cursor|codex|aider|cline|copilot|all coming soon)",
+              "Editor / agent target: claude, cursor, codex (aider|cline|copilot|all coming soon)",
           },
           scope: {
             type: "enum",

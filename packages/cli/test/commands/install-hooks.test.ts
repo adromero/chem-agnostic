@@ -99,11 +99,11 @@ describe("cmdInstallHooks — scope routing", () => {
 });
 
 describe("cmdInstallHooks — unsupported tool", () => {
-  it("returns non-zero with CHEM-INSTALL-HOOKS-001 for codex (still a placeholder)", () => {
-    const code = cmdInstallHooks(["--tool", "codex", "--workspace", tmpDir]);
+  it("returns non-zero with CHEM-INSTALL-HOOKS-001 for aider (still a placeholder)", () => {
+    const code = cmdInstallHooks(["--tool", "aider", "--workspace", tmpDir]);
     expect(code).toBe(2);
     expect(stderr.join("\n")).toContain("CHEM-INSTALL-HOOKS-001");
-    expect(stderr.join("\n")).toContain("codex");
+    expect(stderr.join("\n")).toContain("aider");
   });
 
   it("returns non-zero for an unknown tool name", () => {
@@ -114,7 +114,7 @@ describe("cmdInstallHooks — unsupported tool", () => {
 });
 
 describe("cmdInstallHooks — cursor without husky surfaces CHEM-INSTALL-HOOKS-007", () => {
-  it("returns non-zero with the cursor husky-not-detected diagnostic", () => {
+  it("returns non-zero with the tool-agnostic husky-not-detected diagnostic", () => {
     // No husky in tmpDir → installer fails 007 with an actionable message.
     fs.writeFileSync(
       path.join(tmpDir, "workspace.yaml"),

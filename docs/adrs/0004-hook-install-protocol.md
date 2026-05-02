@@ -1,8 +1,9 @@
 # ADR 0004 — `chemag install-hooks` protocol and the `--for-hook claude` mode
 
 - Status: Accepted
-- Date: 2026-05-01 (revised 2026-05-02 for WP-011 — Cursor installer)
-- Stage: WP-010, WP-011
+- Date: 2026-05-01 (revised 2026-05-02 for WP-011 — Cursor installer; revised
+  2026-05-03 for WP-012 — Codex installer + tool-agnostic husky diagnostic)
+- Stage: WP-010, WP-011, WP-012
 
 ## Context
 
@@ -206,11 +207,15 @@ Detection is satisfied if **either** of:
 - `.husky/` already exists at the workspace root.
 
 If neither is true, the installer fails with **CHEM-INSTALL-HOOKS-007**
-`cursor_husky_not_detected` and prints the actionable remedy
-(`pnpm add -D husky && pnpm husky init`). Detection is intentionally
-permissive — `pnpm husky init` creates `.husky/` even before husky is
-pinned into `dependencies` on a fresh checkout, and we want to support the
-"husky already initialised but not yet in package.json" intermediate state.
+`husky_not_detected` and prints the actionable remedy
+(`pnpm add -D husky && pnpm husky init`). The trKey is intentionally
+**tool-agnostic** as of WP-012 — both the Cursor and Codex installers (and
+WP-013's Aider/Cline/Copilot installers) throw the same
+`HuskyNotDetectedError`, surface the same code, and render the same
+message. Detection is intentionally permissive — `pnpm husky init` creates
+`.husky/` even before husky is pinned into `dependencies` on a fresh
+checkout, and we want to support the "husky already initialised but not yet
+in package.json" intermediate state.
 
 ### Pre-commit unparseable (CHEM-INSTALL-HOOKS-008)
 
@@ -283,3 +288,91 @@ makes no sense for a per-repo pre-commit gate.
 `--restore` is rejected outright for Cursor: there is no `.bak` file to
 restore from. Users who want to undo the install run
 `chemag install-hooks --tool cursor --uninstall`.
+
+## Codex (WP-012)
+
+Codex (OpenAI's coding agent) reads `AGENTS.md` at the workspace root by
+convention, so the install surface for `chemag install-hooks --tool codex`
+is two artifacts:
+
+| Artifact            | Tagging mechanism                                          |
+| ------------------- | ---------------------------------------------------------- |
+| `.husky/pre-commit` | Trailing line comment `# _chemag`                          |
+| `AGENTS.md`         | `<!-- chemag:rules:start --> ... -->` (rules markers, owned by `emit-rules`) |
+
+Each artifact is line-tagged (shell) or marker-block-tagged (markdown), so
+no `.bak` file is required — `_backup.ts` is **not** consumed by the Codex
+installer. The husky pre-commit line is byte-identical to the Cursor
+installer's: `chemag check --format human || exit 1 # _chemag`.
+
+### Husky-missing diagnostic is tool-agnostic
+
+WP-012 renames `CHEM-INSTALL-HOOKS-007`'s trKey from
+`diagnostic.cursor_husky_not_detected` to the tool-agnostic
+`diagnostic.husky_not_detected`. The rendered message names neither
+"cursor" nor "codex" — both installers (and the Aider/Cline/Copilot
+installers in WP-013) reuse the same diagnostic without further key churn.
+The code number (007) is unchanged.
+
+### MCP-registration follow-up tip (cross-references WP-017)
+
+After a successful Codex install, the CLI prints a follow-up tip rendered
+via `tr("cli.install_hooks.tip.mcp_register", { clientName, clientId })`.
+The tip points users at `chemag mcp install --client codex` (the surface
+landing in WP-017). The tip is **text-only** — `install-hooks --tool codex`
+does NOT auto-register the MCP server today; that responsibility belongs
+to WP-017. Leaving the tip as a `tr()` string lets WP-017 swap the message
+text without rewriting this installer or churning the key.
+
+### The 5-step library flow for `AGENTS.md`
+
+The Codex installer is a sibling of `cmdEmitRules`, not a caller of it.
+`installCodex` performs the same library-level work that `cmdEmitRules`
+does for `--tool codex`, in five explicit steps (mirroring the Cursor
+installer):
+
+1. `loadWorkspace(workspace.yaml)` — parse the manifest.
+2. `discoverCompounds(workspace, root, { loadCompound })` — enumerate
+   compound manifests on disk. On failure: log a warning, continue with an
+   empty list (matches `cmdEmitRules` behavior).
+3. `buildRulesContent(workspace, compounds)` — build the language-agnostic
+   intermediate.
+4. `emitAgentsMd(content)` — content-only emitter. Returns an
+   `EmittedFile` with `path`, `block`, `leading`, `trailing`, `body`,
+   `warnings`. Does NOT load workspaces. Does NOT touch disk.
+5. `mergeBetweenMarkers(existing, file.block, { isMdc: false, leading,
+   trailing, overwrite: false })` to produce the merged body, then write
+   to disk (or skip the write under `--dry-run`).
+
+A regression test (`codex.test.ts` → "5-step flow parity") asserts that
+the installer's AGENTS.md output is byte-identical to a fresh
+`chemag emit-rules --tool codex` run on the same workspace. This is the
+contract that pins the two paths together.
+
+### Codex uninstall policy
+
+`uninstallCodex`:
+
+- **Removes** every `# _chemag`-tagged line from `.husky/pre-commit`. The
+  file is deleted only when the strip leaves only the default shebang (or
+  whitespace) behind; otherwise the file is kept in place.
+- **Does NOT delete** `AGENTS.md`. Deletion is opt-in: the user can
+  hand-remove the file or run `chemag emit-rules --tool codex` again to
+  refresh it. Rationale: AGENTS.md is the AI-context layer the developer
+  is most likely to want to keep around; the installer's responsibility is
+  the deterministic gate (the husky line). The marker-block tagging makes
+  AGENTS.md trivially regenerable on demand.
+
+### Modes for Codex
+
+Codex has no deterministic editor hook beyond the husky pre-commit, so the
+`--mode block|warn|context-only` flag is **accepted but ignored** for
+`--tool codex` (mirrors Cursor). The installer surfaces an informational
+note in the summary when a non-default mode is passed.
+
+`--scope user|project` is similarly informational-only — husky is always
+project-scoped.
+
+`--restore` is rejected outright for Codex: there is no `.bak` file to
+restore from. Users who want to undo the install run
+`chemag install-hooks --tool codex --uninstall`.

@@ -5,9 +5,10 @@
 //   * claude (WP-010)
 //   * cursor (WP-011) — husky pre-commit + .cursor/rules/architecture.mdc
 //                        + CONTRIBUTING.md fragment
+//   * codex  (WP-012) — husky pre-commit + AGENTS.md
 //
 // Pending tools (still error CHEM-INSTALL-HOOKS-001):
-//   * codex / aider / cline / copilot / all
+//   * aider / cline / copilot / all
 //
 // Surface:
 //   chemag install-hooks --tool <claude|cursor|codex|aider|cline|copilot|all>
@@ -37,6 +38,7 @@ import {
   uninstallCursor,
   type CursorInstallResult,
 } from "../installers/cursor.js";
+import { installCodex, uninstallCodex, type CodexInstallResult } from "../installers/codex.js";
 
 const R = "\x1b[0m";
 const RED = "\x1b[31m";
@@ -45,9 +47,9 @@ const YLW = "\x1b[33m";
 const DIM = "\x1b[2m";
 const BLD = "\x1b[1m";
 
-// All recognized tool names. Currently only `claude` and `cursor` are implemented.
+// All recognized tool names. `claude`, `cursor`, and `codex` are implemented.
 const KNOWN_TOOLS = new Set(["claude", "cursor", "codex", "aider", "cline", "copilot", "all"]);
-const IMPLEMENTED_TOOLS = new Set(["claude", "cursor"]);
+const IMPLEMENTED_TOOLS = new Set(["claude", "cursor", "codex"]);
 
 interface ParsedArgs {
   tool: string;
@@ -94,6 +96,10 @@ export function cmdInstallHooks(argv: string[]): number {
 
   if (parsed.tool === "cursor") {
     return runCursor(parsed, workspaceRoot);
+  }
+
+  if (parsed.tool === "codex") {
+    return runCodex(parsed, workspaceRoot);
   }
 
   // claude path
@@ -251,7 +257,7 @@ function runCursor(args: ParsedArgs, workspaceRoot: string): number {
   } catch (e) {
     if (e instanceof HuskyNotDetectedError) {
       console.error(
-        `${RED}CHEM-INSTALL-HOOKS-007:${R} ${tr("diagnostic.cursor_husky_not_detected", {
+        `${RED}CHEM-INSTALL-HOOKS-007:${R} ${tr("diagnostic.husky_not_detected", {
           workspace: e.workspaceRoot,
         })}`,
       );
@@ -297,6 +303,91 @@ function mapAction(action: "create" | "update" | "no-op" | "skip"): string {
       return `${DIM}=${R}`;
     case "skip":
       return `${DIM}.${R}`;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Codex path
+// ---------------------------------------------------------------------------
+
+function runCodex(args: ParsedArgs, workspaceRoot: string): number {
+  if (args.restore) {
+    // --restore is a Claude-Code-specific concept (.bak file). Codex's
+    // deliverables are line/marker tagged, not whole-file replaced.
+    console.error(
+      `${RED}install-hooks failed:${R} --restore is not supported for --tool codex (Codex's installer does not write .bak files).`,
+    );
+    return 2;
+  }
+
+  // --scope is irrelevant for husky (always project-scoped). Surface an
+  // informational note without failing.
+  if (args.scope !== "project") {
+    console.warn(
+      `${YLW}note:${R} --scope ${args.scope} ignored for codex (husky is always project-scoped).`,
+    );
+  }
+
+  try {
+    const result = args.uninstall
+      ? uninstallCodex({ workspaceRoot, dryRun: args.dryRun })
+      : installCodex({ workspaceRoot, mode: args.mode, dryRun: args.dryRun });
+    renderCodexSummary(result, args);
+
+    void emitTelemetry("cli.command.install_hooks", {
+      tool: "codex",
+      scope: args.scope,
+      mode: args.mode,
+      action: args.uninstall ? "uninstall" : "install",
+    }).catch(() => {});
+
+    return 0;
+  } catch (e) {
+    if (e instanceof HuskyNotDetectedError) {
+      console.error(
+        `${RED}CHEM-INSTALL-HOOKS-007:${R} ${tr("diagnostic.husky_not_detected", {
+          workspace: e.workspaceRoot,
+        })}`,
+      );
+      return 2;
+    }
+    if (e instanceof PrecommitUnparseableError) {
+      console.error(
+        `${RED}CHEM-INSTALL-HOOKS-008:${R} ${tr("diagnostic.cursor_precommit_unparseable", {
+          path: e.path,
+          reason: e.reason,
+        })}`,
+      );
+      return 2;
+    }
+    console.error(`${RED}install-hooks failed:${R} ${(e as Error).message}`);
+    return 2;
+  }
+}
+
+function renderCodexSummary(result: CodexInstallResult, args: ParsedArgs): void {
+  const headline = args.uninstall ? "chemag install-hooks --uninstall" : "chemag install-hooks";
+  console.log(`\n${BLD}${headline}${R}${args.dryRun ? ` ${DIM}(dry run)${R}` : ""}`);
+  console.log(`  ${DIM}tool:${R}  codex`);
+  console.log(`  ${DIM}root:${R}  ${result.workspaceRoot}`);
+
+  for (const note of result.infoNotes) {
+    console.log(`  ${DIM}note:${R} ${note}`);
+  }
+
+  for (const artifact of [result.precommit, result.agentsMd]) {
+    const verb = mapAction(artifact.action);
+    console.log(`  ${verb}  ${artifact.path}`);
+  }
+
+  // After-install MCP tip (cross-references WP-017). Always surface on install
+  // (not on uninstall) so the user knows the next step.
+  if (!args.uninstall) {
+    const tip = tr("cli.install_hooks.tip.mcp_register", {
+      clientName: "Codex",
+      clientId: "codex",
+    });
+    console.log(`  ${DIM}tip:${R}  ${tip}`);
   }
 }
 
