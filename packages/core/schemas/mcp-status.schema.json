@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://chemag.dev/schemas/mcp-status.schema.json",
+  "title": "McpStatusOutput",
+  "description": "JSON output of `chemag mcp status --format json`. Stable public contract — once shipped, any change requires a changeset and release notes.",
+  "type": "object",
+  "required": ["clients"],
+  "additionalProperties": false,
+  "properties": {
+    "clients": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/clientStatus" }
+    }
+  },
+  "definitions": {
+    "clientStatus": {
+      "type": "object",
+      "required": ["client", "scope", "config_path", "registered", "server_command", "notes"],
+      "additionalProperties": false,
+      "properties": {
+        "client": {
+          "type": "string",
+          "enum": ["claude", "cursor", "cline", "continue"],
+          "description": "The MCP client this status row describes."
+        },
+        "scope": {
+          "type": "string",
+          "enum": ["user", "project"],
+          "description": "Whether the registration was inspected at user or project scope."
+        },
+        "config_path": {
+          "type": "string",
+          "description": "Absolute path to the MCP config file consulted (file may not exist yet — see notes)."
+        },
+        "registered": {
+          "type": "boolean",
+          "description": "True iff a chemag entry was found in the config."
+        },
+        "server_command": {
+          "type": ["string", "null"],
+          "description": "The chemag invocation as registered (e.g. \"chemag mcp --workspace /abs/path\"), or null when not registered."
+        },
+        "notes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Human-readable notes (e.g. \"claude CLI not on PATH; using JSON file fallback\", \"config file does not exist yet\")."
+        }
+      }
+    }
+  }
+}
