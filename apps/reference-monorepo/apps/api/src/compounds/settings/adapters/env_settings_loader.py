@@ -1,5 +1,5 @@
 """Auto-scaffolded adapter."""
-from ..public import SettingsLoader, AppSettings
+from .. import SettingsLoader, AppSettings
 
 
 class EnvSettingsLoader:

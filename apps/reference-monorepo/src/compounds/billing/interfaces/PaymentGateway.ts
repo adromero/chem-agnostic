@@ -2,4 +2,5 @@
 import type { BillingMoney } from "../public.js";
 export interface PaymentGateway {
   describe(): string;
+  readonly _billingmoney?: BillingMoney;
 }

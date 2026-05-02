@@ -1,7 +1,7 @@
 """Auto-scaffolded reaction (use case workflow)."""
 from typing import Any
 
-from ..public import IntegrationKey, IntegrationClient
+from .. import IntegrationKey, IntegrationClient
 
 
 async def call_integration(input: Any) -> dict[str, Any]:

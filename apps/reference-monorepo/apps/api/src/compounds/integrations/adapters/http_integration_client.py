@@ -1,5 +1,5 @@
 """Auto-scaffolded adapter."""
-from ..public import IntegrationClient, IntegrationKey
+from .. import IntegrationClient, IntegrationKey
 
 
 class HttpIntegrationClient:

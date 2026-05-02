@@ -2,4 +2,6 @@
 import type { Credential, Token } from "../public.js";
 export interface AuthGateway {
   describe(): string;
+  readonly _credential?: Credential;
+  readonly _token?: Token;
 }

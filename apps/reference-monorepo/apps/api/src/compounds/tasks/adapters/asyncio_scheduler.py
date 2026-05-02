@@ -1,5 +1,5 @@
 """Auto-scaffolded adapter."""
-from ..public import Scheduler, TaskSpec
+from .. import Scheduler, TaskSpec
 
 
 class AsyncioScheduler:

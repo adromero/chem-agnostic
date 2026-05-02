@@ -2,4 +2,5 @@
 import type { RetrySpec } from "../public.js";
 export interface BackoffComputer {
   describe(): string;
+  readonly _retryspec?: RetrySpec;
 }

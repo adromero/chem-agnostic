@@ -1,5 +1,5 @@
 """Auto-scaffolded adapter."""
-from ..public import TokenVerifier, AuthToken, Principal
+from .. import TokenVerifier, AuthToken, Principal
 
 
 class JwtTokenVerifier:

@@ -2,4 +2,6 @@
 import type { JobId, JobName } from "../public.js";
 export interface JobQueue {
   describe(): string;
+  readonly _jobid?: JobId;
+  readonly _jobname?: JobName;
 }

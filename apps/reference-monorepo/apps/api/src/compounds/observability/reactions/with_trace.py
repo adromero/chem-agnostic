@@ -1,7 +1,7 @@
 """Auto-scaffolded reaction (use case workflow)."""
 from typing import Any
 
-from ..public import TraceId, Logger
+from .. import TraceId, Logger
 
 
 async def with_trace(input: Any) -> dict[str, Any]:

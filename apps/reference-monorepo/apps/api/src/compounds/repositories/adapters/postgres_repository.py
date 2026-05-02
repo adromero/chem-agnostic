@@ -1,5 +1,5 @@
 """Auto-scaffolded adapter."""
-from ..public import Repository, Record, RecordId
+from .. import Repository, Record, RecordId
 
 
 class PostgresRepository:

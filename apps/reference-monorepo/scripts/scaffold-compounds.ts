@@ -48,20 +48,48 @@ function tsExtensionless(name: string): string {
   return name.replace(/\.ts$/, "");
 }
 
+/**
+ * Group cross-compound dependencies by their owning compound. Returns a
+ * list of `import type { ... } from "..." ` lines suitable for placement at
+ * the top of a unit stub.
+ *
+ *   - Names that live in the SAME compound resolve through `../public.js`.
+ *   - Names that live in DIFFERENT compounds (declared in `importsFrom` of
+ *     the current compound) resolve through `../../<other>/public.js`.
+ *
+ * Unknown names are dropped silently so the stub still type-checks even if
+ * a future scaffold spec lists a dep that doesn't ship yet.
+ */
+function importLinesForUnit(deps: string[], ctx: { ownerByName: Map<string, string>; selfCompound: string }): string {
+  if (deps.length === 0) return "";
+  const groups = new Map<string, string[]>();
+  for (const d of deps) {
+    const owner = ctx.ownerByName.get(d);
+    if (!owner) continue;
+    const target = owner === ctx.selfCompound ? "../public.js" : `../../${owner}/public.js`;
+    if (!groups.has(target)) groups.set(target, []);
+    groups.get(target)!.push(d);
+  }
+  return [...groups.entries()]
+    .map(([target, names]) => `import type { ${names.join(", ")} } from "${target}";`)
+    .join("\n") + (groups.size ? "\n" : "");
+}
+
+interface RenderCtx {
+  ownerByName: Map<string, string>;
+  selfCompound: string;
+}
+
 function elementBody(name: string): string {
   return `// Auto-scaffolded element. Replace with the real value object.
 export type ${name} = { readonly value: string };
-export function make${name}(value: string): ${name} {
-  return { value };
-}
 `;
 }
 
-function moleculeBody(name: string, deps: string[]): string {
-  const importLines = deps.length
-    ? `import type { ${deps.join(", ")} } from "../public.js";\n`
-    : "";
+function moleculeBody(name: string, deps: string[], ctx: RenderCtx): string {
+  const importLines = importLinesForUnit(deps, ctx);
   const fieldLines = deps
+    .filter((d) => ctx.ownerByName.has(d))
     .map((d) => `  readonly ${d.charAt(0).toLowerCase() + d.slice(1)}: ${d};`)
     .join("\n");
   return `// Auto-scaffolded molecule.
@@ -71,23 +99,31 @@ ${fieldLines || "  readonly id: string;"}
 `;
 }
 
-function interfaceBody(name: string, deps: string[]): string {
-  const importLines = deps.length
-    ? `import type { ${deps.join(", ")} } from "../public.js";\n`
-    : "";
+function interfaceBody(name: string, deps: string[], ctx: RenderCtx): string {
+  const importLines = importLinesForUnit(deps, ctx);
+  // Reference each imported type in a phantom field so `verbatimModuleSyntax`
+  // tsconfig setups don't strip the import. The body still passes strict.
+  const phantom = deps
+    .filter((d) => ctx.ownerByName.has(d))
+    .map((d) => `  readonly _${d.toLowerCase()}?: ${d};`)
+    .join("\n");
   return `// Auto-scaffolded port. Adapters in this compound implement this contract.
 ${importLines}export interface ${name} {
   describe(): string;
+${phantom}
 }
 `;
 }
 
-function adapterBody(name: string, ifaceName: string | undefined, deps: string[]): string {
+function adapterBody(
+  name: string,
+  ifaceName: string | undefined,
+  deps: string[],
+  ctx: RenderCtx,
+): string {
   const allRefs = new Set<string>(deps);
   if (ifaceName) allRefs.add(ifaceName);
-  const importLines = allRefs.size
-    ? `import type { ${[...allRefs].join(", ")} } from "../public.js";\n`
-    : "";
+  const importLines = importLinesForUnit([...allRefs], ctx);
   const implClause = ifaceName ? ` implements ${ifaceName}` : "";
   return `// Auto-scaffolded adapter.
 ${importLines}export class ${name}${implClause} {
@@ -98,48 +134,55 @@ ${importLines}export class ${name}${implClause} {
 `;
 }
 
-function reactionBody(name: string, deps: string[]): string {
-  // We intentionally only depend on names that can be resolved inside the
-  // compound. Reaction signatures are kept loose to avoid pulling in TS
-  // checker-level constraints — the chemag bond rules are the contract.
-  const importLines = deps.length
-    ? `import type { ${deps.join(", ")} } from "../public.js";\n`
-    : "";
+function reactionBody(name: string, deps: string[], ctx: RenderCtx): string {
+  // The stub doesn't actually USE the imports; it just needs to declare the
+  // architectural dependency in the compound.yaml manifest. We still emit
+  // type-only imports + reference each in a `void` so the imports survive
+  // any verbatim-module-syntax tsconfig later.
+  const importLines = importLinesForUnit(deps, ctx);
+  const voidRefs = deps
+    .filter((d) => ctx.ownerByName.has(d))
+    .map((d) => `  void {} as ${d} | undefined;`)
+    .join("\n");
   return `// Auto-scaffolded reaction (use case workflow).
 ${importLines}export async function ${name}(input: unknown): Promise<unknown> {
   void input;
+${voidRefs}
   return { ok: true, reaction: "${name}" };
 }
 `;
 }
 
-function bufferBody(name: string, deps: string[]): string {
-  const importLines = deps.length
-    ? `import type { ${deps.join(", ")} } from "../public.js";\n`
-    : "";
+function bufferBody(name: string, deps: string[], ctx: RenderCtx): string {
+  const importLines = importLinesForUnit(deps, ctx);
+  const voidRefs = deps
+    .filter((d) => ctx.ownerByName.has(d))
+    .map((d) => `    void {} as ${d} | undefined;`)
+    .join("\n");
   return `// Auto-scaffolded buffer (cross-cutting middleware).
 ${importLines}export function ${name}<T>(reaction: (i: T) => Promise<unknown>): (i: T) => Promise<unknown> {
   return async (i) => {
+${voidRefs}
     return reaction(i);
   };
 }
 `;
 }
 
-function rendererFor(role: Role) {
+function rendererFor(role: Role, ctx: RenderCtx) {
   switch (role) {
     case "element":
       return (u: UnitSpec) => elementBody(u.name);
     case "molecule":
-      return (u: UnitSpec) => moleculeBody(u.name, u.dependsOn ?? []);
+      return (u: UnitSpec) => moleculeBody(u.name, u.dependsOn ?? [], ctx);
     case "interface":
-      return (u: UnitSpec) => interfaceBody(u.name, u.dependsOn ?? []);
+      return (u: UnitSpec) => interfaceBody(u.name, u.dependsOn ?? [], ctx);
     case "adapter":
-      return (u: UnitSpec) => adapterBody(u.name, u.implements?.[0], u.dependsOn ?? []);
+      return (u: UnitSpec) => adapterBody(u.name, u.implements?.[0], u.dependsOn ?? [], ctx);
     case "reaction":
-      return (u: UnitSpec) => reactionBody(u.name, u.dependsOn ?? []);
+      return (u: UnitSpec) => reactionBody(u.name, u.dependsOn ?? [], ctx);
     case "buffer":
-      return (u: UnitSpec) => bufferBody(u.name, u.dependsOn ?? []);
+      return (u: UnitSpec) => bufferBody(u.name, u.dependsOn ?? [], ctx);
   }
 }
 
@@ -152,9 +195,15 @@ function roleFolder(role: Role): string {
 // compound.yaml + public.ts emission
 // ---------------------------------------------------------------------------
 
-function writeCompound(compoundsDir: string, c: CompoundSpec): void {
+function writeCompound(
+  compoundsDir: string,
+  c: CompoundSpec,
+  ownerByName: Map<string, string>,
+): void {
   const dir = path.join(compoundsDir, c.name);
   fs.mkdirSync(dir, { recursive: true });
+
+  const ctx: RenderCtx = { ownerByName, selfCompound: c.name };
 
   const exportBuckets: Record<string, string[]> = {};
   for (const u of c.units) {
@@ -164,23 +213,12 @@ function writeCompound(compoundsDir: string, c: CompoundSpec): void {
 
     const folder = path.join(dir, roleFolder(u.role));
     fs.mkdirSync(folder, { recursive: true });
-    const body = u.body ?? rendererFor(u.role)(u);
+    const body = u.body ?? rendererFor(u.role, ctx)(u);
     fs.writeFileSync(path.join(folder, `${u.name}.ts`), body);
   }
 
   // public.ts re-exports every unit from its role folder.
   const publicLines: string[] = [];
-  for (const u of c.units) {
-    publicLines.push(
-      `export { ${u.name === "BillingMoney" ? "make" + u.name + ", " : ""}${
-        u.role === "element" || u.role === "molecule" || u.role === "interface" ? "type " : ""
-      }${u.name} } from "./${roleFolder(u.role)}/${u.name}.js";`,
-    );
-  }
-  // The ad-hoc "make" prefix above only fires for one element; for normal
-  // elements/molecules we just want a type-only export. Simpler path: emit a
-  // value-or-type re-export per unit.
-  publicLines.length = 0;
   for (const u of c.units) {
     if (u.role === "element" || u.role === "molecule" || u.role === "interface") {
       publicLines.push(`export type { ${u.name} } from "./${roleFolder(u.role)}/${u.name}.js";`);
@@ -787,9 +825,33 @@ function pyName(name: string): string {
     .toLowerCase();
 }
 
-function pyImportLine(deps: string[]): string {
+interface PyRenderCtx {
+  ownerByName: Map<string, string>;
+  selfCompound: string;
+}
+
+/**
+ * Group cross-compound dependencies by their owning compound and emit
+ * Python-style relative imports. Same-compound deps go through `..public`
+ * (the compound's `__init__.py`); cross-compound deps go through
+ * `..<other_compound>` directly (treating each compound as a sibling
+ * package — Python doesn't need a public.py wrapper because `__init__.py`
+ * IS the surface).
+ */
+function pyImportLines(deps: string[], ctx: PyRenderCtx): string {
   if (!deps.length) return "";
-  return `from ..public import ${deps.join(", ")}\n`;
+  const groups = new Map<string, string[]>();
+  for (const d of deps) {
+    const owner = ctx.ownerByName.get(d);
+    if (!owner) continue;
+    const target =
+      owner === ctx.selfCompound ? ".." : `...${owner.replace(/-/g, "_")}`;
+    if (!groups.has(target)) groups.set(target, []);
+    groups.get(target)!.push(d);
+  }
+  return [...groups.entries()]
+    .map(([target, names]) => `from ${target} import ${names.join(", ")}`)
+    .join("\n") + (groups.size ? "\n" : "");
 }
 
 function pyElementBody(name: string): string {
@@ -803,11 +865,11 @@ class ${name}:
 `;
 }
 
-function pyMoleculeBody(name: string, deps: string[]): string {
+function pyMoleculeBody(name: string, deps: string[], ctx: PyRenderCtx): string {
   return `"""Auto-scaffolded molecule."""
 from dataclasses import dataclass
 
-${pyImportLine(deps)}
+${pyImportLines(deps, ctx)}
 
 @dataclass(frozen=True)
 class ${name}:
@@ -815,22 +877,27 @@ class ${name}:
 `;
 }
 
-function pyInterfaceBody(name: string, deps: string[]): string {
+function pyInterfaceBody(name: string, deps: string[], ctx: PyRenderCtx): string {
   return `"""Auto-scaffolded port. Adapters in this compound implement this protocol."""
 from typing import Protocol
 
-${pyImportLine(deps)}
+${pyImportLines(deps, ctx)}
 
 class ${name}(Protocol):
     def describe(self) -> str: ...
 `;
 }
 
-function pyAdapterBody(name: string, ifaceName: string | undefined, deps: string[]): string {
+function pyAdapterBody(
+  name: string,
+  ifaceName: string | undefined,
+  deps: string[],
+  ctx: PyRenderCtx,
+): string {
   const allDeps = new Set(deps);
   if (ifaceName) allDeps.add(ifaceName);
   return `"""Auto-scaffolded adapter."""
-${pyImportLine([...allDeps])}
+${pyImportLines([...allDeps], ctx)}
 
 class ${name}:
     def describe(self) -> str:
@@ -838,11 +905,11 @@ class ${name}:
 `;
 }
 
-function pyReactionBody(name: string, deps: string[]): string {
+function pyReactionBody(name: string, deps: string[], ctx: PyRenderCtx): string {
   return `"""Auto-scaffolded reaction (use case workflow)."""
 from typing import Any
 
-${pyImportLine(deps)}
+${pyImportLines(deps, ctx)}
 
 async def ${pyName(name)}(input: Any) -> dict[str, Any]:
     _ = input
@@ -850,11 +917,11 @@ async def ${pyName(name)}(input: Any) -> dict[str, Any]:
 `;
 }
 
-function pyBufferBody(name: string, deps: string[]): string {
+function pyBufferBody(name: string, deps: string[], ctx: PyRenderCtx): string {
   return `"""Auto-scaffolded buffer (cross-cutting middleware)."""
 from typing import Awaitable, Callable, Any
 
-${pyImportLine(deps)}
+${pyImportLines(deps, ctx)}
 
 def ${pyName(name)}(reaction: Callable[[Any], Awaitable[Any]]) -> Callable[[Any], Awaitable[Any]]:
     async def wrapped(i: Any) -> Any:
@@ -863,26 +930,33 @@ def ${pyName(name)}(reaction: Callable[[Any], Awaitable[Any]]) -> Callable[[Any]
 `;
 }
 
-function pyRendererFor(role: Role) {
+function pyRendererFor(role: Role, ctx: PyRenderCtx) {
   switch (role) {
     case "element":
       return (u: UnitSpec) => pyElementBody(u.name);
     case "molecule":
-      return (u: UnitSpec) => pyMoleculeBody(u.name, u.dependsOn ?? []);
+      return (u: UnitSpec) => pyMoleculeBody(u.name, u.dependsOn ?? [], ctx);
     case "interface":
-      return (u: UnitSpec) => pyInterfaceBody(u.name, u.dependsOn ?? []);
+      return (u: UnitSpec) => pyInterfaceBody(u.name, u.dependsOn ?? [], ctx);
     case "adapter":
-      return (u: UnitSpec) => pyAdapterBody(u.name, u.implements?.[0], u.dependsOn ?? []);
+      return (u: UnitSpec) =>
+        pyAdapterBody(u.name, u.implements?.[0], u.dependsOn ?? [], ctx);
     case "reaction":
-      return (u: UnitSpec) => pyReactionBody(u.name, u.dependsOn ?? []);
+      return (u: UnitSpec) => pyReactionBody(u.name, u.dependsOn ?? [], ctx);
     case "buffer":
-      return (u: UnitSpec) => pyBufferBody(u.name, u.dependsOn ?? []);
+      return (u: UnitSpec) => pyBufferBody(u.name, u.dependsOn ?? [], ctx);
   }
 }
 
-function writePyCompound(compoundsDir: string, c: PyCompoundSpec): void {
+function writePyCompound(
+  compoundsDir: string,
+  c: PyCompoundSpec,
+  ownerByName: Map<string, string>,
+): void {
   const dir = path.join(compoundsDir, c.name.replace(/-/g, "_"));
   fs.mkdirSync(dir, { recursive: true });
+
+  const ctx: PyRenderCtx = { ownerByName, selfCompound: c.name };
 
   // Each compound directory is a Python package — needs an __init__.py.
   // Each role folder is also a package (needs __init__.py too) so relative
@@ -899,7 +973,7 @@ function writePyCompound(compoundsDir: string, c: PyCompoundSpec): void {
     const folderInit = path.join(folder, "__init__.py");
     if (!fs.existsSync(folderInit)) fs.writeFileSync(folderInit, "");
 
-    const body = pyRendererFor(u.role)(u);
+    const body = pyRendererFor(u.role, ctx)(u);
     fs.writeFileSync(path.join(folder, `${pyName(u.name)}.py`), body);
   }
 
@@ -953,22 +1027,38 @@ function writePyCompound(compoundsDir: string, c: PyCompoundSpec): void {
 // Run
 // ---------------------------------------------------------------------------
 
+/**
+ * Build a name -> owning-compound map across every TS compound. The
+ * scaffolded unit stubs use this to resolve cross-compound type imports
+ * (e.g. `JobName` lives in `queue-driver`, not `job-runners`).
+ */
+function buildOwnerMap(compounds: { name: string; units: UnitSpec[] }[]): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const c of compounds) {
+    for (const u of c.units) {
+      map.set(u.name, c.name);
+    }
+  }
+  return map;
+}
+
+const tsOwnerByName = buildOwnerMap(TS_COMPOUNDS);
+const pyOwnerByName = buildOwnerMap(PY_COMPOUNDS);
+
 const tsCompoundsDir = path.join(repoRoot, "src", "compounds");
 fs.mkdirSync(tsCompoundsDir, { recursive: true });
 for (const c of TS_COMPOUNDS) {
-  writeCompound(tsCompoundsDir, c);
+  writeCompound(tsCompoundsDir, c, tsOwnerByName);
   process.stdout.write(`  ts: ${c.name}\n`);
 }
 process.stdout.write(`scaffolded ${TS_COMPOUNDS.length} TS compounds.\n`);
 
 const pyCompoundsDir = path.join(repoRoot, "apps", "api", "src", "compounds");
 fs.mkdirSync(pyCompoundsDir, { recursive: true });
-// Top-level src/__init__.py and src/compounds/__init__.py so the package
-// hierarchy is importable.
 fs.writeFileSync(path.join(repoRoot, "apps", "api", "src", "__init__.py"), "");
 fs.writeFileSync(path.join(pyCompoundsDir, "__init__.py"), "");
 for (const c of PY_COMPOUNDS) {
-  writePyCompound(pyCompoundsDir, c);
+  writePyCompound(pyCompoundsDir, c, pyOwnerByName);
   process.stdout.write(`  py: ${c.name}\n`);
 }
 process.stdout.write(`scaffolded ${PY_COMPOUNDS.length} Python compounds.\n`);

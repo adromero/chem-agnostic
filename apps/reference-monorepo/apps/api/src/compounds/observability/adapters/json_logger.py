@@ -1,5 +1,5 @@
 """Auto-scaffolded adapter."""
-from ..public import Logger, TraceId
+from .. import Logger, TraceId
 
 
 class JsonLogger:

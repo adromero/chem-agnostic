@@ -2,4 +2,5 @@
 import type { WebhookEvent } from "../public.js";
 export interface WebhookVerifier {
   describe(): string;
+  readonly _webhookevent?: WebhookEvent;
 }

@@ -1,5 +1,5 @@
 """Auto-scaffolded adapter."""
-from ..public import ServiceBus, ServiceResult
+from .. import ServiceBus, ServiceResult
 
 
 class InMemoryServiceBus:

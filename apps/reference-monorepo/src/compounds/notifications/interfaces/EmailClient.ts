@@ -2,4 +2,5 @@
 import type { NotificationPayload } from "../public.js";
 export interface EmailClient {
   describe(): string;
+  readonly _notificationpayload?: NotificationPayload;
 }

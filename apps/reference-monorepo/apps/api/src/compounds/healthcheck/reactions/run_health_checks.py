@@ -1,7 +1,7 @@
 """Auto-scaffolded reaction (use case workflow)."""
 from typing import Any
 
-from ..public import ProbeResult, Probe
+from .. import ProbeResult, Probe
 
 
 async def run_health_checks(input: Any) -> dict[str, Any]:

@@ -1,7 +1,8 @@
 """Auto-scaffolded reaction (use case workflow)."""
 from typing import Any
 
-from ..public import ServiceResult, ServiceBus, Repository
+from .. import ServiceResult, ServiceBus
+from ...repositories import Repository
 
 
 async def execute_service(input: Any) -> dict[str, Any]:

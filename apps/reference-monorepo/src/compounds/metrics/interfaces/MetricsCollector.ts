@@ -2,4 +2,5 @@
 import type { MetricSample } from "../public.js";
 export interface MetricsCollector {
   describe(): string;
+  readonly _metricsample?: MetricSample;
 }

@@ -1,7 +1,9 @@
 """Auto-scaffolded reaction (use case workflow)."""
 from typing import Any
 
-from ..public import RouteSpec, RouteRegistry, ServiceBus, Principal
+from .. import RouteSpec, RouteRegistry
+from ...services import ServiceBus
+from ...auth import Principal
 
 
 async def mount_routes(input: Any) -> dict[str, Any]:

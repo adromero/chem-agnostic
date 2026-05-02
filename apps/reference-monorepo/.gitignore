@@ -13,3 +13,9 @@ venv/
 .cache/
 .chemag/
 coverage/
+# tsc may emit alongside source if rootDir is misconfigured; ignore
+# anywhere outside the explicit allowlist below.
+src/compounds/**/*.js
+src/compounds/**/*.js.map
+src/compounds/**/*.d.ts
+*.tsbuildinfo

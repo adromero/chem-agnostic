@@ -1,5 +1,5 @@
 """Auto-scaffolded adapter."""
-from ..public import Probe, ProbeResult
+from .. import Probe, ProbeResult
 
 
 class DbPingProbe:

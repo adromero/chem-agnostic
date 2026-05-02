@@ -1,7 +1,7 @@
 """Auto-scaffolded port. Adapters in this compound implement this protocol."""
 from typing import Protocol
 
-from ..public import ProbeResult
+from .. import ProbeResult
 
 
 class Probe(Protocol):

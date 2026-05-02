@@ -2,4 +2,5 @@
 import type { AuditEvent } from "../public.js";
 export interface AuditEmitter {
   describe(): string;
+  readonly _auditevent?: AuditEvent;
 }

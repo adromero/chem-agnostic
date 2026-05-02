@@ -2,4 +2,6 @@
 import type { User, UserId } from "../public.js";
 export interface UserRepository {
   describe(): string;
+  readonly _user?: User;
+  readonly _userid?: UserId;
 }

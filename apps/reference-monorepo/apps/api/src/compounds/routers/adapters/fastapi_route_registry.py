@@ -1,5 +1,5 @@
 """Auto-scaffolded adapter."""
-from ..public import RouteRegistry, RouteSpec
+from .. import RouteRegistry, RouteSpec
 
 
 class FastapiRouteRegistry:

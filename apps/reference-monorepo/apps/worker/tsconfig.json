@@ -5,7 +5,11 @@
     "moduleResolution": "NodeNext",
     "lib": ["ES2022"],
     "outDir": "./dist",
-    "rootDir": "./src",
+    // `rootDir` is set to the inner repo root so tsc emits the worker's
+    // own files into ./dist/apps/worker/src/main.js while still type-
+    // checking against ../../src/compounds/. We use `noEmit` for the
+    // compound files via the file-level allowlist (only emit src/**).
+    "rootDir": "../..",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -14,5 +18,9 @@
     "sourceMap": true,
     "incremental": true
   },
-  "include": ["src/**/*"]
+  // Include the worker's own src + the compound public surfaces it
+  // imports from. tsc will emit JS for everything in `include`; downstream
+  // gitignore entries keep stray .js files out of source control if the
+  // build is run from a dev machine.
+  "include": ["src/**/*", "../../src/compounds/**/*"]
 }

@@ -1,7 +1,7 @@
 """Auto-scaffolded reaction (use case workflow)."""
 from typing import Any
 
-from ..public import AppSettings, SettingsLoader
+from .. import AppSettings, SettingsLoader
 
 
 async def load_settings(input: Any) -> dict[str, Any]:

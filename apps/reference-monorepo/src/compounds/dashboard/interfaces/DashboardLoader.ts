@@ -2,4 +2,5 @@
 import type { DashboardLayout } from "../public.js";
 export interface DashboardLoader {
   describe(): string;
+  readonly _dashboardlayout?: DashboardLayout;
 }

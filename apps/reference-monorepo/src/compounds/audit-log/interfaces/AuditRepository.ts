@@ -2,4 +2,5 @@
 import type { AuditEntry } from "../public.js";
 export interface AuditRepository {
   describe(): string;
+  readonly _auditentry?: AuditEntry;
 }

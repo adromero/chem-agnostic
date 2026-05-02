@@ -2,4 +2,5 @@
 import type { LifecyclePhase } from "../public.js";
 export interface HealthProbe {
   describe(): string;
+  readonly _lifecyclephase?: LifecyclePhase;
 }

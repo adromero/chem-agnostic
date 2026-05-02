@@ -2,4 +2,6 @@
 import type { SupportTicket, TicketId } from "../public.js";
 export interface TicketRepository {
   describe(): string;
+  readonly _supportticket?: SupportTicket;
+  readonly _ticketid?: TicketId;
 }

@@ -1,7 +1,7 @@
 """Auto-scaffolded reaction (use case workflow)."""
 from typing import Any
 
-from ..public import AuthToken, TokenVerifier
+from .. import AuthToken, TokenVerifier
 
 
 async def verify_request(input: Any) -> dict[str, Any]:
