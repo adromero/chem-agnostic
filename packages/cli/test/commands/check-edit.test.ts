@@ -358,7 +358,9 @@ describe("chemag check-edit — JSON schema validation", () => {
     expect(schema.title).toBe("CheckEditResult");
     expect(schema.required).toContain("file");
     expect(schema.required).toContain("diagnostics");
-    expect(schema.definitions.diagnostic.properties.code.pattern).toBe("^CHEM-[A-Z]+-[0-9]{3}$");
+    expect(schema.definitions.diagnostic.properties.code.pattern).toBe(
+      "^CHEM-[A-Z]+(-[A-Z]+)*-[0-9]{3}$",
+    );
     // Five remediation kinds.
     const kinds = schema.definitions.remediation.oneOf.map(
       (r: { properties: { kind: { const: string } } }) => r.properties.kind.const,

@@ -46,6 +46,9 @@
   "diagnostic.import_undeclared": "{file}: imports from \"{target}\" but it is not in the imports list",
   "diagnostic.import_bypass": "{file}: imports directly from \"{target}\" internal file instead of {surface}",
   "diagnostic.unresolvable_placement": "Cannot determine module or role for file \"{file}\"",
+  "diagnostic.markers_missing_no_overwrite": "Refusing to rewrite \"{path}\": chemag markers are missing. Pass --overwrite to replace the existing file.",
+  "diagnostic.line_budget_exceeded": "Emitted {tool} block is {actual} lines (budget {budget}). Trim sections or extend the budget.",
+  "diagnostic.unknown_emitter_tool": "Unknown --tool value \"{tool}\". Supported: {supported}.",
 
   "cli.help.intro": "chemag v{version} — language-agnostic module architecture toolkit",
   "cli.help.usage": "Usage: chemag [options] [command]\n       chem-ag [options] [command]   (alias)",
@@ -60,6 +63,7 @@
   "cli.command.scaffold": "scaffold — generate stub files from manifests.\nUsage: chemag scaffold <workspace.yaml> [--dry-run]",
   "cli.command.graph": "graph — output a Mermaid dependency diagram.\nUsage: chemag graph <workspace.yaml>",
   "cli.command.sync": "sync — generate manifests from existing code.\nUsage: chemag sync <workspace.yaml> [--dry-run]",
+  "cli.command.emit_rules": "emit-rules — generate AI-editor rule files (AGENTS.md, CLAUDE.md, .cursor/rules, .github/copilot-instructions.md, .aider/CONVENTIONS.md, .clinerules) from workspace.yaml.\nUsage: chemag emit-rules [--tool <name>] [--out-dir <path>] [--include-violations] [--dry-run] [--diff] [--overwrite]",
 
   "claude_md.intro": "# {name} — Module Architecture\n\nThis project uses a chemistry-inspired module architecture (presented here in standard vocabulary). Read this entire file before writing any code.\n\n## Core Concept\n\nCode is organized into **modules** (feature units). Each module contains **units** — source files with assigned **roles**. Roles determine what a unit can depend on. These dependency rules are called **dependency rules**.\n\nEvery module has a manifest (`compound.yaml`) declaring its units, exports, and imports. The workspace config (`workspace.yaml`) defines the global rules.\n\n**Before writing any code**: read `workspace.yaml`, then the target module's `compound.yaml`.",
   "claude_md.roles_table": "## Roles — What Each Unit Type Means\n\n| Role | What it is | Examples |\n|------|-----------|----------|\n| **value-object** | Immutable value object. The simplest building block. | `UserId`, `Email`, `Money`, `DateRange` |\n| **entity** | Domain state composed of value-objects/entities. | `UserProfile`, `Order`, `ReportDocument` |\n| **use-case** | Workflow. Orchestrates state through ports. | `createOrder`, `generateReport`, `processPayment` |\n| **port** | Contract / port. Defines a capability without implementation. | `OrderRepository`, `PaymentGateway`, `EmailSender` |\n| **adapter** | Concrete implementation of a port. Touches the outside world. | `PgOrderRepository`, `StripeGateway`, `SmtpEmailSender` |\n| **middleware** | Wraps use-cases for cross-cutting concerns. | `authGuard`, `rateLimiter`, `validateInput` |",

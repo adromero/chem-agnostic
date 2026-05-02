@@ -65,6 +65,10 @@ export type TrKey =
   | "diagnostic.import_bypass" // params: { file, target, surface }
   // check-edit.ts
   | "diagnostic.unresolvable_placement" // params: { file }
+  // rules-emitters
+  | "diagnostic.markers_missing_no_overwrite" // params: { path }
+  | "diagnostic.line_budget_exceeded" // params: { tool, actual, budget }
+  | "diagnostic.unknown_emitter_tool" // params: { tool, supported }
   // ---- CLI help (top-level + per-command) ----
   | "cli.help.intro" // params: { version }
   | "cli.help.usage"
@@ -78,6 +82,7 @@ export type TrKey =
   | "cli.command.scaffold"
   | "cli.command.graph"
   | "cli.command.sync"
+  | "cli.command.emit_rules"
   // ---- CLAUDE.md template sections ----
   | "claude_md.intro"
   | "claude_md.roles_table"
@@ -133,6 +138,9 @@ export const ALL_TR_KEYS: readonly TrKey[] = [
   "diagnostic.import_undeclared",
   "diagnostic.import_bypass",
   "diagnostic.unresolvable_placement",
+  "diagnostic.markers_missing_no_overwrite",
+  "diagnostic.line_budget_exceeded",
+  "diagnostic.unknown_emitter_tool",
   "cli.help.intro",
   "cli.help.usage",
   "cli.help.commands",
@@ -145,6 +153,7 @@ export const ALL_TR_KEYS: readonly TrKey[] = [
   "cli.command.scaffold",
   "cli.command.graph",
   "cli.command.sync",
+  "cli.command.emit_rules",
   "claude_md.intro",
   "claude_md.roles_table",
   "claude_md.bonds_table",

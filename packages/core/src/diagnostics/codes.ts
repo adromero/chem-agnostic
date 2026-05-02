@@ -25,7 +25,8 @@ export type DiagnosticCategory =
   | "TYPE"
   | "PUBLIC"
   | "ROLE"
-  | "PLACEMENT";
+  | "PLACEMENT"
+  | "EMIT-RULES";
 
 /**
  * String-literal union of every emitted diagnostic code. Adding a new code
@@ -72,7 +73,11 @@ export type DiagnosticCode =
   | "CHEM-WIRING-004"
   // ---- ASSAY ----
   | "CHEM-ASSAY-001"
-  | "CHEM-ASSAY-002";
+  | "CHEM-ASSAY-002"
+  // ---- EMIT-RULES ----
+  | "CHEM-EMIT-RULES-001"
+  | "CHEM-EMIT-RULES-002"
+  | "CHEM-EMIT-RULES-003";
 
 /** Subset of `TrKey` containing only `diagnostic.*` keys. */
 export type DiagnosticTrKey = Extract<TrKey, `diagnostic.${string}`>;
@@ -319,6 +324,29 @@ export const DIAGNOSTIC_CODES: Record<DiagnosticCode, DiagnosticCodeMeta> = {
     level: "warning",
     trKey: "diagnostic.assay_mock_not_interface",
     helpFragment: "chem-assay-002-assay-mock-not-interface",
+  },
+
+  // ---- EMIT-RULES ----
+  "CHEM-EMIT-RULES-001": {
+    code: "CHEM-EMIT-RULES-001",
+    category: "EMIT-RULES",
+    level: "error",
+    trKey: "diagnostic.markers_missing_no_overwrite",
+    helpFragment: "chem-emit-rules-001-markers-missing-no-overwrite",
+  },
+  "CHEM-EMIT-RULES-002": {
+    code: "CHEM-EMIT-RULES-002",
+    category: "EMIT-RULES",
+    level: "warning",
+    trKey: "diagnostic.line_budget_exceeded",
+    helpFragment: "chem-emit-rules-002-line-budget-exceeded",
+  },
+  "CHEM-EMIT-RULES-003": {
+    code: "CHEM-EMIT-RULES-003",
+    category: "EMIT-RULES",
+    level: "error",
+    trKey: "diagnostic.unknown_emitter_tool",
+    helpFragment: "chem-emit-rules-003-unknown-emitter-tool",
   },
 };
 

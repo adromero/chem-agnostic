@@ -36,8 +36,8 @@
         },
         "code": {
           "type": "string",
-          "pattern": "^CHEM-[A-Z]+-[0-9]{3}$",
-          "description": "Stable diagnostic code (CHEM-CATEGORY-NNN)."
+          "pattern": "^CHEM-[A-Z]+(-[A-Z]+)*-[0-9]{3}$",
+          "description": "Stable diagnostic code (CHEM-CATEGORY-NNN). Categories may contain hyphens (e.g. EMIT-RULES)."
         },
         "check": {
           "type": "string",
