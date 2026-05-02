@@ -308,6 +308,23 @@ describe("cmdInstallHooks --tool codex — MCP tip rendering", () => {
       logSpy.mockRestore();
     }
   });
+
+  // Criterion 17 (WP-017): the rendered tip points at the real one-liner
+  // and the "(available after WP-017)" hedge is gone. Tested in BOTH
+  // vocabularies because WP-017 rewrote both standard.json and chemistry.json
+  // in lockstep.
+  for (const vocab of ["standard", "chemistry"] as const) {
+    it(`${vocab}: tip text has no "(available after WP-017)" hedge`, () => {
+      __resetForTesting();
+      setVocabulary(vocab, "flag");
+      const rendered = tr("cli.install_hooks.tip.mcp_register", {
+        clientName: "Codex",
+        clientId: "codex",
+      });
+      expect(rendered).not.toContain("available after WP-017");
+      expect(rendered).toContain("chemag mcp install --client codex");
+    });
+  }
 });
 
 // ---------------------------------------------------------------------------

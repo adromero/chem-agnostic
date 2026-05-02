@@ -223,10 +223,91 @@ export function buildCommandTree(version: string): CommandDef {
             options: ["stdio", "sse"],
           },
         },
-        // WP-017 will populate install/uninstall/status here. Empty
-        // placeholder keeps the parent shape stable so adding subcommands
-        // doesn't require restructuring the meta declaration.
-        subCommands: {},
+        // WP-017: install/uninstall/status nested under `mcp`. citty owns
+        // help/metadata; dispatch happens in cmdMcp via a small subcommand
+        // switch.
+        subCommands: {
+          install: defineCommand({
+            meta: {
+              name: "install",
+              description: firstLine(tr("cli.command.mcp_install")),
+            },
+            args: {
+              client: {
+                type: "string",
+                description: "MCP client: claude|cursor|cline|continue|all",
+              },
+              scope: {
+                type: "enum",
+                description: "Scope: user or project (default: project)",
+                options: ["user", "project"],
+              },
+              workspace: {
+                type: "string",
+                description: "Workspace directory (defaults to cwd)",
+              },
+              "no-cli": {
+                type: "boolean",
+                description: "Skip the client's CLI; write the MCP config file directly",
+              },
+              "dry-run": {
+                type: "boolean",
+                description: "Print planned changes without writing or invoking any CLI",
+              },
+            },
+          }),
+          uninstall: defineCommand({
+            meta: {
+              name: "uninstall",
+              description: firstLine(tr("cli.command.mcp_uninstall")),
+            },
+            args: {
+              client: {
+                type: "string",
+                description: "MCP client: claude|cursor|cline|continue|all",
+              },
+              scope: {
+                type: "enum",
+                description: "Scope: user or project (default: project)",
+                options: ["user", "project"],
+              },
+              workspace: {
+                type: "string",
+                description: "Workspace directory (defaults to cwd)",
+              },
+              "no-cli": {
+                type: "boolean",
+                description: "Skip the client's CLI; mutate the MCP config file directly",
+              },
+              "dry-run": {
+                type: "boolean",
+                description: "Print planned changes without writing or invoking any CLI",
+              },
+            },
+          }),
+          status: defineCommand({
+            meta: {
+              name: "status",
+              description: firstLine(tr("cli.command.mcp_status")),
+            },
+            args: {
+              format: {
+                type: "enum",
+                description: "Output format",
+                options: ["pretty", "json"],
+              },
+              scope: {
+                type: "enum",
+                description: "Scope to inspect (default: project)",
+                options: ["user", "project"],
+              },
+              workspace: {
+                type: "string",
+                description: "Workspace directory (defaults to cwd)",
+              },
+            },
+          }),
+        },
       }),
 
       "install-hooks": defineCommand({

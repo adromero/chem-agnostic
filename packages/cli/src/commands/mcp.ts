@@ -20,10 +20,14 @@
 import * as path from "node:path";
 import { existsSync } from "node:fs";
 import { tr } from "@chemag/core/vocabulary";
+import { cmdMcpInstall, cmdMcpStatus, cmdMcpUninstall } from "./mcp-install.js";
 
 const R = "\x1b[0m";
 const RED = "\x1b[31m";
 const BLD = "\x1b[1m";
+
+/** Subcommand names that route to the WP-017 mcp-install module. */
+const MCP_SUBCOMMANDS = new Set(["install", "uninstall", "status"]);
 
 interface ParsedArgs {
   workspace: string | null;
@@ -119,6 +123,18 @@ function printHelp(): void {
  * through on success.
  */
 export function cmdMcp(argv: string[]): number {
+  // WP-017: dispatch nested subcommands BEFORE parsing the root-level
+  // workspace/transport flags. The first non-flag positional that matches
+  // `install` / `uninstall` / `status` is treated as a subcommand; everything
+  // after it is forwarded to that handler.
+  if (argv.length > 0 && MCP_SUBCOMMANDS.has(argv[0])) {
+    const sub = argv[0];
+    const rest = argv.slice(1);
+    if (sub === "install") return cmdMcpInstall(rest);
+    if (sub === "uninstall") return cmdMcpUninstall(rest);
+    if (sub === "status") return cmdMcpStatus(rest);
+  }
+
   const args = parseMcpArgs(argv);
 
   if (args.help) {
