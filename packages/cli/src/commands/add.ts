@@ -1,10 +1,15 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { parseDocument, stringify } from "yaml";
-import { loadWorkspace, discoverCompounds } from "@chemag/core/loader";
+import { stringify } from "yaml";
+import { loadWorkspace } from "@chemag/core/loader";
 import { loadPlugin } from "../plugin-loader.js";
-import { scaffoldWorkspace } from "@chemag/core/scaffold";
 import { applyWorkspaceVocabulary, tr } from "@chemag/core/vocabulary";
+import {
+  addUnitToCompound,
+  CompoundNotFoundError,
+  DuplicateUnitError,
+  UnknownRoleError,
+} from "@chemag/core/add-unit";
 
 const R = "\x1b[0m";
 const RED = "\x1b[31m";
@@ -132,76 +137,44 @@ function addUnit(argv: string[]): void {
   applyWorkspaceVocabulary(ws);
   const wsDir = path.dirname(wsPath);
 
-  // Validate role
-  if (!ws.roles[role]) {
-    console.error(
-      `${RED}Unknown role "${role}". Known roles: [${Object.keys(ws.roles).join(", ")}]${R}`,
-    );
-    process.exit(2);
-  }
-
-  // Find compound
-  const compounds = discoverCompounds(ws, wsDir);
-  const target = compounds.find((c) => c.manifest.compound === compoundName);
-  if (!target) {
-    console.error(`${RED}Compound "${compoundName}" not found.${R}`);
-    process.exit(2);
-  }
-
-  // Check for duplicate
-  const existing = (target.manifest.units ?? []).find((u) => u.name === unitName);
-  if (existing) {
-    console.error(`${RED}Unit "${unitName}" already exists in compound "${compoundName}".${R}`);
-    process.exit(1);
-  }
-
-  // Use plugin to determine file path
   const plugin = loadPlugin({ language: ws.language });
-  const folder = ws.roles[role].folder;
-  const file = `./${plugin.unitFilePath(role, unitName, folder)}`;
 
   console.log(`\n${BLD}chem add unit${R}\n`);
 
-  // Update compound.yaml using Document API to preserve formatting
+  let result: ReturnType<typeof addUnitToCompound>;
+  try {
+    result = addUnitToCompound({
+      workspace: ws,
+      workspaceDir: wsDir,
+      compoundName,
+      role,
+      unitName,
+      export: shouldExport,
+      implementsSymbol: impl,
+      plugin,
+    });
+  } catch (err) {
+    if (err instanceof UnknownRoleError) {
+      console.error(
+        `${RED}Unknown role "${err.role}". Known roles: [${err.knownRoles.join(", ")}]${R}`,
+      );
+      process.exit(2);
+    }
+    if (err instanceof CompoundNotFoundError) {
+      console.error(`${RED}Compound "${err.compoundName}" not found.${R}`);
+      process.exit(2);
+    }
+    if (err instanceof DuplicateUnitError) {
+      console.error(
+        `${RED}Unit "${err.unitName}" already exists in compound "${err.compoundName}".${R}`,
+      );
+      process.exit(1);
+    }
+    throw err;
+  }
+
   const manifestFile = ws.rules?.manifest_filename ?? "compound.yaml";
-  const manifestPath = path.join(target.dir, manifestFile);
-  const raw = fs.readFileSync(manifestPath, "utf-8");
-  const doc = parseDocument(raw);
-
-  // Add to units
-  const unitEntry: Record<string, unknown> = { role, name: unitName, file };
-  if (impl) unitEntry.implements = [impl];
-
-  let units = doc.get("units") as unknown;
-  if (!units || !Array.isArray((units as any).items)) {
-    doc.set("units", []);
-    units = doc.get("units");
-  }
-  (units as any).add(doc.createNode(unitEntry));
-
-  // Add to exports if requested
-  if (shouldExport) {
-    const pluralRole = `${role}s`;
-    let exports = doc.get("exports") as any;
-    if (!exports) {
-      doc.set("exports", {});
-      exports = doc.get("exports");
-    }
-    const roleExports = exports.get(pluralRole);
-    if (!roleExports) {
-      exports.set(pluralRole, doc.createNode([unitName]));
-    } else {
-      roleExports.add(doc.createNode(unitName));
-    }
-  }
-
-  fs.writeFileSync(manifestPath, doc.toString(), "utf-8");
   console.log(`  ${GRN}+${R}  ${compoundName}/${manifestFile} updated`);
-
-  // Scaffold the file
-  const reloaded = discoverCompounds(ws, wsDir);
-  const result = scaffoldWorkspace(ws, reloaded, plugin, false);
-
   for (const f of result.created) {
     console.log(`  ${GRN}+${R}  ${path.relative(wsDir, f)}`);
   }

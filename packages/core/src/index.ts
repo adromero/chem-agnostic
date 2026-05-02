@@ -13,3 +13,5 @@ export * from "./template-claude-md.js";
 export * from "./rules-emitters/index.js";
 export * from "./vocabulary/index.js";
 export * from "./diagnostics/index.js";
+export * from "./add-unit.js";
+export * from "./git-utils.js";

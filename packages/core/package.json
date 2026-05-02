@@ -66,6 +66,14 @@
     "./cache": {
       "types": "./dist/cache/index.d.ts",
       "default": "./dist/cache/index.js"
+    },
+    "./add-unit": {
+      "types": "./dist/add-unit.d.ts",
+      "default": "./dist/add-unit.js"
+    },
+    "./git-utils": {
+      "types": "./dist/git-utils.d.ts",
+      "default": "./dist/git-utils.js"
     }
   },
   "files": [

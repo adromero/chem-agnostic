@@ -73,6 +73,10 @@ export type TrKey =
   | "diagnostic.mcp_workspace_required"
   | "diagnostic.mcp_transport_unsupported" // params: { transport }
   | "diagnostic.mcp_initialize_failed" // params: { reason }
+  // mcp-server tool dispatch (CHEM-MCP-101/102/103)
+  | "diagnostic.tool_input_invalid" // params: { tool, reason }
+  | "diagnostic.tool_unknown" // params: { tool }
+  | "diagnostic.tool_handler_failed" // params: { tool, reason }
   // install-hooks (CHEM-INSTALL-HOOKS-001..006)
   | "diagnostic.tool_not_yet_implemented" // params: { tool }
   | "diagnostic.settings_file_invalid_json" // params: { path, reason }
@@ -162,6 +166,9 @@ export const ALL_TR_KEYS: readonly TrKey[] = [
   "diagnostic.mcp_workspace_required",
   "diagnostic.mcp_transport_unsupported",
   "diagnostic.mcp_initialize_failed",
+  "diagnostic.tool_input_invalid",
+  "diagnostic.tool_unknown",
+  "diagnostic.tool_handler_failed",
   "diagnostic.tool_not_yet_implemented",
   "diagnostic.settings_file_invalid_json",
   "diagnostic.hooks_already_installed_no_force",

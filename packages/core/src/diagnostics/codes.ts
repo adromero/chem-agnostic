@@ -6,10 +6,16 @@
 // is the bijection between codes and trKeys; the registry-test in
 // `test/diagnostics-registry.test.ts` enforces it at CI time.
 //
-// Numbering policy: within each category, NNN starts at 001 and increments by
-// 1. Gaps are permitted ONLY when a code has been deprecated (mark the entry
-// with `deprecated: { since, replacement }`); new, non-deprecated codes never
-// reuse a deprecated number — they take the next free integer.
+// Numbering policy: each category is partitioned into 100-wide BLOCKS.
+//   * 001..099 — primary block (runtime-emitted diagnostics, the default).
+//   * 101..199 — second block (e.g., MCP tool-protocol errors that are
+//     surfaced through MCP responses rather than CLI runs).
+//   * 201..299 — reserved for future blocks.
+// Within a block the numbering is contiguous: 001, 002, 003, ..., or
+// 101, 102, 103, .... Gaps WITHIN a block are permitted only when a code
+// has been deprecated (mark the entry with `deprecated: { since, replacement }`);
+// new, non-deprecated codes never reuse a deprecated number — they take the
+// next free integer in their block.
 // ---------------------------------------------------------------------------
 import type { TrKey } from "../vocabulary/keys.js";
 
@@ -84,6 +90,9 @@ export type DiagnosticCode =
   | "CHEM-MCP-001"
   | "CHEM-MCP-002"
   | "CHEM-MCP-003"
+  | "CHEM-MCP-101"
+  | "CHEM-MCP-102"
+  | "CHEM-MCP-103"
   // ---- INSTALL-HOOKS ----
   | "CHEM-INSTALL-HOOKS-001"
   | "CHEM-INSTALL-HOOKS-002"
@@ -383,6 +392,27 @@ export const DIAGNOSTIC_CODES: Record<DiagnosticCode, DiagnosticCodeMeta> = {
     level: "error",
     trKey: "diagnostic.mcp_initialize_failed",
     helpFragment: "chem-mcp-003-mcp-initialize-failed",
+  },
+  "CHEM-MCP-101": {
+    code: "CHEM-MCP-101",
+    category: "MCP",
+    level: "error",
+    trKey: "diagnostic.tool_input_invalid",
+    helpFragment: "chem-mcp-101-tool-input-invalid",
+  },
+  "CHEM-MCP-102": {
+    code: "CHEM-MCP-102",
+    category: "MCP",
+    level: "error",
+    trKey: "diagnostic.tool_unknown",
+    helpFragment: "chem-mcp-102-tool-unknown",
+  },
+  "CHEM-MCP-103": {
+    code: "CHEM-MCP-103",
+    category: "MCP",
+    level: "error",
+    trKey: "diagnostic.tool_handler_failed",
+    helpFragment: "chem-mcp-103-tool-handler-failed",
   },
 
   // ---- INSTALL-HOOKS ----

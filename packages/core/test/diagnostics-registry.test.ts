@@ -61,7 +61,7 @@ describe("DIAGNOSTIC_CODES — bijection with diagnostic.* TrKeys", () => {
 });
 
 describe("DIAGNOSTIC_CODES — numbering monotonicity", () => {
-  it("each category's NNN values form a prefix of the positive integers, modulo deprecations", () => {
+  it("each category's NNN values form a contiguous prefix WITHIN each 100-block, modulo deprecations", () => {
     const byCategory = new Map<string, DiagnosticCodeMeta[]>();
     for (const e of ENTRIES) {
       if (!byCategory.has(e.category)) byCategory.set(e.category, []);
@@ -79,24 +79,33 @@ describe("DIAGNOSTIC_CODES — numbering monotonicity", () => {
       // No two live entries in a category share an NNN.
       expect(new Set(nums).size, `category ${category} has duplicate NNN values`).toBe(nums.length);
 
-      // The set { live entries' NNNs } ∪ { deprecated-and-removed NNNs }
-      // must form 1..max(NNN). Today we have no deprecated entries, so we
-      // simply assert a contiguous prefix; if deprecations land later, the
-      // permitted gaps coincide with the removed numbers.
-      const sorted = [...nums].sort((a, b) => a - b);
-      const max = sorted[sorted.length - 1];
+      // Group by 100-block — the policy partitions codes into 001..099,
+      // 101..199, 201..299, .... Each block must be contiguous starting at
+      // its block-low (1, 101, 201, ...), modulo deprecations.
+      const blocks = new Map<number, number[]>();
+      for (const n of nums) {
+        const blockLow = n < 100 ? 1 : Math.floor(n / 100) * 100 + 1;
+        if (!blocks.has(blockLow)) blocks.set(blockLow, []);
+        blocks.get(blockLow)!.push(n);
+      }
+
       const deprecatedNums = entries
         .filter((e) => e.deprecated !== undefined)
         .map((e) => Number(e.code.match(/-(\d{3})$/)![1]));
 
-      for (let want = 1; want <= max; want++) {
-        const present = sorted.includes(want);
-        const isReservedDeprecation = deprecatedNums.includes(want);
-        // A number must be present unless it is reserved by a deprecation.
-        expect(
-          present || isReservedDeprecation,
-          `category ${category}: NNN ${String(want).padStart(3, "0")} is missing and not reserved by a deprecation`,
-        ).toBe(true);
+      for (const [blockLow, blockNums] of blocks) {
+        const sorted = [...blockNums].sort((a, b) => a - b);
+        const max = sorted[sorted.length - 1];
+        for (let want = blockLow; want <= max; want++) {
+          const present = sorted.includes(want);
+          const isReservedDeprecation = deprecatedNums.includes(want);
+          expect(
+            present || isReservedDeprecation,
+            `category ${category}: NNN ${String(want).padStart(3, "0")} is missing in block starting at ${String(
+              blockLow,
+            ).padStart(3, "0")} and not reserved by a deprecation`,
+          ).toBe(true);
+        }
       }
     }
   });

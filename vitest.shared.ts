@@ -19,6 +19,8 @@ export function chemagAliases(repoRoot: string): Record<string, string> {
     "@chemag/core/rules-emitters": r("packages/core/src/rules-emitters/index.ts"),
     "@chemag/core/vocabulary": r("packages/core/src/vocabulary/index.ts"),
     "@chemag/core/diagnostics": r("packages/core/src/diagnostics/index.ts"),
+    "@chemag/core/add-unit": r("packages/core/src/add-unit.ts"),
+    "@chemag/core/git-utils": r("packages/core/src/git-utils.ts"),
     "@chemag/core": r("packages/core/src/index.ts"),
     "@chemag/mcp-server": r("packages/mcp-server/src/index.ts"),
     "@chemag/plugin-typescript": r("packages/plugin-typescript/src/index.ts"),

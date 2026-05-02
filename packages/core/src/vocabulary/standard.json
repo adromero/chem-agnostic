@@ -52,6 +52,9 @@
   "diagnostic.mcp_workspace_required": "chemag mcp requires a workspace. Pass --workspace <path> or run from a directory containing workspace.yaml.",
   "diagnostic.mcp_transport_unsupported": "MCP transport \"{transport}\" is not supported. Use --transport stdio.",
   "diagnostic.mcp_initialize_failed": "MCP server failed to initialize: {reason}",
+  "diagnostic.tool_input_invalid": "Invalid input for MCP tool \"{tool}\": {reason}",
+  "diagnostic.tool_unknown": "Unknown MCP tool: \"{tool}\"",
+  "diagnostic.tool_handler_failed": "MCP tool \"{tool}\" handler failed: {reason}",
 
   "diagnostic.tool_not_yet_implemented": "Tool \"{tool}\" is not yet supported by chemag install-hooks. Currently supported: claude.",
   "diagnostic.settings_file_invalid_json": "Settings file is not valid JSON: {path} ({reason})",
