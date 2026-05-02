@@ -464,8 +464,8 @@ export const DIAGNOSTIC_CODES: Record<DiagnosticCode, DiagnosticCodeMeta> = {
     code: "CHEM-INSTALL-HOOKS-007",
     category: "INSTALL-HOOKS",
     level: "error",
-    trKey: "diagnostic.cursor_husky_not_detected",
-    helpFragment: "chem-install-hooks-007-cursor-husky-not-detected",
+    trKey: "diagnostic.husky_not_detected",
+    helpFragment: "chem-install-hooks-007-husky-not-detected",
   },
   "CHEM-INSTALL-HOOKS-008": {
     code: "CHEM-INSTALL-HOOKS-008",

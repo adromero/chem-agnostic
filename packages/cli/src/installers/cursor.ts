@@ -113,9 +113,11 @@ export { PrecommitUnparseableError } from "./_husky.js";
  * unchanged workspace produces byte-equal `.husky/pre-commit`,
  * `.cursor/rules/architecture.mdc`, and CONTRIBUTING.md files.
  *
- * Throws `HuskyNotDetectedError` (→ CHEM-INSTALL-HOOKS-007) when husky is
- * missing, or `PrecommitUnparseableError` (→ CHEM-INSTALL-HOOKS-008) when
- * an existing `.husky/pre-commit` cannot be safely modified.
+ * Throws `HuskyNotDetectedError` (→ CHEM-INSTALL-HOOKS-007 with the
+ * tool-agnostic trKey `diagnostic.husky_not_detected`, shared with the
+ * Codex installer in WP-012) when husky is missing, or
+ * `PrecommitUnparseableError` (→ CHEM-INSTALL-HOOKS-008) when an existing
+ * `.husky/pre-commit` cannot be safely modified.
  */
 export function installCursor(opts: InstallCursorOpts): CursorInstallResult {
   const infoNotes = collectInfoNotes(opts);

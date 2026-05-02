@@ -84,7 +84,7 @@ export type TrKey =
   | "diagnostic.unknown_scope" // params: { scope }
   | "diagnostic.no_chemag_entries_to_uninstall" // params: { path }
   | "diagnostic.hook_stdin_unparseable" // params: { reason }
-  | "diagnostic.cursor_husky_not_detected" // params: { workspace }
+  | "diagnostic.husky_not_detected" // params: { workspace }
   | "diagnostic.cursor_precommit_unparseable" // params: { path, reason }
   // ---- CLI help (top-level + per-command) ----
   | "cli.help.intro" // params: { version }
@@ -107,6 +107,8 @@ export type TrKey =
   | "cli.help.install_hooks.tool"
   | "cli.help.install_hooks.scope"
   | "cli.help.install_hooks.mode"
+  | "cli.install_hooks.tip.mcp_register" // params: { clientName, clientId }
+  | "cli.install_hooks.codex.help"
   // ---- CLAUDE.md template sections ----
   | "claude_md.intro"
   | "claude_md.roles_table"
@@ -177,7 +179,7 @@ export const ALL_TR_KEYS: readonly TrKey[] = [
   "diagnostic.unknown_scope",
   "diagnostic.no_chemag_entries_to_uninstall",
   "diagnostic.hook_stdin_unparseable",
-  "diagnostic.cursor_husky_not_detected",
+  "diagnostic.husky_not_detected",
   "diagnostic.cursor_precommit_unparseable",
   "cli.help.intro",
   "cli.help.usage",
@@ -199,6 +201,8 @@ export const ALL_TR_KEYS: readonly TrKey[] = [
   "cli.help.install_hooks.tool",
   "cli.help.install_hooks.scope",
   "cli.help.install_hooks.mode",
+  "cli.install_hooks.tip.mcp_register",
+  "cli.install_hooks.codex.help",
   "claude_md.intro",
   "claude_md.roles_table",
   "claude_md.bonds_table",
