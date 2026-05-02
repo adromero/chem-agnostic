@@ -2,27 +2,43 @@
 // `createServer` — instantiates the chemag MCP server with the capability
 // flags promised by WP-014 and wires it to a per-session state container.
 //
-// This stage scaffolds the server identity, capability surface, and session
-// lifecycle. Concrete tool, resource, and prompt handlers land in WP-015,
-// WP-016, and follow-on tickets respectively. The capability flags are
-// advertised now so MCP-aware clients see the right shape during the
-// handshake — they get an empty `resources/list` payload until the
-// resource handlers ship.
+// As of WP-016 this also wires the resource registry (resources/list,
+// resources/read, resources/templates/list) and the subscription pipeline:
+//
+//   * `registerResources(...)` registers all 6 architecture URIs.
+//   * The chokidar-backed `Watcher` is created lazily on first subscribe;
+//     today we create it eagerly because `registerResources` installs the
+//     watcher → cache-invalidation → notification chain at wire-up time.
+//   * `SubscribeRequestSchema` and `UnsubscribeRequestSchema` are wired
+//     onto the inner low-level `Server` — `McpServer` does NOT install
+//     these handlers itself, despite the advertised
+//     `capabilities.resources.subscribe = true` flag.
+//   * `dispose()` releases every subscription owned by the session, closes
+//     the subscription manager's debounce timers, and tears down the
+//     watcher (the watcher close is owned by `Session.dispose()`).
 //
 // Privacy note (WP-006): the MCP server intentionally does NOT emit
-// telemetry per tool call. Per-call telemetry would leak workspace
-// internals to operators of an opt-in metrics endpoint. Only the CLI's
-// `chemag mcp` startup may emit one event (in cli.ts), and only when the
-// user has consented.
+// telemetry per tool/resource call. Only the CLI's `chemag mcp` startup may
+// emit one event (in cli.ts), and only when the user has consented.
 // ---------------------------------------------------------------------------
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
-import type { ServerCapabilities } from "@modelcontextprotocol/sdk/types.js";
+import {
+  type ServerCapabilities,
+  SubscribeRequestSchema,
+  UnsubscribeRequestSchema,
+} from "@modelcontextprotocol/sdk/types.js";
 import type { VocabularyName } from "@chemag/core/vocabulary";
 import { Session, type SessionOptions } from "./context.js";
+import { registerResources } from "./resources/index.js";
+import {
+  createSubscriptionManager,
+  type SubscriptionManager,
+} from "./subscriptions.js";
 import { registerTools } from "./tools/index.js";
 import { VERSION } from "./version.js";
+import { createWatcher, type Watcher } from "./watcher.js";
 
 /** Options accepted by `createServer`. */
 export interface CreateServerOptions {
@@ -42,6 +58,14 @@ export interface CreateServerOptions {
    * `initialize` request). Stored for debugging / logging only.
    */
   clientName?: string;
+  /**
+   * When false, the server skips the chokidar watcher and the resource
+   * subscription pipeline. Used by tests that don't want a live filesystem
+   * watcher running. Resource reads still work; resources/subscribe still
+   * registers, but notifications never fire because nothing is watching.
+   * Default: true.
+   */
+  enableWatcher?: boolean;
 }
 
 /**
@@ -54,6 +78,8 @@ export interface ServerHandle {
   server: McpServer;
   /** The per-connection session state. */
   session: Session;
+  /** The active subscription manager (test hook; do not rely in production). */
+  subscriptionManager: SubscriptionManager;
   /** Connect to a transport and start handling messages. */
   connect(transport: Transport): Promise<void>;
   /** Close the underlying connection and dispose the session. */
@@ -61,10 +87,8 @@ export interface ServerHandle {
 }
 
 /**
- * Capability flags advertised on the initialize handshake. Resources and
- * prompts are stubbed — handler code lands in WP-016+. Tools is an empty
- * object today (WP-015 fills it in). The shape — not the contents — is
- * what the client uses to gate its UI.
+ * Capability flags advertised on the initialize handshake. The advertised
+ * `resources.subscribe = true` is now backed by real handlers (WP-016).
  */
 export const SERVER_CAPABILITIES: ServerCapabilities = {
   tools: {},
@@ -93,17 +117,12 @@ export function createServer(opts: CreateServerOptions = {}): ServerHandle {
       capabilities: SERVER_CAPABILITIES,
       instructions:
         "chemag MCP server — exposes Chem architecture tools (check, analyze, scaffold) " +
-        "to MCP-aware clients. Tool implementations land in WP-015 and beyond; today the " +
-        "server only handles the initialization handshake.",
+        "and resources (workspace, compound, violations, graph, docs) to MCP-aware " +
+        "clients. Subscribe to architecture://* URIs to receive change notifications.",
     },
   );
 
-  // Register an empty `resources/list` handler so clients that probe the
-  // resources surface during initialization get a well-formed response.
-  // Concrete resource definitions land in WP-016.
-  server.server.setRequestHandler(EmptyResourceListSchema, async () => ({ resources: [] }));
-
-  // Likewise, an empty `prompts/list` so prompt-capable clients don't hang.
+  // Empty `prompts/list` placeholder — prompts ship in a follow-on ticket.
   server.server.setRequestHandler(EmptyPromptListSchema, async () => ({ prompts: [] }));
 
   // Wire the tool registry — this installs the SDK's own `tools/list` and
@@ -112,16 +131,70 @@ export function createServer(opts: CreateServerOptions = {}): ServerHandle {
   // authoritative.
   registerTools(server, session);
 
+  // Subscription manager — pure module, transport-agnostic. The notifier
+  // closure is the ONLY place that knows about the SDK transport. We use
+  // `server.server.sendResourceUpdated`, NOT `McpServer` (which does not
+  // expose that API).
+  const subscriptionManager = createSubscriptionManager({
+    notifier: (uri) => {
+      // Fire-and-forget; the transport may be closing. Swallow + ignore.
+      server.server
+        .sendResourceUpdated({ uri })
+        .catch(() => {
+          // Transport hiccup — non-fatal.
+        });
+    },
+  });
+
+  // Spin up the file watcher (optional) and wire the resource registry
+  // (always). The watcher is the data source for `notifications/resources/
+  // updated`; tests can pass `enableWatcher: false` to skip the OS-level
+  // watch surface — resource reads still work, subscriptions register
+  // (criterion #16), and the only thing that doesn't happen is the
+  // watcher → notify pipeline (no notifications fire). When the watcher
+  // is disabled we install a no-op watcher so the resources/index can
+  // still attach a (silent) onChange handler.
+  const wantWatcher = opts.enableWatcher !== false;
+  const watcher = wantWatcher
+    ? createWatcher(session.workspaceDir, {
+        // We don't read the manifest_filename from workspace.yaml here because
+        // the watcher is constructed BEFORE loadWorkspace() runs. The default
+        // ("compound.yaml") matches every workspace shipped today; non-default
+        // manifest names will be picked up via re-init in a follow-on patch.
+        manifestFilename: "compound.yaml",
+      })
+    : createNoopWatcher();
+  session.watcher = watcher;
+  registerResources(server, session, watcher, subscriptionManager);
+
+  // Subscribe / Unsubscribe handlers — wired explicitly because McpServer
+  // does NOT install these despite the capability flag. Without these the
+  // client gets MethodNotFound on resources/subscribe.
+  server.server.setRequestHandler(SubscribeRequestSchema, async (request) => {
+    subscriptionManager.subscribe(request.params.uri, session.id);
+    return {};
+  });
+  server.server.setRequestHandler(UnsubscribeRequestSchema, async (request) => {
+    subscriptionManager.unsubscribe(request.params.uri, session.id);
+    return {};
+  });
+
   return {
     server,
     session,
+    subscriptionManager,
     async connect(transport: Transport): Promise<void> {
       await server.connect(transport);
     },
     async dispose(): Promise<void> {
       try {
+        // Drop subscriptions BEFORE the transport closes — otherwise a
+        // pending notifier call may fire on a half-closed transport.
+        subscriptionManager.releaseSession(session.id);
+        subscriptionManager.close();
         await server.close();
       } finally {
+        // Session.dispose() closes the watcher (fire-and-forget).
         session.dispose();
       }
     },
@@ -129,24 +202,34 @@ export function createServer(opts: CreateServerOptions = {}): ServerHandle {
 }
 
 // ---------------------------------------------------------------------------
-// Tiny inline zod-like schema stand-ins.
+// Tiny inline zod-like schema stand-in for the prompts/list placeholder.
 //
 // The MCP SDK's setRequestHandler signature wants something with a `parse`
-// method that yields the request body. We don't need to validate anything
-// here (the SDK already verified the JSON-RPC envelope), so we ship the
-// minimal schema that picks the request method by literal-equality. This
-// avoids a hard zod dep at our layer and keeps the bundle small.
+// method that yields the request body. The prompts/list placeholder doesn't
+// need to validate anything (the SDK already verified the JSON-RPC envelope),
+// so we ship the minimal schema that picks the request method by literal-
+// equality.
 //
-// The schema shape here mirrors zod's inference contract just closely
-// enough for the SDK's generic constraint to be happy.
+// `EmptyResourceListSchema` was REMOVED in WP-016 — `registerResources` now
+// installs the SDK's authoritative resources/list handler.
 // ---------------------------------------------------------------------------
 
-const EmptyResourceListSchema = makeMethodSchema("resources/list");
 const EmptyPromptListSchema = makeMethodSchema("prompts/list");
 
+/**
+ * Watcher stub for `enableWatcher: false`. Honors the public Watcher API
+ * but never emits a change event. Used by tests that don't want a chokidar
+ * instance running.
+ */
+function createNoopWatcher(): Watcher {
+  return {
+    onChange: () => () => {},
+    ready: () => Promise.resolve(),
+    close: () => Promise.resolve(),
+  };
+}
+
 function makeMethodSchema(method: string) {
-  // Cast: the SDK accepts any object schema with a `parse` method whose
-  // output has a `method` discriminant. We do the bare minimum.
   return {
     _def: { typeName: "ZodObject" as const },
     shape: {
@@ -159,9 +242,5 @@ function makeMethodSchema(method: string) {
       }
       return { method, params: obj.params };
     },
-    // The SDK's generic constraint expects a zod-shaped schema; we satisfy
-    // the structural minimum and cast through `unknown` because no typed
-    // shape on our side can describe the SDK's heavily-overloaded generic
-    // constraint without pulling in zod itself.
   } as unknown as never;
 }

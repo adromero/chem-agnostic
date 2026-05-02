@@ -72,8 +72,13 @@ describe("createServer — 100 cycles stay within budget", () => {
     // Without this the first 5-10 calls amortize ~10MB of module loading
     // onto the measurement window and the 5MB budget is unreachable on
     // real V8.
+    //
+    // We use `enableWatcher: false` because chokidar's per-instance allocations
+    // (~150KB each) and OS handle churn would dominate the measurement on
+    // Linux. Watcher leak behavior is covered by `test/watcher.test.ts` which
+    // explicitly closes the watcher and asserts its handle teardown.
     for (let i = 0; i < 10; i++) {
-      const h = createServer({ workspaceUri: FIXTURE });
+      const h = createServer({ workspaceUri: FIXTURE, enableWatcher: false });
       await h.dispose();
     }
 
@@ -84,7 +89,7 @@ describe("createServer — 100 cycles stay within budget", () => {
     const baselineRss = process.memoryUsage().rss;
 
     for (let i = 0; i < CYCLES; i++) {
-      const handle = createServer({ workspaceUri: FIXTURE });
+      const handle = createServer({ workspaceUri: FIXTURE, enableWatcher: false });
       // Touching .session ensures the constructor's lazy fields exist.
       expect(handle.session.workspaceDir).toBeDefined();
       await handle.dispose();

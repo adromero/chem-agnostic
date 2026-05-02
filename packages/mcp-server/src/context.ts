@@ -22,6 +22,7 @@
 // ---------------------------------------------------------------------------
 
 import * as path from "node:path";
+import { randomUUID } from "node:crypto";
 import { createManifestCache, type ManifestCache } from "@chemag/core/cache";
 import {
   applyWorkspaceVocabulary,
@@ -30,6 +31,7 @@ import {
 } from "@chemag/core/vocabulary";
 import { discoverCompounds, loadCompound, loadWorkspace } from "@chemag/core/loader";
 import type { Compound, LoadedCompound, Workspace } from "@chemag/core/types";
+import type { Watcher } from "./watcher.js";
 
 /** Construction options for `Session`. */
 export interface SessionOptions {
@@ -56,9 +58,22 @@ export interface SessionOptions {
  * never reuse across distinct workspaces.
  */
 export class Session {
+  /**
+   * Stable per-Session identifier — used as the SubscriptionManager's
+   * subscriber key and for any future per-connection log correlation.
+   * Generated once at construction; never re-assigned.
+   */
+  readonly id: string;
   readonly workspaceDir: string;
   readonly clientName: string | null;
   readonly cache: ManifestCache;
+
+  /**
+   * The optional file watcher created on first resource subscribe (WP-016).
+   * `dispose()` closes it. Stays `null` until the resource layer attaches
+   * one — sessions that never subscribe never spin a watcher up.
+   */
+  watcher: Watcher | null = null;
 
   private _vocabulary: VocabularyName;
   private _workspace: Workspace | null = null;
@@ -66,6 +81,7 @@ export class Session {
   private _disposed = false;
 
   constructor(opts: SessionOptions) {
+    this.id = randomUUID();
     this.workspaceDir = path.resolve(opts.workspaceDir);
     this.clientName = opts.clientName ?? null;
     // Per-session cache root — the cache directory is workspace-scoped, so
@@ -140,17 +156,37 @@ export class Session {
   }
 
   /**
+   * Drop the in-memory loaded-workspace + compounds memos. Called by the
+   * resource layer when the watcher reports a workspace.yaml or
+   * compound.yaml change — the next `loadWorkspace` / `listCompounds` call
+   * will re-discover from source. The on-disk cache layer is invalidated
+   * separately via `cache.invalidateWorkspace` / `cache.invalidateCompound`.
+   */
+  invalidateLoadedWorkspace(): void {
+    this._workspace = null;
+    this._compounds = null;
+  }
+
+  /**
    * Release session resources. After dispose, accessor methods throw. The
    * disk cache is intentionally NOT wiped — multiple sessions and CLI runs
    * share that surface and the cache TTL handles invalidation.
    *
-   * File-watcher cleanup hooks land in WP-016 once resource subscriptions
-   * are wired up.
+   * The file watcher (if any was attached by the resource layer) is closed.
+   * `dispose()` returns synchronously; the watcher's close is fire-and-forget
+   * because chokidar's close is best-effort once the OS handles are dropped.
    */
   dispose(): void {
     this._disposed = true;
     this._workspace = null;
     this._compounds = null;
+    if (this.watcher !== null) {
+      const w = this.watcher;
+      this.watcher = null;
+      // Fire-and-forget; we don't want to make dispose() async for a single
+      // session's worth of file watchers. Errors are swallowed.
+      void w.close().catch(() => {});
+    }
   }
 
   /** True when `dispose()` has been called on this session. */

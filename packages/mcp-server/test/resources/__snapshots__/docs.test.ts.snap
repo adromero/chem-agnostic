@@ -1,0 +1,29 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`architecture://docs/{section} — happy paths > docs/bonds renders the dependency-rules table (snapshot) 1`] = `
+"## Dependency rules
+
+| Role | Can depend on |
+|------|---------------|
+| element | element |
+| molecule | element, molecule |
+| reaction | element, molecule, interface |
+| interface | element, molecule |
+| adapter | element, molecule, interface, adapter |
+| buffer | element, molecule, interface |
+"
+`;
+
+exports[`architecture://docs/{section} — happy paths > docs/roles renders a Role | Allowed bonds table (snapshot) 1`] = `
+"## Roles
+
+| Role | Allowed bonds |
+|------|---------------|
+| element | element |
+| molecule | element, molecule |
+| reaction | element, molecule, interface |
+| interface | element, molecule |
+| adapter | element, molecule, interface, adapter |
+| buffer | element, molecule, interface |
+"
+`;
