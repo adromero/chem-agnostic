@@ -1,0 +1,37 @@
+compound: users
+description: "User management: create, edit, deactivate, list. The canonical owner of the User entity."
+exports:
+  elements: [UserId, Email]
+  molecules: [User]
+  interfaces: [UserRepository]
+  adapters: [PostgresUserRepository]
+  reactions: [createUser, deactivateUser]
+imports: []
+units:
+  - role: element
+    name: UserId
+    file: ./elements/UserId.ts
+  - role: element
+    name: Email
+    file: ./elements/Email.ts
+  - role: molecule
+    name: User
+    file: ./molecules/User.ts
+    depends_on: [UserId, Email]
+  - role: interface
+    name: UserRepository
+    file: ./interfaces/UserRepository.ts
+    depends_on: [User, UserId]
+  - role: adapter
+    name: PostgresUserRepository
+    file: ./adapters/PostgresUserRepository.ts
+    implements: [UserRepository]
+    depends_on: [UserRepository, User, UserId]
+  - role: reaction
+    name: createUser
+    file: ./reactions/createUser.ts
+    depends_on: [User, Email, UserRepository]
+  - role: reaction
+    name: deactivateUser
+    file: ./reactions/deactivateUser.ts
+    depends_on: [UserId, UserRepository]

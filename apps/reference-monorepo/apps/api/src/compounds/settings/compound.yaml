@@ -1,0 +1,25 @@
+compound: settings
+description: "Application configuration loaded from environment variables and config files."
+exports:
+  elements: [AppSettings]
+  interfaces: [SettingsLoader]
+  adapters: [EnvSettingsLoader]
+  reactions: [load_settings]
+imports: []
+units:
+  - role: element
+    name: AppSettings
+    file: ./elements/app_settings.py
+  - role: interface
+    name: SettingsLoader
+    file: ./interfaces/settings_loader.py
+    depends_on: [AppSettings]
+  - role: adapter
+    name: EnvSettingsLoader
+    file: ./adapters/env_settings_loader.py
+    implements: [SettingsLoader]
+    depends_on: [SettingsLoader, AppSettings]
+  - role: reaction
+    name: load_settings
+    file: ./reactions/load_settings.py
+    depends_on: [AppSettings, SettingsLoader]

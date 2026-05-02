@@ -1,0 +1,25 @@
+compound: tasks
+description: "Background async tasks scheduled by the API process — cron-like recurring jobs."
+exports:
+  elements: [TaskSpec]
+  interfaces: [Scheduler]
+  adapters: [AsyncioScheduler]
+  reactions: [schedule_task]
+imports: []
+units:
+  - role: element
+    name: TaskSpec
+    file: ./elements/task_spec.py
+  - role: interface
+    name: Scheduler
+    file: ./interfaces/scheduler.py
+    depends_on: [TaskSpec]
+  - role: adapter
+    name: AsyncioScheduler
+    file: ./adapters/asyncio_scheduler.py
+    implements: [Scheduler]
+    depends_on: [Scheduler, TaskSpec]
+  - role: reaction
+    name: schedule_task
+    file: ./reactions/schedule_task.py
+    depends_on: [TaskSpec, Scheduler]

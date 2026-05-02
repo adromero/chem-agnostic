@@ -1,0 +1,5 @@
+// Auto-scaffolded element. Replace with the real value object.
+export type Token = { readonly value: string };
+export function makeToken(value: string): Token {
+  return { value };
+}

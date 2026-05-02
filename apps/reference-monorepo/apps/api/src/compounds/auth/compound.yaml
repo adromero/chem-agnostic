@@ -1,0 +1,28 @@
+compound: auth
+description: "JWT auth middleware, request principal extraction, role-based access checks."
+exports:
+  elements: [Principal, AuthToken]
+  interfaces: [TokenVerifier]
+  adapters: [JwtTokenVerifier]
+  reactions: [verify_request]
+imports: []
+units:
+  - role: element
+    name: Principal
+    file: ./elements/principal.py
+  - role: element
+    name: AuthToken
+    file: ./elements/auth_token.py
+  - role: interface
+    name: TokenVerifier
+    file: ./interfaces/token_verifier.py
+    depends_on: [AuthToken, Principal]
+  - role: adapter
+    name: JwtTokenVerifier
+    file: ./adapters/jwt_token_verifier.py
+    implements: [TokenVerifier]
+    depends_on: [TokenVerifier, AuthToken, Principal]
+  - role: reaction
+    name: verify_request
+    file: ./reactions/verify_request.py
+    depends_on: [AuthToken, TokenVerifier]

@@ -1,0 +1,19 @@
+compound: profile
+description: "User profile editing — display name, avatar, time-zone, notification preferences."
+exports:
+  elements: [DisplayName, Avatar]
+  reactions: [updateProfile]
+imports:
+  - compound: users
+    units: [UserId, User, UserRepository]
+units:
+  - role: element
+    name: DisplayName
+    file: ./elements/DisplayName.ts
+  - role: element
+    name: Avatar
+    file: ./elements/Avatar.ts
+  - role: reaction
+    name: updateProfile
+    file: ./reactions/updateProfile.ts
+    depends_on: [DisplayName, Avatar, UserId, UserRepository]

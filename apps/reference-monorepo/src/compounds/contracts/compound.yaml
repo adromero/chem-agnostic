@@ -1,0 +1,13 @@
+compound: contracts
+description: "Generated OpenAPI request/response shapes shared between web, worker, and api."
+type: solvent
+exports:
+  elements: [ApiResponse, ApiError]
+imports: []
+units:
+  - role: element
+    name: ApiResponse
+    file: ./elements/ApiResponse.ts
+  - role: element
+    name: ApiError
+    file: ./elements/ApiError.ts

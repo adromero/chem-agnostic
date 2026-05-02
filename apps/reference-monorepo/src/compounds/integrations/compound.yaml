@@ -1,0 +1,39 @@
+compound: integrations
+description: "Third-party connectors: Slack, Stripe webhook receivers, GitHub. Verifies signatures and dispatches into domain reactions."
+exports:
+  elements: [WebhookEvent]
+  interfaces: [SlackClient, WebhookVerifier]
+  adapters: [SlackHttpClient, StripeWebhookVerifier]
+  reactions: [handleStripeWebhook, postSlackMessage]
+imports:
+  - compound: billing
+    units: [BillingMoney]
+units:
+  - role: element
+    name: WebhookEvent
+    file: ./elements/WebhookEvent.ts
+  - role: interface
+    name: SlackClient
+    file: ./interfaces/SlackClient.ts
+  - role: interface
+    name: WebhookVerifier
+    file: ./interfaces/WebhookVerifier.ts
+    depends_on: [WebhookEvent]
+  - role: adapter
+    name: SlackHttpClient
+    file: ./adapters/SlackHttpClient.ts
+    implements: [SlackClient]
+    depends_on: [SlackClient]
+  - role: adapter
+    name: StripeWebhookVerifier
+    file: ./adapters/StripeWebhookVerifier.ts
+    implements: [WebhookVerifier]
+    depends_on: [WebhookVerifier, WebhookEvent]
+  - role: reaction
+    name: handleStripeWebhook
+    file: ./reactions/handleStripeWebhook.ts
+    depends_on: [WebhookEvent, WebhookVerifier]
+  - role: reaction
+    name: postSlackMessage
+    file: ./reactions/postSlackMessage.ts
+    depends_on: [SlackClient]

@@ -1,0 +1,27 @@
+compound: job-runners
+description: "Job runner registry and per-name dispatch into domain reactions."
+exports:
+  elements: [RunnerHandle]
+  interfaces: [RunnerRegistry]
+  adapters: [InMemoryRunnerRegistry]
+  reactions: [runJob]
+imports:
+  - compound: queue-driver
+    units: [JobId, JobName, JobQueue]
+units:
+  - role: element
+    name: RunnerHandle
+    file: ./elements/RunnerHandle.ts
+  - role: interface
+    name: RunnerRegistry
+    file: ./interfaces/RunnerRegistry.ts
+    depends_on: [RunnerHandle, JobName]
+  - role: adapter
+    name: InMemoryRunnerRegistry
+    file: ./adapters/InMemoryRunnerRegistry.ts
+    implements: [RunnerRegistry]
+    depends_on: [RunnerRegistry, RunnerHandle, JobName]
+  - role: reaction
+    name: runJob
+    file: ./reactions/runJob.ts
+    depends_on: [JobId, JobName, RunnerRegistry]

@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "chemag check-edit --for-hook claude --format json --workspace \"$CLAUDE_PROJECT_DIR\"",
+            "_chemag": true
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "chemag analyze --for-hook claude --format json --workspace \"$CLAUDE_PROJECT_DIR\"",
+            "_chemag": true
+          }
+        ]
+      }
+    ]
+  }
+}

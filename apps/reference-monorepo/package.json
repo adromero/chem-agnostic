@@ -1,0 +1,28 @@
+{
+  "name": "chemag-reference-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Demo monorepo exercising chemag end-to-end (TypeScript web + worker, Python FastAPI). Used by benchmarks, screenshots, and integration tests.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=9"
+  },
+  "packageManager": "pnpm@9.12.0",
+  "scripts": {
+    "chemag:check": "chemag check && chemag check --workspace apps/api/workspace.yaml",
+    "chemag:check:ts": "chemag check",
+    "chemag:check:python": "chemag check --workspace apps/api/workspace.yaml",
+    "chemag:analyze": "chemag analyze && chemag analyze --workspace apps/api/workspace.yaml",
+    "chemag:graph": "chemag graph workspace.yaml",
+    "chemag:graph:snapshot": "chemag graph workspace.yaml > test/chemag-graph.snapshot.txt",
+    "chemag:emit-rules": "chemag emit-rules --tool all",
+    "build": "pnpm -r --filter './apps/web' --filter './apps/worker' --filter './packages/*' build",
+    "lint": "echo 'lint configured per-app'"
+  },
+  "devDependencies": {
+    "husky": "^9.1.6",
+    "typescript": "^5.7.0"
+  }
+}

@@ -1,0 +1,12 @@
+compound: errors
+description: "Domain error types and FastAPI exception handlers."
+exports:
+  elements: [DomainError, ValidationError]
+imports: []
+units:
+  - role: element
+    name: DomainError
+    file: ./elements/domain_error.py
+  - role: element
+    name: ValidationError
+    file: ./elements/validation_error.py

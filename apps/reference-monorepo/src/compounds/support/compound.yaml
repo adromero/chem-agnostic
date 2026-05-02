@@ -1,0 +1,37 @@
+compound: support
+description: "Help center and customer support tickets — open, comment, close."
+exports:
+  elements: [TicketId, TicketStatus]
+  molecules: [SupportTicket]
+  interfaces: [TicketRepository]
+  adapters: [PostgresTicketRepository]
+  reactions: [openTicket, closeTicket]
+imports: []
+units:
+  - role: element
+    name: TicketId
+    file: ./elements/TicketId.ts
+  - role: element
+    name: TicketStatus
+    file: ./elements/TicketStatus.ts
+  - role: molecule
+    name: SupportTicket
+    file: ./molecules/SupportTicket.ts
+    depends_on: [TicketId, TicketStatus]
+  - role: interface
+    name: TicketRepository
+    file: ./interfaces/TicketRepository.ts
+    depends_on: [SupportTicket, TicketId]
+  - role: adapter
+    name: PostgresTicketRepository
+    file: ./adapters/PostgresTicketRepository.ts
+    implements: [TicketRepository]
+    depends_on: [TicketRepository, SupportTicket, TicketId]
+  - role: reaction
+    name: openTicket
+    file: ./reactions/openTicket.ts
+    depends_on: [SupportTicket, TicketRepository]
+  - role: reaction
+    name: closeTicket
+    file: ./reactions/closeTicket.ts
+    depends_on: [TicketId, TicketRepository]

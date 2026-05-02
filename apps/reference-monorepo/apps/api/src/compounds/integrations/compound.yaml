@@ -1,0 +1,25 @@
+compound: integrations
+description: "External service clients — Stripe, Postmark, Slack — used from services."
+exports:
+  elements: [IntegrationKey]
+  interfaces: [IntegrationClient]
+  adapters: [HttpIntegrationClient]
+  reactions: [call_integration]
+imports: []
+units:
+  - role: element
+    name: IntegrationKey
+    file: ./elements/integration_key.py
+  - role: interface
+    name: IntegrationClient
+    file: ./interfaces/integration_client.py
+    depends_on: [IntegrationKey]
+  - role: adapter
+    name: HttpIntegrationClient
+    file: ./adapters/http_integration_client.py
+    implements: [IntegrationClient]
+    depends_on: [IntegrationClient, IntegrationKey]
+  - role: reaction
+    name: call_integration
+    file: ./reactions/call_integration.py
+    depends_on: [IntegrationKey, IntegrationClient]

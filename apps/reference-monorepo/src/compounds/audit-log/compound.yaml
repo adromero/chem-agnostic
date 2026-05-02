@@ -1,0 +1,25 @@
+compound: audit-log
+description: "Audit trail recording who did what when, with diff context for sensitive actions."
+exports:
+  elements: [AuditEntry]
+  interfaces: [AuditRepository]
+  adapters: [PostgresAuditRepository]
+  reactions: [recordAuditEntry]
+imports: []
+units:
+  - role: element
+    name: AuditEntry
+    file: ./elements/AuditEntry.ts
+  - role: interface
+    name: AuditRepository
+    file: ./interfaces/AuditRepository.ts
+    depends_on: [AuditEntry]
+  - role: adapter
+    name: PostgresAuditRepository
+    file: ./adapters/PostgresAuditRepository.ts
+    implements: [AuditRepository]
+    depends_on: [AuditRepository, AuditEntry]
+  - role: reaction
+    name: recordAuditEntry
+    file: ./reactions/recordAuditEntry.ts
+    depends_on: [AuditEntry, AuditRepository]

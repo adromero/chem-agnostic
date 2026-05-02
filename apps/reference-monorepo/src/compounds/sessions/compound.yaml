@@ -1,0 +1,36 @@
+compound: sessions
+description: "Session lifecycle: creation, refresh, revocation, idle expiry. Backed by a key-value session store."
+exports:
+  elements: [SessionId]
+  molecules: [Session]
+  interfaces: [SessionStore]
+  adapters: [RedisSessionStore]
+  reactions: [createSession, revokeSession]
+imports:
+  - compound: auth
+    units: [Token]
+units:
+  - role: element
+    name: SessionId
+    file: ./elements/SessionId.ts
+  - role: molecule
+    name: Session
+    file: ./molecules/Session.ts
+    depends_on: [SessionId]
+  - role: interface
+    name: SessionStore
+    file: ./interfaces/SessionStore.ts
+    depends_on: [Session, SessionId]
+  - role: adapter
+    name: RedisSessionStore
+    file: ./adapters/RedisSessionStore.ts
+    implements: [SessionStore]
+    depends_on: [SessionStore, Session, SessionId]
+  - role: reaction
+    name: createSession
+    file: ./reactions/createSession.ts
+    depends_on: [Session, SessionStore]
+  - role: reaction
+    name: revokeSession
+    file: ./reactions/revokeSession.ts
+    depends_on: [SessionId, SessionStore]

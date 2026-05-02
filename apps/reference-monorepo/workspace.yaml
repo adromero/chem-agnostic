@@ -1,0 +1,54 @@
+workspace: reference-monorepo
+language: typescript
+vocabulary: chemistry
+
+# Roles use the chemistry vocabulary as the marketing-friendly example.
+roles:
+  element:
+    description: Immutable value object — primitive domain shape with no behavior beyond construction
+    folder: elements
+  molecule:
+    description: Domain entity composed of value objects with simple behavior
+    folder: molecules
+  reaction:
+    description: Workflow that orchestrates ports and entities to fulfil a single use case
+    folder: reactions
+  interface:
+    description: Port contract describing an external capability the compound consumes
+    folder: interfaces
+  adapter:
+    description: Adapter implementing a port against a real infrastructure backend (Stripe, Postgres, Redis, ...)
+    folder: adapters
+  buffer:
+    description: Middleware wrapper for cross-cutting concerns (rate limiting, audit, retries)
+    folder: buffers
+
+bonds:
+  element: [element]
+  molecule: [element, molecule]
+  reaction: [element, molecule, interface]
+  interface: [element, molecule]
+  adapter: [element, molecule, interface, adapter]
+  buffer: [element, molecule, interface]
+
+# Compound types — solvents are implicit shared-utility compounds whose
+# exports any other compound may import without declaring an explicit
+# imports entry. Used here for the cross-cutting domain primitives in
+# `shared-domain` and the OpenAPI types in `contracts`.
+compound_types:
+  compound:
+    description: Standard domain compound — must declare its imports.
+    can_import: [compound, solvent]
+  solvent:
+    description: Cross-cutting shared utilities — implicitly importable everywhere.
+    implicit: true
+    importable_by: all
+
+paths:
+  compounds: ./src/compounds
+
+rules:
+  cross_compound_imports: public_only
+  role_from_path: true
+  public_surface: public.ts
+  manifest_filename: compound.yaml

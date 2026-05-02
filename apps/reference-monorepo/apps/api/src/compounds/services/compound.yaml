@@ -1,0 +1,27 @@
+compound: services
+description: "Application services that orchestrate repositories and external integrations."
+exports:
+  elements: [ServiceResult]
+  interfaces: [ServiceBus]
+  adapters: [InMemoryServiceBus]
+  reactions: [execute_service]
+imports:
+  - compound: repositories
+    units: [Record, Repository, RecordId]
+units:
+  - role: element
+    name: ServiceResult
+    file: ./elements/service_result.py
+  - role: interface
+    name: ServiceBus
+    file: ./interfaces/service_bus.py
+    depends_on: [ServiceResult]
+  - role: adapter
+    name: InMemoryServiceBus
+    file: ./adapters/in_memory_service_bus.py
+    implements: [ServiceBus]
+    depends_on: [ServiceBus, ServiceResult]
+  - role: reaction
+    name: execute_service
+    file: ./reactions/execute_service.py
+    depends_on: [ServiceResult, ServiceBus, Repository]

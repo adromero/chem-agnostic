@@ -1,0 +1,29 @@
+compound: lifecycle
+description: "Worker lifecycle — startup, graceful shutdown, health probes, signal handling."
+exports:
+  elements: [LifecyclePhase]
+  interfaces: [HealthProbe]
+  adapters: [DefaultHealthProbe]
+  reactions: [startWorker, shutdownWorker]
+imports: []
+units:
+  - role: element
+    name: LifecyclePhase
+    file: ./elements/LifecyclePhase.ts
+  - role: interface
+    name: HealthProbe
+    file: ./interfaces/HealthProbe.ts
+    depends_on: [LifecyclePhase]
+  - role: adapter
+    name: DefaultHealthProbe
+    file: ./adapters/DefaultHealthProbe.ts
+    implements: [HealthProbe]
+    depends_on: [HealthProbe, LifecyclePhase]
+  - role: reaction
+    name: startWorker
+    file: ./reactions/startWorker.ts
+    depends_on: [LifecyclePhase, HealthProbe]
+  - role: reaction
+    name: shutdownWorker
+    file: ./reactions/shutdownWorker.ts
+    depends_on: [LifecyclePhase, HealthProbe]

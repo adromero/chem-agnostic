@@ -1,0 +1,29 @@
+compound: routers
+description: "FastAPI route definitions exposing services over HTTP."
+exports:
+  elements: [RouteSpec]
+  interfaces: [RouteRegistry]
+  adapters: [FastapiRouteRegistry]
+  reactions: [mount_routes]
+imports:
+  - compound: services
+    units: [ServiceResult, ServiceBus]
+  - compound: auth
+    units: [Principal]
+units:
+  - role: element
+    name: RouteSpec
+    file: ./elements/route_spec.py
+  - role: interface
+    name: RouteRegistry
+    file: ./interfaces/route_registry.py
+    depends_on: [RouteSpec]
+  - role: adapter
+    name: FastapiRouteRegistry
+    file: ./adapters/fastapi_route_registry.py
+    implements: [RouteRegistry]
+    depends_on: [RouteRegistry, RouteSpec]
+  - role: reaction
+    name: mount_routes
+    file: ./reactions/mount_routes.py
+    depends_on: [RouteSpec, RouteRegistry, ServiceBus, Principal]

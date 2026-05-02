@@ -1,0 +1,2 @@
+#!/usr/bin/env sh
+chemag check --format human || exit 1 # _chemag

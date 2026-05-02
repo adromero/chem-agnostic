@@ -1,0 +1,54 @@
+compound: billing
+description: "Subscription billing — Stripe payment flows, invoicing, refunds, and webhook reconciliation. Owns Money, Invoice, and Subscription value objects."
+exports:
+  elements: [PriceId, BillingMoney]
+  molecules: [Subscription, Invoice]
+  interfaces: [PaymentGateway, BillingRepository]
+  adapters: [StripeGateway, PostgresBillingRepository]
+  reactions: [chargeCustomer, processRefund, createSubscription]
+imports: []
+units:
+  - role: element
+    name: PriceId
+    file: ./elements/PriceId.ts
+  - role: element
+    name: BillingMoney
+    file: ./elements/BillingMoney.ts
+  - role: molecule
+    name: Subscription
+    file: ./molecules/Subscription.ts
+    depends_on: [PriceId, BillingMoney]
+  - role: molecule
+    name: Invoice
+    file: ./molecules/Invoice.ts
+    depends_on: [BillingMoney]
+  - role: interface
+    name: PaymentGateway
+    file: ./interfaces/PaymentGateway.ts
+    depends_on: [BillingMoney]
+  - role: interface
+    name: BillingRepository
+    file: ./interfaces/BillingRepository.ts
+    depends_on: [Subscription, Invoice]
+  - role: adapter
+    name: StripeGateway
+    file: ./adapters/StripeGateway.ts
+    implements: [PaymentGateway]
+    depends_on: [PaymentGateway, BillingMoney]
+  - role: adapter
+    name: PostgresBillingRepository
+    file: ./adapters/PostgresBillingRepository.ts
+    implements: [BillingRepository]
+    depends_on: [BillingRepository, Subscription, Invoice]
+  - role: reaction
+    name: chargeCustomer
+    file: ./reactions/chargeCustomer.ts
+    depends_on: [BillingMoney, PaymentGateway]
+  - role: reaction
+    name: processRefund
+    file: ./reactions/processRefund.ts
+    depends_on: [BillingMoney, PaymentGateway]
+  - role: reaction
+    name: createSubscription
+    file: ./reactions/createSubscription.ts
+    depends_on: [Subscription, PriceId, BillingRepository]

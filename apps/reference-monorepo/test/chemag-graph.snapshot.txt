@@ -1,0 +1,52 @@
+graph LR
+  subgraph solvents["solvents"]
+    contracts["contracts\nGenerated OpenAPI request/response shap…"]
+    shared-domain["shared-domain\nCross-cutting shared value objects — Mo…"]
+    ui-kit["ui-kit\nShared React UI components — Button, Ca…"]
+  end
+  subgraph compounds["compounds"]
+    audit-emit["audit-emit\nEmits audit events to the central audit…"]
+    audit-log["audit-log\nAudit trail recording who did what when…"]
+    auth["auth\nAuthentication: login, logout, password…"]
+    billing["billing\nSubscription billing — Stripe payment f…"]
+    dashboard["dashboard\nDashboard widgets and metrics overview …"]
+    integrations["integrations\nThird-party connectors: Slack, Stripe w…"]
+    job-runners["job-runners\nJob runner registry and per-name dispat…"]
+    lifecycle["lifecycle\nWorker lifecycle — startup, graceful sh…"]
+    metrics["metrics\nPrometheus-style worker metrics — job c…"]
+    notifications["notifications\nUser-facing notifications — email, in-a…"]
+    profile["profile\nUser profile editing — display name, av…"]
+    queue-driver["queue-driver\npg-boss queue driver — connects to Post…"]
+    retry-policy["retry-policy\nRetry strategy with exponential backoff…"]
+    search["search\nFull-text search over users, tickets, a…"]
+    sessions["sessions\nSession lifecycle: creation, refresh, r…"]
+    settings["settings\nWorkspace and per-user preferences (fea…"]
+    support["support\nHelp center and customer support ticket…"]
+    users["users\nUser management: create, edit, deactiva…"]
+  end
+  style audit-emit fill:#fff3e0,stroke:#ff9800
+  style audit-log fill:#fff3e0,stroke:#ff9800
+  style auth fill:#fff3e0,stroke:#ff9800
+  style billing fill:#fff3e0,stroke:#ff9800
+  style dashboard fill:#fff3e0,stroke:#ff9800
+  style integrations fill:#fff3e0,stroke:#ff9800
+  style job-runners fill:#fff3e0,stroke:#ff9800
+  style lifecycle fill:#fff3e0,stroke:#ff9800
+  style metrics fill:#fff3e0,stroke:#ff9800
+  style notifications fill:#fff3e0,stroke:#ff9800
+  style profile fill:#fff3e0,stroke:#ff9800
+  style queue-driver fill:#fff3e0,stroke:#ff9800
+  style retry-policy fill:#fff3e0,stroke:#ff9800
+  style search fill:#fff3e0,stroke:#ff9800
+  style sessions fill:#fff3e0,stroke:#ff9800
+  style settings fill:#fff3e0,stroke:#ff9800
+  style support fill:#fff3e0,stroke:#ff9800
+  style users fill:#fff3e0,stroke:#ff9800
+  style contracts fill:#e3f2fd,stroke:#2196f3
+  style shared-domain fill:#e3f2fd,stroke:#2196f3
+  style ui-kit fill:#e3f2fd,stroke:#2196f3
+  integrations --> billing
+  job-runners --> queue-driver
+  profile --> users
+  sessions --> auth
+

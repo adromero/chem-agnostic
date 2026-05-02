@@ -1,0 +1,16 @@
+compound: ui-kit
+description: "Shared React UI components — Button, Card, Modal — published via the design system."
+type: solvent
+exports:
+  elements: [ButtonProps, CardProps, ModalProps]
+imports: []
+units:
+  - role: element
+    name: ButtonProps
+    file: ./elements/ButtonProps.ts
+  - role: element
+    name: CardProps
+    file: ./elements/CardProps.ts
+  - role: element
+    name: ModalProps
+    file: ./elements/ModalProps.ts

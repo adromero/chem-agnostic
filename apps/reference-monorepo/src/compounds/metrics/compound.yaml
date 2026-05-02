@@ -1,0 +1,25 @@
+compound: metrics
+description: "Prometheus-style worker metrics — job counts, latency histograms, error rates."
+exports:
+  elements: [MetricSample]
+  interfaces: [MetricsCollector]
+  adapters: [PrometheusCollector]
+  reactions: [recordJobMetric]
+imports: []
+units:
+  - role: element
+    name: MetricSample
+    file: ./elements/MetricSample.ts
+  - role: interface
+    name: MetricsCollector
+    file: ./interfaces/MetricsCollector.ts
+    depends_on: [MetricSample]
+  - role: adapter
+    name: PrometheusCollector
+    file: ./adapters/PrometheusCollector.ts
+    implements: [MetricsCollector]
+    depends_on: [MetricsCollector, MetricSample]
+  - role: reaction
+    name: recordJobMetric
+    file: ./reactions/recordJobMetric.ts
+    depends_on: [MetricSample, MetricsCollector]

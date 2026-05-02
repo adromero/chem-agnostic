@@ -1,0 +1,28 @@
+compound: search
+description: "Full-text search over users, tickets, and audit entries via an external search index."
+exports:
+  elements: [SearchQuery, SearchHit]
+  interfaces: [SearchIndex]
+  adapters: [MeilisearchIndex]
+  reactions: [searchEntries]
+imports: []
+units:
+  - role: element
+    name: SearchQuery
+    file: ./elements/SearchQuery.ts
+  - role: element
+    name: SearchHit
+    file: ./elements/SearchHit.ts
+  - role: interface
+    name: SearchIndex
+    file: ./interfaces/SearchIndex.ts
+    depends_on: [SearchQuery, SearchHit]
+  - role: adapter
+    name: MeilisearchIndex
+    file: ./adapters/MeilisearchIndex.ts
+    implements: [SearchIndex]
+    depends_on: [SearchIndex, SearchQuery, SearchHit]
+  - role: reaction
+    name: searchEntries
+    file: ./reactions/searchEntries.ts
+    depends_on: [SearchQuery, SearchHit, SearchIndex]

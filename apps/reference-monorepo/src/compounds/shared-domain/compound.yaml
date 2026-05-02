@@ -1,0 +1,16 @@
+compound: shared-domain
+description: "Cross-cutting shared value objects — Money, EmailAddress, Slug, ISO timestamp helpers."
+type: solvent
+exports:
+  elements: [MoneyAmount, EmailAddress, Slug]
+imports: []
+units:
+  - role: element
+    name: MoneyAmount
+    file: ./elements/MoneyAmount.ts
+  - role: element
+    name: EmailAddress
+    file: ./elements/EmailAddress.ts
+  - role: element
+    name: Slug
+    file: ./elements/Slug.ts

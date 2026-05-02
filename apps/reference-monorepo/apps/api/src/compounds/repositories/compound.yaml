@@ -1,0 +1,25 @@
+compound: repositories
+description: "Postgres-backed repositories — users, billing entries, support tickets."
+exports:
+  elements: [RecordId]
+  molecules: [Record]
+  interfaces: [Repository]
+  adapters: [PostgresRepository]
+imports: []
+units:
+  - role: element
+    name: RecordId
+    file: ./elements/record_id.py
+  - role: molecule
+    name: Record
+    file: ./molecules/record.py
+    depends_on: [RecordId]
+  - role: interface
+    name: Repository
+    file: ./interfaces/repository.py
+    depends_on: [Record, RecordId]
+  - role: adapter
+    name: PostgresRepository
+    file: ./adapters/postgres_repository.py
+    implements: [Repository]
+    depends_on: [Repository, Record, RecordId]

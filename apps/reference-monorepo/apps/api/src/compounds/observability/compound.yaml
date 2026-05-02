@@ -1,0 +1,25 @@
+compound: observability
+description: "Structured logging, OpenTelemetry tracing, request-scoped correlation IDs."
+exports:
+  elements: [TraceId]
+  interfaces: [Logger]
+  adapters: [JsonLogger]
+  reactions: [with_trace]
+imports: []
+units:
+  - role: element
+    name: TraceId
+    file: ./elements/trace_id.py
+  - role: interface
+    name: Logger
+    file: ./interfaces/logger.py
+    depends_on: [TraceId]
+  - role: adapter
+    name: JsonLogger
+    file: ./adapters/json_logger.py
+    implements: [Logger]
+    depends_on: [Logger, TraceId]
+  - role: reaction
+    name: with_trace
+    file: ./reactions/with_trace.py
+    depends_on: [TraceId, Logger]

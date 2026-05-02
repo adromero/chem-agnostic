@@ -1,0 +1,28 @@
+compound: settings
+description: "Workspace and per-user preferences (feature flags, themes, locale)."
+exports:
+  elements: [SettingKey, SettingValue]
+  interfaces: [SettingsRepository]
+  adapters: [PostgresSettingsRepository]
+  reactions: [updateSetting]
+imports: []
+units:
+  - role: element
+    name: SettingKey
+    file: ./elements/SettingKey.ts
+  - role: element
+    name: SettingValue
+    file: ./elements/SettingValue.ts
+  - role: interface
+    name: SettingsRepository
+    file: ./interfaces/SettingsRepository.ts
+    depends_on: [SettingKey, SettingValue]
+  - role: adapter
+    name: PostgresSettingsRepository
+    file: ./adapters/PostgresSettingsRepository.ts
+    implements: [SettingsRepository]
+    depends_on: [SettingsRepository, SettingKey, SettingValue]
+  - role: reaction
+    name: updateSetting
+    file: ./reactions/updateSetting.ts
+    depends_on: [SettingKey, SettingValue, SettingsRepository]

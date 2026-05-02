@@ -1,0 +1,25 @@
+compound: notifications
+description: "User-facing notifications — email, in-app toasts, push deliverability."
+exports:
+  elements: [NotificationPayload]
+  interfaces: [EmailClient]
+  adapters: [PostmarkClient]
+  reactions: [sendEmailNotification]
+imports: []
+units:
+  - role: element
+    name: NotificationPayload
+    file: ./elements/NotificationPayload.ts
+  - role: interface
+    name: EmailClient
+    file: ./interfaces/EmailClient.ts
+    depends_on: [NotificationPayload]
+  - role: adapter
+    name: PostmarkClient
+    file: ./adapters/PostmarkClient.ts
+    implements: [EmailClient]
+    depends_on: [EmailClient, NotificationPayload]
+  - role: reaction
+    name: sendEmailNotification
+    file: ./reactions/sendEmailNotification.ts
+    depends_on: [NotificationPayload, EmailClient]

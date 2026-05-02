@@ -1,0 +1,25 @@
+compound: retry-policy
+description: "Retry strategy with exponential backoff and configurable jitter for failed jobs."
+exports:
+  elements: [RetrySpec]
+  interfaces: [BackoffComputer]
+  adapters: [ExponentialBackoff]
+  reactions: [computeRetryDelay]
+imports: []
+units:
+  - role: element
+    name: RetrySpec
+    file: ./elements/RetrySpec.ts
+  - role: interface
+    name: BackoffComputer
+    file: ./interfaces/BackoffComputer.ts
+    depends_on: [RetrySpec]
+  - role: adapter
+    name: ExponentialBackoff
+    file: ./adapters/ExponentialBackoff.ts
+    implements: [BackoffComputer]
+    depends_on: [BackoffComputer, RetrySpec]
+  - role: reaction
+    name: computeRetryDelay
+    file: ./reactions/computeRetryDelay.ts
+    depends_on: [RetrySpec, BackoffComputer]

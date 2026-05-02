@@ -1,0 +1,32 @@
+compound: auth
+description: "Authentication: login, logout, password reset, JWT issuance and verification for the admin web console."
+exports:
+  elements: [Credential, Token]
+  interfaces: [AuthGateway]
+  adapters: [JwtAuthGateway]
+  reactions: [loginUser, logoutUser]
+imports: []
+units:
+  - role: element
+    name: Credential
+    file: ./elements/Credential.ts
+  - role: element
+    name: Token
+    file: ./elements/Token.ts
+  - role: interface
+    name: AuthGateway
+    file: ./interfaces/AuthGateway.ts
+    depends_on: [Credential, Token]
+  - role: adapter
+    name: JwtAuthGateway
+    file: ./adapters/JwtAuthGateway.ts
+    implements: [AuthGateway]
+    depends_on: [AuthGateway, Credential, Token]
+  - role: reaction
+    name: loginUser
+    file: ./reactions/loginUser.ts
+    depends_on: [Credential, AuthGateway]
+  - role: reaction
+    name: logoutUser
+    file: ./reactions/logoutUser.ts
+    depends_on: [Token, AuthGateway]

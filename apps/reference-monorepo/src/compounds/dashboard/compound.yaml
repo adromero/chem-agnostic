@@ -1,0 +1,30 @@
+compound: dashboard
+description: "Dashboard widgets and metrics overview — KPI cards, recent-activity feed, and configurable layouts."
+exports:
+  elements: [WidgetSpec]
+  molecules: [DashboardLayout]
+  interfaces: [DashboardLoader]
+  adapters: [HttpDashboardLoader]
+  reactions: [loadDashboard]
+imports: []
+units:
+  - role: element
+    name: WidgetSpec
+    file: ./elements/WidgetSpec.ts
+  - role: molecule
+    name: DashboardLayout
+    file: ./molecules/DashboardLayout.ts
+    depends_on: [WidgetSpec]
+  - role: interface
+    name: DashboardLoader
+    file: ./interfaces/DashboardLoader.ts
+    depends_on: [DashboardLayout]
+  - role: adapter
+    name: HttpDashboardLoader
+    file: ./adapters/HttpDashboardLoader.ts
+    implements: [DashboardLoader]
+    depends_on: [DashboardLoader, DashboardLayout]
+  - role: reaction
+    name: loadDashboard
+    file: ./reactions/loadDashboard.ts
+    depends_on: [DashboardLayout, DashboardLoader]

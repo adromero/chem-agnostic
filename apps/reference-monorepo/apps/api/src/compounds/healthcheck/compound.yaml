@@ -1,0 +1,25 @@
+compound: healthcheck
+description: "Liveness and readiness probes — DB ping, queue ping, Stripe ping."
+exports:
+  elements: [ProbeResult]
+  interfaces: [Probe]
+  adapters: [DbPingProbe]
+  reactions: [run_health_checks]
+imports: []
+units:
+  - role: element
+    name: ProbeResult
+    file: ./elements/probe_result.py
+  - role: interface
+    name: Probe
+    file: ./interfaces/probe.py
+    depends_on: [ProbeResult]
+  - role: adapter
+    name: DbPingProbe
+    file: ./adapters/db_ping_probe.py
+    implements: [Probe]
+    depends_on: [Probe, ProbeResult]
+  - role: reaction
+    name: run_health_checks
+    file: ./reactions/run_health_checks.py
+    depends_on: [ProbeResult, Probe]

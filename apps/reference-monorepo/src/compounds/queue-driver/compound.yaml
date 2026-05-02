@@ -1,0 +1,32 @@
+compound: queue-driver
+description: "pg-boss queue driver — connects to Postgres, enqueues and dequeues background jobs."
+exports:
+  elements: [JobId, JobName]
+  interfaces: [JobQueue]
+  adapters: [PgBossJobQueue]
+  reactions: [enqueueJob, dequeueJob]
+imports: []
+units:
+  - role: element
+    name: JobId
+    file: ./elements/JobId.ts
+  - role: element
+    name: JobName
+    file: ./elements/JobName.ts
+  - role: interface
+    name: JobQueue
+    file: ./interfaces/JobQueue.ts
+    depends_on: [JobId, JobName]
+  - role: adapter
+    name: PgBossJobQueue
+    file: ./adapters/PgBossJobQueue.ts
+    implements: [JobQueue]
+    depends_on: [JobQueue, JobId, JobName]
+  - role: reaction
+    name: enqueueJob
+    file: ./reactions/enqueueJob.ts
+    depends_on: [JobName, JobQueue]
+  - role: reaction
+    name: dequeueJob
+    file: ./reactions/dequeueJob.ts
+    depends_on: [JobId, JobQueue]

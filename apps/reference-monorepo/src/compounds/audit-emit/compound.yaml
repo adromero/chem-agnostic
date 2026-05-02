@@ -1,0 +1,25 @@
+compound: audit-emit
+description: "Emits audit events to the central audit-log service via HTTP."
+exports:
+  elements: [AuditEvent]
+  interfaces: [AuditEmitter]
+  adapters: [HttpAuditEmitter]
+  reactions: [emitAuditEvent]
+imports: []
+units:
+  - role: element
+    name: AuditEvent
+    file: ./elements/AuditEvent.ts
+  - role: interface
+    name: AuditEmitter
+    file: ./interfaces/AuditEmitter.ts
+    depends_on: [AuditEvent]
+  - role: adapter
+    name: HttpAuditEmitter
+    file: ./adapters/HttpAuditEmitter.ts
+    implements: [AuditEmitter]
+    depends_on: [AuditEmitter, AuditEvent]
+  - role: reaction
+    name: emitAuditEvent
+    file: ./reactions/emitAuditEvent.ts
+    depends_on: [AuditEvent, AuditEmitter]

@@ -1,0 +1,5 @@
+# chemag:aider:start
+# Managed by chemag — do not edit manually between the start/end markers.
+auto-commands:
+  - "chemag check-edit"
+# chemag:aider:end
