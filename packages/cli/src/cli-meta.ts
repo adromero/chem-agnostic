@@ -30,7 +30,7 @@ const COMMAND_GROUPS: { title: string; commands: string[] }[] = [
   { title: "Workspace", commands: ["init", "add"] },
   { title: "Validation", commands: ["check", "check-edit", "analyze"] },
   { title: "Generation", commands: ["scaffold", "graph", "sync", "emit-rules"] },
-  { title: "Integrations", commands: ["mcp"] },
+  { title: "Integrations", commands: ["mcp", "install-hooks"] },
   { title: "Utilities", commands: ["config", "completion"] },
 ];
 
@@ -227,6 +227,46 @@ export function buildCommandTree(version: string): CommandDef {
         // placeholder keeps the parent shape stable so adding subcommands
         // doesn't require restructuring the meta declaration.
         subCommands: {},
+      }),
+
+      "install-hooks": defineCommand({
+        meta: {
+          name: "install-hooks",
+          description: firstLine(tr("cli.command.install_hooks")),
+        },
+        args: {
+          tool: {
+            type: "string",
+            description:
+              "Editor / agent target: claude (cursor|codex|aider|cline|copilot|all coming soon)",
+          },
+          scope: {
+            type: "enum",
+            description: "Where to install: user or project (default: project)",
+            options: ["user", "project"],
+          },
+          mode: {
+            type: "enum",
+            description: "Hook mode: block (default), warn, or context-only",
+            options: ["block", "warn", "context-only"],
+          },
+          uninstall: {
+            type: "boolean",
+            description: "Remove chemag hook entries (preserves non-chemag entries)",
+          },
+          restore: {
+            type: "boolean",
+            description: "With --uninstall: restore from <settings>.bak",
+          },
+          "dry-run": {
+            type: "boolean",
+            description: "Print planned changes without writing",
+          },
+          workspace: {
+            type: "string",
+            description: "Workspace root (defaults to cwd)",
+          },
+        },
       }),
 
       config: defineCommand({

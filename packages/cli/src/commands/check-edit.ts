@@ -52,6 +52,14 @@ interface ParsedArgs {
   proposedRole?: string;
   proposedCompound?: string;
   help: boolean;
+  /** "claude" → emit a Claude Code PreToolUse hook envelope on stdout. */
+  forHook?: "claude";
+  /**
+   * In `--for-hook claude` mode: "block" (default) → emit
+   * `permissionDecision: "deny"` on violation; "warn" → emit "ask".
+   * Ignored outside `--for-hook claude` mode.
+   */
+  mode?: "block" | "warn";
 }
 
 export function cmdCheckEdit(argv: string[]): void {
@@ -67,23 +75,90 @@ export function cmdCheckEdit(argv: string[]): void {
     process.exit(2);
   }
 
+  // --for-hook claude takes the file path from stdin JSON
+  // (`tool_input.file_path`), not from positional argv. Resolve it here so
+  // the rest of the function continues with the same `args.file` contract.
+  if (args.forHook === "claude") {
+    const resolved = resolveHookStdin();
+    if (resolved.kind === "malformed") {
+      // Fail-soft: emit `permissionDecision: "allow"` envelope so the agent
+      // is never blocked over our parser bugs. Log a stderr warning citing
+      // CHEM-INSTALL-HOOKS-006.
+      console.error(
+        `CHEM-INSTALL-HOOKS-006: ${tr("diagnostic.hook_stdin_unparseable", {
+          reason: resolved.reason,
+        })}`,
+      );
+      console.log(
+        JSON.stringify({
+          hookSpecificOutput: {
+            hookEventName: "PreToolUse",
+            permissionDecision: "allow",
+          },
+        }),
+      );
+      process.exit(0);
+    }
+    args.file = resolved.filePath;
+  }
+
   if (!args.file) {
+    if (args.forHook === "claude") {
+      // Should not happen: resolveHookStdin returns malformed when path is
+      // missing. Defensive — emit allow + 006 + exit 0.
+      console.error(
+        `CHEM-INSTALL-HOOKS-006: ${tr("diagnostic.hook_stdin_unparseable", {
+          reason: "missing tool_input.file_path",
+        })}`,
+      );
+      console.log(
+        JSON.stringify({
+          hookSpecificOutput: {
+            hookEventName: "PreToolUse",
+            permissionDecision: "allow",
+          },
+        }),
+      );
+      process.exit(0);
+    }
     console.error(`${RED}check-edit requires a file argument${R}`);
     console.error("Run 'chemag check-edit --help' for usage.");
     process.exit(2);
   }
 
-  // Resolve workspace. Either an explicit --workspace path, or auto-discover
-  // by walking up from the file's directory looking for workspace.yaml.
-  const wsPath = args.workspace ? resolve(args.workspace) : findWorkspaceUp(resolve(args.file));
+  // Resolve workspace. Either an explicit --workspace path (which install-hooks
+  // sets to $CLAUDE_PROJECT_DIR for hook invocations), or auto-discover by
+  // walking up from the file's directory looking for workspace.yaml.
+  // For --workspace, accept either a path to workspace.yaml directly OR a
+  // directory containing workspace.yaml — the hook installer passes the
+  // project root.
+  const wsPath = resolveWorkspacePath(args.workspace, args.file);
   if (!wsPath) {
+    if (args.forHook === "claude") {
+      // No workspace → silent pass (no envelope). Lets Claude proceed.
+      process.exit(0);
+    }
     console.error(`${RED}Could not locate workspace.yaml${R} (auto-discovery failed)`);
     console.error("Pass --workspace <path> to specify it explicitly.");
     process.exit(2);
   }
   if (!existsSync(wsPath)) {
+    if (args.forHook === "claude") {
+      process.exit(0);
+    }
     console.error(`${RED}Workspace file not found:${R} ${wsPath}`);
     process.exit(2);
+  }
+
+  // For --for-hook claude, if the resolved file is outside the workspace
+  // root, exit silently (no envelope) — lets Claude proceed for files we
+  // don't manage.
+  if (args.forHook === "claude" && args.file) {
+    const wsRoot = dirname(wsPath);
+    const absFile = resolve(args.file);
+    if (!isWithin(absFile, wsRoot)) {
+      process.exit(0);
+    }
   }
 
   const wsDir = dirname(wsPath);
@@ -205,10 +280,106 @@ export function cmdCheckEdit(argv: string[]): void {
     process.exit(2);
   }
 
+  if (args.forHook === "claude") {
+    emitClaudeHookEnvelope(result, args.mode ?? "block");
+    process.exit(0);
+  }
+
   emitResult(result, args.format, wsDir, ws.workspace);
 
   const hasError = result.diagnostics.some((d) => d.level === "error");
   process.exit(hasError ? 1 : 0);
+}
+
+// ---------------------------------------------------------------------------
+// Claude Code hook envelope (PreToolUse)
+// ---------------------------------------------------------------------------
+
+interface PreToolUseEnvelope {
+  hookSpecificOutput: {
+    hookEventName: "PreToolUse";
+    permissionDecision: "allow" | "deny" | "ask";
+    permissionDecisionReason?: string;
+  };
+}
+
+/**
+ * Emit the Claude Code PreToolUse hook envelope on stdout. When there are no
+ * error-level diagnostics we omit the envelope entirely so Claude proceeds
+ * without prompting (the spec calls this the "allow-omit" path).
+ */
+function emitClaudeHookEnvelope(result: CheckEditResult, mode: "block" | "warn"): void {
+  const errors = result.diagnostics.filter((d) => d.level === "error");
+  if (errors.length === 0) {
+    // No envelope — Claude proceeds without prompting.
+    return;
+  }
+
+  const decision: "deny" | "ask" = mode === "warn" ? "ask" : "deny";
+  const reason = formatHookReason(result, errors);
+
+  const envelope: PreToolUseEnvelope = {
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      permissionDecision: decision,
+      permissionDecisionReason: reason,
+    },
+  };
+  console.log(JSON.stringify(envelope));
+}
+
+/**
+ * Build the human-readable reason shown to the model. Includes diagnostic
+ * codes so the model can self-correct (and so users can grep for the code in
+ * Claude's chat output).
+ */
+function formatHookReason(result: CheckEditResult, errors: CheckEditResult["diagnostics"]): string {
+  const compoundPart = result.compound ? ` (compound: ${result.compound}` : "";
+  const rolePart = result.role ? `, role: ${result.role})` : result.compound ? ")" : "";
+  const header = `chemag check-edit found ${errors.length} error(s) in ${result.file}${compoundPart}${rolePart}`;
+
+  const lines = errors.map((d) => {
+    const code = d.code ?? "CHEM-???";
+    return `- [${code}] ${d.message}`;
+  });
+
+  return `${header}\n${lines.join("\n")}`;
+}
+
+// ---------------------------------------------------------------------------
+// Workspace path resolution (shared with --for-hook claude)
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolve `--workspace` to an absolute workspace.yaml path. Accepts:
+ *   - undefined → walk up from the (possibly proposed) file
+ *   - a workspace.yaml path
+ *   - a directory containing workspace.yaml
+ *
+ * Returns null if no workspace can be found.
+ */
+function resolveWorkspacePath(
+  workspace: string | undefined,
+  file: string | undefined,
+): string | null {
+  if (workspace !== undefined) {
+    const abs = resolve(workspace);
+    if (existsSync(abs) && statSync(abs).isDirectory()) {
+      const cand = resolve(abs, "workspace.yaml");
+      return existsSync(cand) ? cand : null;
+    }
+    return abs;
+  }
+  if (file === undefined) return null;
+  return findWorkspaceUp(resolve(file));
+}
+
+/** True if `target` is contained within `root` (or equal to it). */
+function isWithin(target: string, root: string): boolean {
+  const normTarget = resolve(target);
+  const normRoot = resolve(root);
+  if (normTarget === normRoot) return true;
+  return normTarget.startsWith(`${normRoot}/`) || normTarget.startsWith(`${normRoot}\\`);
 }
 
 // ---------------------------------------------------------------------------
@@ -294,6 +465,18 @@ function parseArgs(argv: string[]): ParsedArgs {
       case "--proposed-compound":
         out.proposedCompound = argv[++i];
         break;
+      case "--for-hook": {
+        const v = argv[++i];
+        if (v === "claude") out.forHook = "claude";
+        // Other values are silently ignored — future hosts add their own
+        // values without breaking the current ABI.
+        break;
+      }
+      case "--mode": {
+        const v = argv[++i];
+        if (v === "block" || v === "warn") out.mode = v;
+        break;
+      }
       default:
         if (a.startsWith("--content=")) {
           out.content = a.slice("--content=".length);
@@ -305,6 +488,12 @@ function parseArgs(argv: string[]): ParsedArgs {
           out.proposedRole = a.slice("--proposed-role=".length);
         } else if (a.startsWith("--proposed-compound=")) {
           out.proposedCompound = a.slice("--proposed-compound=".length);
+        } else if (a.startsWith("--for-hook=")) {
+          const v = a.slice("--for-hook=".length);
+          if (v === "claude") out.forHook = "claude";
+        } else if (a.startsWith("--mode=")) {
+          const v = a.slice("--mode=".length);
+          if (v === "block" || v === "warn") out.mode = v;
         } else if (!a.startsWith("-") && out.file === undefined) {
           out.file = a;
         }
@@ -313,6 +502,54 @@ function parseArgs(argv: string[]): ParsedArgs {
   }
 
   return out;
+}
+
+// ---------------------------------------------------------------------------
+// Hook stdin reader
+// ---------------------------------------------------------------------------
+
+/**
+ * Result of attempting to read + parse the Claude Code hook stdin envelope.
+ * Successful: { kind: "ok", filePath }. Otherwise malformed (caller emits
+ * `permissionDecision: "allow"` + CHEM-INSTALL-HOOKS-006 stderr warning).
+ */
+type HookStdinResult = { kind: "ok"; filePath: string } | { kind: "malformed"; reason: string };
+
+function resolveHookStdin(): HookStdinResult {
+  let raw: string;
+  try {
+    raw = stdinReader();
+  } catch (e) {
+    return {
+      kind: "malformed",
+      reason: e instanceof Error ? e.message : String(e),
+    };
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (e) {
+    return {
+      kind: "malformed",
+      reason: e instanceof Error ? e.message : "invalid JSON",
+    };
+  }
+
+  if (typeof parsed !== "object" || parsed === null) {
+    return { kind: "malformed", reason: "stdin JSON is not an object" };
+  }
+
+  const obj = parsed as Record<string, unknown>;
+  const toolInput = obj.tool_input;
+  if (typeof toolInput !== "object" || toolInput === null) {
+    return { kind: "malformed", reason: "missing tool_input" };
+  }
+  const filePath = (toolInput as Record<string, unknown>).file_path;
+  if (typeof filePath !== "string" || filePath === "") {
+    return { kind: "malformed", reason: "missing tool_input.file_path" };
+  }
+  return { kind: "ok", filePath };
 }
 
 // ---------------------------------------------------------------------------

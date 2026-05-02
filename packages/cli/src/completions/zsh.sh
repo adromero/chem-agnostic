@@ -14,6 +14,7 @@ _chemag() {
     'emit-rules:emit-rules — generate AI-editor rule files (AGENTS.md, CLAUDE.md, .cursor/rules, .github/copilot-instructions.md, .aider/CONVENTIONS.md, .clinerules) from workspace.yaml.' \
     'graph:graph — output a Mermaid dependency diagram.' \
     'init:init — bootstrap a new workspace.' \
+    'install-hooks:install-hooks — install or uninstall AI-editor hook integrations that call chemag check-edit / analyze around tool edits.' \
     'mcp:mcp — run an MCP server exposing chemag tools to MCP-aware clients.' \
     'scaffold:scaffold — generate stub files from manifests.' \
     'sync:sync — generate manifests from existing code.' \

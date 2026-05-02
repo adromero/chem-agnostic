@@ -27,6 +27,7 @@ import { cmdConfig } from "./commands/config.js";
 import { cmdCompletion } from "./commands/completion.js";
 import { cmdEmitRules } from "./commands/emit-rules.js";
 import { cmdMcp } from "./commands/mcp.js";
+import { cmdInstallHooks } from "./commands/install-hooks.js";
 import { buildCommandTree, renderHelp } from "./cli-meta.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -159,6 +160,11 @@ export function runCli(argv: string[]): void {
       break;
     case "mcp": {
       const code = cmdMcp(commandArgs);
+      if (code !== 0) process.exit(code);
+      break;
+    }
+    case "install-hooks": {
+      const code = cmdInstallHooks(commandArgs);
       if (code !== 0) process.exit(code);
       break;
     }

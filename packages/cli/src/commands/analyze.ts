@@ -1,5 +1,5 @@
 import * as path from "node:path";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { discoverCompounds, loadCompound, loadWorkspace } from "@chemag/core/loader";
 import { checkImports } from "@chemag/core/import-check";
 import type { LanguagePlugin } from "@chemag/core/plugin-interface";
@@ -16,6 +16,17 @@ import {
 } from "../format/index.js";
 import { VERSION } from "../version.js";
 
+// Test-overridable stdin reader. Production reads file-descriptor 0. Tests
+// inject a fake by calling __setStdinReader(). Mirrors the seam in
+// check-edit.ts so --for-hook claude can be unit-tested without a subprocess.
+let stdinReader: () => string = () => readFileSync(0, "utf-8");
+export function __setStdinReaderForTesting(fn: () => string): void {
+  stdinReader = fn;
+}
+export function __resetStdinReaderForTesting(): void {
+  stdinReader = () => readFileSync(0, "utf-8");
+}
+
 const R = "\x1b[0m";
 const RED = "\x1b[31m";
 
@@ -25,9 +36,22 @@ export function cmdAnalyze(argv: string[]): void {
     console.log(
       "\x1b[1mOptions:\x1b[0m\n" +
         "  --format <fmt>   Output format: human|json|sarif|junit (default: human)\n" +
-        "  --json           DEPRECATED. Alias for --format json that preserves the legacy ad-hoc shape. Use --format json instead.\n",
+        "  --json           DEPRECATED. Alias for --format json that preserves the legacy ad-hoc shape. Use --format json instead.\n" +
+        "  --for-hook claude  Emit Claude Code PostToolUse envelope; reads stdin JSON for tool_input.file_path.\n" +
+        "  --workspace <path>   Workspace root or path to workspace.yaml.\n",
     );
     process.exit(0);
+  }
+
+  const forHook = parseForHookFlag(argv);
+  const explicitWorkspace = parseWorkspaceFlag(argv);
+
+  // --for-hook claude takes precedence: it routes through the hook envelope
+  // emitter, never emits the standard analyze output, and always exits 0
+  // (PostToolUse is informational; engine errors are stderr-only).
+  if (forHook === "claude") {
+    runForHookClaude(argv, explicitWorkspace);
+    return;
   }
 
   const legacyJson = argv.includes("--json");
@@ -51,13 +75,22 @@ export function cmdAnalyze(argv: string[]): void {
     );
   }
 
+  // Resolve workspace path. Standard path: positional argument is workspace.yaml.
+  // (--workspace is consumed only by --for-hook claude to keep argv parsing simple
+  // for the existing wp-005 contract.)
   const positional = stripFlags(argv).find((a) => !a.startsWith("-"));
-  if (!positional) {
+  if (!positional && !explicitWorkspace) {
     console.error(`${RED}No workspace file specified.${R}`);
     process.exit(2);
   }
 
-  const wsPath = path.resolve(positional);
+  const wsPath = positional
+    ? path.resolve(positional)
+    : resolveWorkspaceArg(explicitWorkspace as string);
+  if (!wsPath) {
+    console.error(`${RED}Could not locate workspace.yaml${R}`);
+    process.exit(2);
+  }
   const wsDir = path.dirname(wsPath);
   const manifestCache = createManifestCache(wsDir);
   const importCache = createImportCache(wsDir);
@@ -223,7 +256,270 @@ function stripFlags(argv: string[]): string[] {
     }
     if (a.startsWith("--format=")) continue;
     if (a === "--json") continue;
+    if (a === "--for-hook") {
+      i++;
+      continue;
+    }
+    if (a.startsWith("--for-hook=")) continue;
+    if (a === "--workspace") {
+      i++;
+      continue;
+    }
+    if (a.startsWith("--workspace=")) continue;
     out.push(a);
   }
   return out;
+}
+
+function parseForHookFlag(argv: string[]): "claude" | null {
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "--for-hook") {
+      const v = argv[i + 1];
+      return v === "claude" ? "claude" : null;
+    }
+    if (a.startsWith("--for-hook=")) {
+      const v = a.slice("--for-hook=".length);
+      return v === "claude" ? "claude" : null;
+    }
+  }
+  return null;
+}
+
+function parseWorkspaceFlag(argv: string[]): string | null {
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "--workspace") return argv[i + 1] ?? null;
+    if (a.startsWith("--workspace=")) return a.slice("--workspace=".length);
+  }
+  return null;
+}
+
+/**
+ * Resolve a `--workspace` arg (which may be either a workspace.yaml path or
+ * a directory containing it). Returns the absolute workspace.yaml path or
+ * null if not found.
+ */
+function resolveWorkspaceArg(arg: string): string | null {
+  const abs = path.resolve(arg);
+  if (!existsSync(abs)) return null;
+  if (statSync(abs).isDirectory()) {
+    const cand = path.resolve(abs, "workspace.yaml");
+    return existsSync(cand) ? cand : null;
+  }
+  return abs;
+}
+
+// ---------------------------------------------------------------------------
+// --for-hook claude (PostToolUse) implementation
+// ---------------------------------------------------------------------------
+
+interface PostToolUseEnvelope {
+  hookSpecificOutput: {
+    hookEventName: "PostToolUse";
+    additionalContext: string;
+  };
+}
+
+/**
+ * Read stdin JSON, locate the workspace, run analyze, and emit a Claude Code
+ * PostToolUse envelope (additionalContext only — never permissionDecision).
+ *
+ * Failure modes — ALL exit 0:
+ *   - stdin malformed or missing tool_input.file_path → no envelope on stdout,
+ *     stderr CHEM-INSTALL-HOOKS-006.
+ *   - workspace not locatable → no envelope on stdout (silent pass).
+ *   - clean workspace (no diagnostics) → no envelope on stdout.
+ *   - engine crash → no envelope, stderr trace, exit 0 (we never block tool
+ *     edits via PostToolUse — the tool already ran).
+ */
+function runForHookClaude(argv: string[], explicitWorkspace: string | null): void {
+  // Read stdin envelope first; failure → stderr 006 + exit 0.
+  let raw: string;
+  try {
+    raw = stdinReader();
+  } catch (e) {
+    console.error(
+      `CHEM-INSTALL-HOOKS-006: ${tr("diagnostic.hook_stdin_unparseable", {
+        reason: e instanceof Error ? e.message : String(e),
+      })}`,
+    );
+    process.exit(0);
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (e) {
+    console.error(
+      `CHEM-INSTALL-HOOKS-006: ${tr("diagnostic.hook_stdin_unparseable", {
+        reason: e instanceof Error ? e.message : "invalid JSON",
+      })}`,
+    );
+    process.exit(0);
+  }
+
+  if (typeof parsed !== "object" || parsed === null) {
+    console.error(
+      `CHEM-INSTALL-HOOKS-006: ${tr("diagnostic.hook_stdin_unparseable", {
+        reason: "stdin JSON is not an object",
+      })}`,
+    );
+    process.exit(0);
+  }
+  const obj = parsed as Record<string, unknown>;
+  const toolInput = obj.tool_input;
+  if (typeof toolInput !== "object" || toolInput === null) {
+    console.error(
+      `CHEM-INSTALL-HOOKS-006: ${tr("diagnostic.hook_stdin_unparseable", {
+        reason: "missing tool_input",
+      })}`,
+    );
+    process.exit(0);
+  }
+  const filePath = (toolInput as Record<string, unknown>).file_path;
+  if (typeof filePath !== "string" || filePath === "") {
+    console.error(
+      `CHEM-INSTALL-HOOKS-006: ${tr("diagnostic.hook_stdin_unparseable", {
+        reason: "missing tool_input.file_path",
+      })}`,
+    );
+    process.exit(0);
+  }
+
+  // Resolve workspace. Prefer --workspace; fall back to walking up from the
+  // edited file's directory.
+  const wsPath = explicitWorkspace
+    ? resolveWorkspaceArg(explicitWorkspace)
+    : findWorkspaceFromFile(filePath);
+  if (!wsPath) {
+    // No workspace → silent pass.
+    process.exit(0);
+  }
+
+  // Run analyze. Wrap in try/catch — any engine error is logged to stderr
+  // (with no envelope) so PostToolUse stays silent on the model side.
+  let diags: Diagnostic[] = [];
+  try {
+    diags = runWorkspaceAnalyze(wsPath);
+  } catch (e) {
+    console.error(`analyze (--for-hook claude) failed: ${(e as Error).message}`);
+    process.exit(0);
+  }
+
+  if (diags.length === 0) {
+    // Clean workspace — no envelope, exit 0.
+    process.exit(0);
+  }
+
+  const additionalContext = formatPostHookSummary(diags, filePath);
+  const envelope: PostToolUseEnvelope = {
+    hookSpecificOutput: {
+      hookEventName: "PostToolUse",
+      additionalContext,
+    },
+  };
+  console.log(JSON.stringify(envelope));
+  process.exit(0);
+}
+
+function findWorkspaceFromFile(file: string): string | null {
+  // Walk up from file's directory looking for workspace.yaml.
+  let dir = path.isAbsolute(file) ? path.dirname(file) : path.dirname(path.resolve(file));
+  let lastDir: string | null = null;
+  while (dir && dir !== lastDir) {
+    const cand = path.resolve(dir, "workspace.yaml");
+    if (existsSync(cand)) return cand;
+    lastDir = dir;
+    dir = path.dirname(dir);
+  }
+  return null;
+}
+
+function runWorkspaceAnalyze(wsPath: string): Diagnostic[] {
+  const wsDir = path.dirname(wsPath);
+  const manifestCache = createManifestCache(wsDir);
+  const importCache = createImportCache(wsDir);
+
+  const raw = readFileSync(wsPath, "utf-8");
+  const hash = contentHash(raw);
+  let ws: Workspace;
+  const cached = manifestCache.getWorkspace(wsPath, hash);
+  if (cached !== null) {
+    ws = cached;
+  } else {
+    ws = loadWorkspace(wsPath);
+    manifestCache.setWorkspace(wsPath, ws, hash);
+  }
+
+  applyWorkspaceVocabulary(ws);
+
+  const compounds = discoverCompounds(ws, wsDir, {
+    loadCompound: (manifestPath: string): LoadedCompound => {
+      const r = readFileSync(manifestPath, "utf-8");
+      const h = contentHash(r);
+      const c = manifestCache.getCompound(manifestPath, h);
+      if (c !== null) return c;
+      const parsed = loadCompound(manifestPath);
+      manifestCache.setCompound(manifestPath, parsed, h);
+      return parsed;
+    },
+  });
+
+  const plugin = loadPlugin({ language: ws.language });
+
+  return checkImports(ws, compounds, plugin, {
+    parseImportsBatch: (filePaths: string[], p: LanguagePlugin) => {
+      const result = new Map<string, ParsedImport[]>();
+      const misses: { abs: string; hash: string }[] = [];
+      for (const abs of filePaths) {
+        let r: string;
+        try {
+          r = readFileSync(abs, "utf-8");
+        } catch {
+          continue;
+        }
+        const h = contentHash(r);
+        const c = importCache.get(abs, h);
+        if (c !== null) {
+          result.set(abs, c);
+        } else {
+          misses.push({ abs, hash: h });
+        }
+      }
+      if (misses.length > 0) {
+        const parsedMisses = p.parseImportsBatch(misses.map((m) => m.abs));
+        for (const { abs, hash: h } of misses) {
+          const parsed = parsedMisses.get(abs) ?? [];
+          importCache.set(abs, parsed, h);
+          result.set(abs, parsed);
+        }
+      }
+      return result;
+    },
+  });
+}
+
+/** Compose the additionalContext string shown to the model. */
+function formatPostHookSummary(diags: Diagnostic[], editedFile: string): string {
+  const errors = diags.filter((d) => d.level === "error");
+  const warnings = diags.filter((d) => d.level === "warning");
+  const lines: string[] = [];
+  lines.push(
+    `chemag analyze (PostToolUse) — ${errors.length} error(s), ${warnings.length} warning(s) after editing ${editedFile}`,
+  );
+  // Cap the listed diagnostics so PostToolUse doesn't flood the model.
+  const cap = 20;
+  const interesting = [...errors, ...warnings].slice(0, cap);
+  for (const d of interesting) {
+    const code = d.code ?? "CHEM-???";
+    const file = d.file ?? "";
+    lines.push(`- [${code}] ${file ? `${file}: ` : ""}${d.message}`);
+  }
+  if (errors.length + warnings.length > cap) {
+    lines.push(
+      `(${errors.length + warnings.length - cap} more — run \`chemag analyze\` for the full list.)`,
+    );
+  }
+  return lines.join("\n");
 }

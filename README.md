@@ -85,6 +85,24 @@ chemag emit-rules --overwrite              # replace files that lack chemag mark
 
 Generated files: `AGENTS.md`, `CLAUDE.md`, `.cursor/rules/architecture.mdc`, `.github/copilot-instructions.md`, `.aider/CONVENTIONS.md`, `.clinerules`.
 
+### Installing AI-editor hooks
+
+`chemag install-hooks --tool claude` wires `chemag check-edit` (PreToolUse) and `chemag analyze` (PostToolUse) into Claude Code's hook system so the validator runs around every `Edit` / `Write` tool call.
+
+```bash
+chemag install-hooks --tool claude                    # project scope, block mode (default)
+chemag install-hooks --tool claude --scope user       # ~/.claude/settings.json
+chemag install-hooks --tool claude --mode warn        # downgrade deny → ask
+chemag install-hooks --tool claude --mode context-only  # PostToolUse only (informational)
+chemag install-hooks --tool claude --uninstall        # remove (preserves non-chemag hooks)
+chemag install-hooks --tool claude --uninstall --restore  # restore from <settings>.bak
+chemag install-hooks --tool claude --dry-run          # preview without writing
+```
+
+Hooks are written to `.claude/settings.json` (project) or `~/.claude/settings.json` (user). Each chemag entry carries `"_chemag": true` so an `--uninstall` run scrubs only chemag's hooks and leaves any other entries intact. Cursor / Codex / Aider / Cline / Copilot are stubs in WP-010 and report `CHEM-INSTALL-HOOKS-001`; they land in WP-011..WP-013.
+
+See `docs/adrs/0004-hook-install-protocol.md` for the full protocol and rationale.
+
 ### MCP server
 
 `chemag mcp` boots a [Model Context Protocol](https://modelcontextprotocol.io/) server that exposes chemag's check / analyze / scaffold tooling to MCP-aware clients (Claude Desktop, Cursor, IDE plugins). The current scaffold registers the capability surface (tools, resources, prompts) and the initialize handshake; concrete tool handlers ship in subsequent work packages.
