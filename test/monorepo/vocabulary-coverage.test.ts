@@ -15,6 +15,11 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../
 const checksPath = path.join(repoRoot, "packages/core/src/checks.ts");
 const importCheckPath = path.join(repoRoot, "packages/core/src/import-check.ts");
 const templatePath = path.join(repoRoot, "packages/core/src/template-claude-md.ts");
+// Post-WP-009: the language-agnostic CLAUDE.md/AGENTS.md content lives in the
+// rules-emitters module. The vocabulary keys it references migrated there
+// (today only `claude_md.intro` is still consumed; the other claude_md.*
+// keys are reserved for future consumers).
+const rulesEmittersIndexPath = path.join(repoRoot, "packages/core/src/rules-emitters/index.ts");
 
 /**
  * Strip line + block comments from a TS source string. Used so that the
@@ -76,12 +81,11 @@ describe("vocabulary coverage — modified core files do not embed literal user-
     }
   });
 
-  it("template-claude-md.ts builds shared sections via tr()", () => {
+  it("template-claude-md.ts has no inline user-facing markdown literals", () => {
     const src = stripComments(fs.readFileSync(templatePath, "utf-8"));
 
-    // The shared sections (intro, roles_table, bond rules, etc.) all live
-    // in the locale JSON. The template should reference them by key, not
-    // re-implement them inline.
+    // After WP-009 the template is a thin shim around rules-emitters. It
+    // must not re-implement any of the legacy section text.
     const forbidden = [
       "Chem Architecture",
       "## Roles — What Each Unit Type Means",
@@ -94,19 +98,14 @@ describe("vocabulary coverage — modified core files do not embed literal user-
         phrase,
       );
     }
+  });
 
-    // It SHOULD still call tr() for the seven required CLAUDE.md keys.
-    const required = [
-      "claude_md.intro",
-      "claude_md.roles_table",
-      "claude_md.bonds_table",
-      "claude_md.compound_types",
-      "claude_md.workflow",
-      "claude_md.tool_reference",
-      "claude_md.ai_rules",
-    ];
-    for (const key of required) {
-      expect(src, `template-claude-md.ts should call tr("${key}")`).toContain(key);
-    }
+  it("rules-emitters/index.ts builds shared content from tr()", () => {
+    const src = stripComments(fs.readFileSync(rulesEmittersIndexPath, "utf-8"));
+    // The intro line still flows through claude_md.intro. The remaining
+    // claude_md.* keys are reserved for future use; we don't enforce them
+    // here because the new builder derives roles/bonds/types from
+    // workspace.yaml directly.
+    expect(src, 'buildIntro should call tr("claude_md.intro")').toContain("claude_md.intro");
   });
 });

@@ -51,6 +51,10 @@
       "types": "./dist/template-claude-md.d.ts",
       "default": "./dist/template-claude-md.js"
     },
+    "./rules-emitters": {
+      "types": "./dist/rules-emitters/index.d.ts",
+      "default": "./dist/rules-emitters/index.js"
+    },
     "./vocabulary": {
       "types": "./dist/vocabulary/index.d.ts",
       "default": "./dist/vocabulary/index.js"

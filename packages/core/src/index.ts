@@ -10,5 +10,6 @@ export * from "./scaffold.js";
 export * from "./sync.js";
 export * from "./graph.js";
 export * from "./template-claude-md.js";
+export * from "./rules-emitters/index.js";
 export * from "./vocabulary/index.js";
 export * from "./diagnostics/index.js";

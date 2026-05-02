@@ -81,14 +81,18 @@ describe("cmdInit with --language typescript", () => {
     const content = fs.readFileSync(claudeMdPath, "utf-8");
     // Default vocabulary is "standard" — title and section headings reflect
     // that. The chemistry vocabulary is opt-in via --vocabulary or
-    // CHEMAG_VOCABULARY. The shared sections still appear.
-    expect(content).toContain("# testapp —");
-    expect(content).toContain("## Roles");
-    expect(content).toMatch(/## (Bond Rules|Dependency Rules)/);
-    expect(content).toMatch(/## (Compound|Module) Types/);
-    expect(content).toContain("## Workflow");
-    expect(content).toContain("## Rules for AI Assistants");
-    // TypeScript-specific section: references public.ts
+    // CHEMAG_VOCABULARY. The shared sections (rendered by
+    // packages/core/src/rules-emitters/shared-body.ts) appear with these
+    // headings:
+    expect(content).toContain("# testapp — Architecture rules");
+    expect(content).toContain("## Architecture summary");
+    expect(content).toContain("## Dependency rules");
+    expect(content).toContain("## Cross-module imports");
+    expect(content).toContain("## Validation");
+    expect(content).toContain("## Where to look");
+    expect(content).toContain("## Claude Code hooks");
+    // TypeScript-specific section: references public.ts (lives outside the
+    // chemag markers — contributed by the plugin's generateClaudeMd output).
     expect(content).toContain("public.ts");
   });
 
@@ -128,8 +132,8 @@ describe("cmdInit with --language python", () => {
     runInit(["--language", "python"]);
     const claudeMdPath = path.join(tmpDir, "CLAUDE.md");
     const content = fs.readFileSync(claudeMdPath, "utf-8");
-    expect(content).toContain("# testapp —");
-    expect(content).toMatch(/## (Bond Rules|Dependency Rules)/);
+    expect(content).toContain("# testapp — Architecture rules");
+    expect(content).toContain("## Dependency rules");
     // Python-specific: references __init__.py and Python language section
     expect(content).toContain("__init__.py");
     expect(content).toContain("Language: Python");
