@@ -283,16 +283,22 @@ describe("installCursor — 5-step flow parity with cmdEmitRules", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Criterion 9: gap-free 001..008 INSTALL-HOOKS numbering
+// Criterion 9: gap-free INSTALL-HOOKS numbering within the 001-099 runtime
+// block. WP-011 landed 001..008; WP-013 extends to 010 (sequential).
 // ---------------------------------------------------------------------------
 
-describe("DIAGNOSTIC_CODES — INSTALL-HOOKS gap-free 001..008", () => {
-  it("all of CHEM-INSTALL-HOOKS-001 through 008 are registered with no gaps", () => {
+describe("DIAGNOSTIC_CODES — INSTALL-HOOKS gap-free runtime block", () => {
+  it("all CHEM-INSTALL-HOOKS-NNN values in the 001-099 block are registered with no gaps", () => {
     const registered = Object.keys(DIAGNOSTIC_CODES).filter((k) =>
       k.startsWith("CHEM-INSTALL-HOOKS-"),
     );
     const nums = registered.map((k) => Number(k.match(/-(\d{3})$/)![1])).sort((a, b) => a - b);
-    expect(nums).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    // Runtime block (001..099) — must be contiguous starting at 1.
+    const runtimeBlock = nums.filter((n) => n < 100);
+    expect(runtimeBlock.length).toBeGreaterThanOrEqual(8);
+    for (let i = 0; i < runtimeBlock.length; i++) {
+      expect(runtimeBlock[i]).toBe(i + 1);
+    }
   });
 });
 

@@ -99,11 +99,14 @@ describe("cmdInstallHooks — scope routing", () => {
 });
 
 describe("cmdInstallHooks — unsupported tool", () => {
-  it("returns non-zero with CHEM-INSTALL-HOOKS-001 for aider (still a placeholder)", () => {
-    const code = cmdInstallHooks(["--tool", "aider", "--workspace", tmpDir]);
+  it("returns non-zero with CHEM-INSTALL-HOOKS-001 for `all` (WP-018 placeholder)", () => {
+    // WP-013 promoted aider/cline/copilot from placeholders to implemented
+    // tools. `all` remains the only known-but-not-yet-implemented value
+    // until WP-018 wires the fan-out.
+    const code = cmdInstallHooks(["--tool", "all", "--workspace", tmpDir]);
     expect(code).toBe(2);
     expect(stderr.join("\n")).toContain("CHEM-INSTALL-HOOKS-001");
-    expect(stderr.join("\n")).toContain("aider");
+    expect(stderr.join("\n")).toContain("all");
   });
 
   it("returns non-zero for an unknown tool name", () => {

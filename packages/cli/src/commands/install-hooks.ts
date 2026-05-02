@@ -2,13 +2,18 @@
 // `chemag install-hooks` — install / uninstall AI-editor hook integrations.
 //
 // Implemented tools:
-//   * claude (WP-010)
-//   * cursor (WP-011) — husky pre-commit + .cursor/rules/architecture.mdc
-//                        + CONTRIBUTING.md fragment
-//   * codex  (WP-012) — husky pre-commit + AGENTS.md
+//   * claude  (WP-010)
+//   * cursor  (WP-011) — husky pre-commit + .cursor/rules/architecture.mdc
+//                         + CONTRIBUTING.md fragment
+//   * codex   (WP-012) — husky pre-commit + AGENTS.md
+//   * aider   (WP-013) — husky pre-commit + .aider/CONVENTIONS.md
+//                         + chemag block in .aider.conf.yml
+//   * cline   (WP-013) — husky pre-commit + .clinerules + MCP follow-up tip
+//   * copilot (WP-013) — husky pre-commit + .github/copilot-instructions.md
+//                         + .github/workflows/chemag-pr.yml
 //
 // Pending tools (still error CHEM-INSTALL-HOOKS-001):
-//   * aider / cline / copilot / all
+//   * all (WP-018 will fan out across every tool above)
 //
 // Surface:
 //   chemag install-hooks --tool <claude|cursor|codex|aider|cline|copilot|all>
@@ -16,6 +21,7 @@
 //                        [--mode block|warn|context-only]       default: block
 //                        [--uninstall]
 //                        [--restore]
+//                        [--overwrite]                         (copilot only)
 //                        [--dry-run]
 // ---------------------------------------------------------------------------
 
@@ -39,6 +45,19 @@ import {
   type CursorInstallResult,
 } from "../installers/cursor.js";
 import { installCodex, uninstallCodex, type CodexInstallResult } from "../installers/codex.js";
+import {
+  AiderConfInvalidYamlError,
+  installAider,
+  uninstallAider,
+  type AiderInstallResult,
+} from "../installers/aider.js";
+import { installCline, uninstallCline, type ClineInstallResult } from "../installers/cline.js";
+import {
+  CopilotWorkflowExistsNoOverwriteError,
+  installCopilot,
+  uninstallCopilot,
+  type CopilotInstallResult,
+} from "../installers/copilot.js";
 
 const R = "\x1b[0m";
 const RED = "\x1b[31m";
@@ -47,9 +66,10 @@ const YLW = "\x1b[33m";
 const DIM = "\x1b[2m";
 const BLD = "\x1b[1m";
 
-// All recognized tool names. `claude`, `cursor`, and `codex` are implemented.
+// All recognized tool names. `claude`, `cursor`, `codex`, `aider`, `cline`,
+// and `copilot` are implemented. `all` is reserved for WP-018.
 const KNOWN_TOOLS = new Set(["claude", "cursor", "codex", "aider", "cline", "copilot", "all"]);
-const IMPLEMENTED_TOOLS = new Set(["claude", "cursor", "codex"]);
+const IMPLEMENTED_TOOLS = new Set(["claude", "cursor", "codex", "aider", "cline", "copilot"]);
 
 interface ParsedArgs {
   tool: string;
@@ -57,6 +77,7 @@ interface ParsedArgs {
   mode: InstallMode;
   uninstall: boolean;
   restore: boolean;
+  overwrite: boolean;
   dryRun: boolean;
   workspace: string;
   help: boolean;
@@ -100,6 +121,18 @@ export function cmdInstallHooks(argv: string[]): number {
 
   if (parsed.tool === "codex") {
     return runCodex(parsed, workspaceRoot);
+  }
+
+  if (parsed.tool === "aider") {
+    return runAider(parsed, workspaceRoot);
+  }
+
+  if (parsed.tool === "cline") {
+    return runCline(parsed, workspaceRoot);
+  }
+
+  if (parsed.tool === "copilot") {
+    return runCopilot(parsed, workspaceRoot);
   }
 
   // claude path
@@ -391,6 +424,251 @@ function renderCodexSummary(result: CodexInstallResult, args: ParsedArgs): void 
   }
 }
 
+// ---------------------------------------------------------------------------
+// Aider path
+// ---------------------------------------------------------------------------
+
+function runAider(args: ParsedArgs, workspaceRoot: string): number {
+  if (args.restore) {
+    console.error(
+      `${RED}install-hooks failed:${R} --restore is not supported for --tool aider (Aider's installer does not write .bak files).`,
+    );
+    return 2;
+  }
+
+  if (args.scope !== "project") {
+    console.warn(
+      `${YLW}note:${R} --scope ${args.scope} ignored for aider (husky is always project-scoped).`,
+    );
+  }
+
+  try {
+    const result = args.uninstall
+      ? uninstallAider({ workspaceRoot, dryRun: args.dryRun })
+      : installAider({ workspaceRoot, mode: args.mode, dryRun: args.dryRun });
+    renderAiderSummary(result, args);
+
+    void emitTelemetry("cli.command.install_hooks", {
+      tool: "aider",
+      scope: args.scope,
+      mode: args.mode,
+      action: args.uninstall ? "uninstall" : "install",
+    }).catch(() => {});
+
+    return 0;
+  } catch (e) {
+    if (e instanceof HuskyNotDetectedError) {
+      console.error(
+        `${RED}CHEM-INSTALL-HOOKS-007:${R} ${tr("diagnostic.husky_not_detected", {
+          workspace: e.workspaceRoot,
+        })}`,
+      );
+      return 2;
+    }
+    if (e instanceof PrecommitUnparseableError) {
+      console.error(
+        `${RED}CHEM-INSTALL-HOOKS-008:${R} ${tr("diagnostic.cursor_precommit_unparseable", {
+          path: e.path,
+          reason: e.reason,
+        })}`,
+      );
+      return 2;
+    }
+    if (e instanceof AiderConfInvalidYamlError) {
+      console.error(
+        `${RED}CHEM-INSTALL-HOOKS-009:${R} ${tr("diagnostic.aider_conf_invalid_yaml", {
+          path: e.path,
+          reason: e.reason,
+        })}`,
+      );
+      return 2;
+    }
+    console.error(`${RED}install-hooks failed:${R} ${(e as Error).message}`);
+    return 2;
+  }
+}
+
+function renderAiderSummary(result: AiderInstallResult, args: ParsedArgs): void {
+  const headline = args.uninstall ? "chemag install-hooks --uninstall" : "chemag install-hooks";
+  console.log(`\n${BLD}${headline}${R}${args.dryRun ? ` ${DIM}(dry run)${R}` : ""}`);
+  console.log(`  ${DIM}tool:${R}  aider`);
+  console.log(`  ${DIM}root:${R}  ${result.workspaceRoot}`);
+
+  for (const note of result.infoNotes) {
+    console.log(`  ${DIM}note:${R} ${note}`);
+  }
+
+  for (const artifact of [result.precommit, result.conventions, result.aiderConf]) {
+    const verb = mapAction(artifact.action);
+    console.log(`  ${verb}  ${artifact.path}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Cline path
+// ---------------------------------------------------------------------------
+
+function runCline(args: ParsedArgs, workspaceRoot: string): number {
+  if (args.restore) {
+    console.error(
+      `${RED}install-hooks failed:${R} --restore is not supported for --tool cline (Cline's installer does not write .bak files).`,
+    );
+    return 2;
+  }
+
+  if (args.scope !== "project") {
+    console.warn(
+      `${YLW}note:${R} --scope ${args.scope} ignored for cline (husky is always project-scoped).`,
+    );
+  }
+
+  try {
+    const result = args.uninstall
+      ? uninstallCline({ workspaceRoot, dryRun: args.dryRun })
+      : installCline({ workspaceRoot, mode: args.mode, dryRun: args.dryRun });
+    renderClineSummary(result, args);
+
+    void emitTelemetry("cli.command.install_hooks", {
+      tool: "cline",
+      scope: args.scope,
+      mode: args.mode,
+      action: args.uninstall ? "uninstall" : "install",
+    }).catch(() => {});
+
+    return 0;
+  } catch (e) {
+    if (e instanceof HuskyNotDetectedError) {
+      console.error(
+        `${RED}CHEM-INSTALL-HOOKS-007:${R} ${tr("diagnostic.husky_not_detected", {
+          workspace: e.workspaceRoot,
+        })}`,
+      );
+      return 2;
+    }
+    if (e instanceof PrecommitUnparseableError) {
+      console.error(
+        `${RED}CHEM-INSTALL-HOOKS-008:${R} ${tr("diagnostic.cursor_precommit_unparseable", {
+          path: e.path,
+          reason: e.reason,
+        })}`,
+      );
+      return 2;
+    }
+    console.error(`${RED}install-hooks failed:${R} ${(e as Error).message}`);
+    return 2;
+  }
+}
+
+function renderClineSummary(result: ClineInstallResult, args: ParsedArgs): void {
+  const headline = args.uninstall ? "chemag install-hooks --uninstall" : "chemag install-hooks";
+  console.log(`\n${BLD}${headline}${R}${args.dryRun ? ` ${DIM}(dry run)${R}` : ""}`);
+  console.log(`  ${DIM}tool:${R}  cline`);
+  console.log(`  ${DIM}root:${R}  ${result.workspaceRoot}`);
+
+  for (const note of result.infoNotes) {
+    console.log(`  ${DIM}note:${R} ${note}`);
+  }
+
+  for (const artifact of [result.precommit, result.clinerules]) {
+    const verb = mapAction(artifact.action);
+    console.log(`  ${verb}  ${artifact.path}`);
+  }
+
+  // After-install MCP tip (cross-references WP-017). Always surface on install
+  // (not on uninstall) so the user knows the next step.
+  if (!args.uninstall) {
+    const tip = tr("cli.install_hooks.tip.mcp_register", {
+      clientName: "Cline",
+      clientId: "cline",
+    });
+    console.log(`  ${DIM}tip:${R}  ${tip}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Copilot path
+// ---------------------------------------------------------------------------
+
+function runCopilot(args: ParsedArgs, workspaceRoot: string): number {
+  if (args.restore) {
+    console.error(
+      `${RED}install-hooks failed:${R} --restore is not supported for --tool copilot (Copilot's installer does not write .bak files).`,
+    );
+    return 2;
+  }
+
+  if (args.scope !== "project") {
+    console.warn(
+      `${YLW}note:${R} --scope ${args.scope} ignored for copilot (husky is always project-scoped).`,
+    );
+  }
+
+  try {
+    const result = args.uninstall
+      ? uninstallCopilot({ workspaceRoot, dryRun: args.dryRun })
+      : installCopilot({
+          workspaceRoot,
+          mode: args.mode,
+          dryRun: args.dryRun,
+          overwrite: args.overwrite,
+        });
+    renderCopilotSummary(result, args);
+
+    void emitTelemetry("cli.command.install_hooks", {
+      tool: "copilot",
+      scope: args.scope,
+      mode: args.mode,
+      action: args.uninstall ? "uninstall" : "install",
+    }).catch(() => {});
+
+    return 0;
+  } catch (e) {
+    if (e instanceof HuskyNotDetectedError) {
+      console.error(
+        `${RED}CHEM-INSTALL-HOOKS-007:${R} ${tr("diagnostic.husky_not_detected", {
+          workspace: e.workspaceRoot,
+        })}`,
+      );
+      return 2;
+    }
+    if (e instanceof PrecommitUnparseableError) {
+      console.error(
+        `${RED}CHEM-INSTALL-HOOKS-008:${R} ${tr("diagnostic.cursor_precommit_unparseable", {
+          path: e.path,
+          reason: e.reason,
+        })}`,
+      );
+      return 2;
+    }
+    if (e instanceof CopilotWorkflowExistsNoOverwriteError) {
+      console.error(
+        `${RED}CHEM-INSTALL-HOOKS-010:${R} ${tr("diagnostic.copilot_workflow_exists_no_overwrite", {
+          path: e.path,
+        })}`,
+      );
+      return 2;
+    }
+    console.error(`${RED}install-hooks failed:${R} ${(e as Error).message}`);
+    return 2;
+  }
+}
+
+function renderCopilotSummary(result: CopilotInstallResult, args: ParsedArgs): void {
+  const headline = args.uninstall ? "chemag install-hooks --uninstall" : "chemag install-hooks";
+  console.log(`\n${BLD}${headline}${R}${args.dryRun ? ` ${DIM}(dry run)${R}` : ""}`);
+  console.log(`  ${DIM}tool:${R}  copilot`);
+  console.log(`  ${DIM}root:${R}  ${result.workspaceRoot}`);
+
+  for (const note of result.infoNotes) {
+    console.log(`  ${DIM}note:${R} ${note}`);
+  }
+
+  for (const artifact of [result.precommit, result.copilotInstructions, result.prWorkflow]) {
+    const verb = mapAction(artifact.action);
+    console.log(`  ${verb}  ${artifact.path}`);
+  }
+}
+
 function pathForScope(scope: InstallScope, workspaceRoot: string): string {
   return getClaudeSettingsPath(scope, workspaceRoot);
 }
@@ -405,6 +683,7 @@ function parseArgs(argv: string[]): ParsedArgs {
   let mode: InstallMode = "block";
   let uninstall = false;
   let restore = false;
+  let overwrite = false;
   let dryRun = false;
   let workspace = ".";
   let help = false;
@@ -435,6 +714,9 @@ function parseArgs(argv: string[]): ParsedArgs {
       case "--restore":
         restore = true;
         break;
+      case "--overwrite":
+        overwrite = true;
+        break;
       case "--dry-run":
         dryRun = true;
         break;
@@ -461,7 +743,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     throw new Error("--tool is required (one of claude|cursor|codex|aider|cline|copilot|all)");
   }
 
-  return { tool, scope, mode, uninstall, restore, dryRun, workspace, help };
+  return { tool, scope, mode, uninstall, restore, overwrite, dryRun, workspace, help };
 }
 
 function parseScope(v: string): InstallScope {
@@ -488,6 +770,9 @@ function printHelp(): void {
   console.log("  --uninstall          Remove chemag hook entries (preserves non-chemag entries).");
   console.log(
     "  --restore            With --uninstall: restore from <settings>.bak (claude only).",
+  );
+  console.log(
+    "  --overwrite          Replace .github/workflows/chemag-pr.yml even without the chemag header (copilot only).",
   );
   console.log("  --dry-run            Print planned changes without writing.");
   console.log("  --workspace <path>   Workspace root (defaults to cwd).");
