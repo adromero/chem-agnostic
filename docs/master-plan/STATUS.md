@@ -24,7 +24,7 @@ The conductor updates this file as work completes. Format per row: `[ ]` pending
 - [ ] WP-015 — MCP tools
 - [ ] WP-016 — MCP resources + subscriptions
 - [ ] WP-017 — MCP registration helpers
-- [ ] WP-018 — Reference monorepo
+- [x] WP-018 — Reference monorepo (2026-05-02; **Go service dropped for v1.0**, revisit after WP-021)
 
 ## Track 2 — Cross-Language + CI
 
@@ -86,3 +86,16 @@ The conductor updates this file as work completes. Format per row: `[ ]` pending
 ## Launch checklist
 
 See [10-acceptance-criteria.md](./10-acceptance-criteria.md). v1.0 ships when every item is checked.
+
+## Scope notes
+
+### WP-018 — Go service dropped for v1.0
+
+The original WP-018 spec called for a third language sub-tree in
+`apps/reference-monorepo/` — a Go background worker. Per the operator
+decision recorded on 2026-05-01, **Go is dropped from v1.0** of the
+reference monorepo because the Go language plugin (WP-021, Track 2) has not
+yet shipped. The Go workload is replaced by a TypeScript Node.js worker
+using `pg-boss`. The Go service will be added back as a follow-up after
+WP-021 lands. This note is referenced by `apps/reference-monorepo/README.md`
+under "What's missing in v1.0".

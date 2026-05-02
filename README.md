@@ -204,14 +204,43 @@ packages/
   plugin-typescript/   @chemag/plugin-typescript
   plugin-python/       @chemag/plugin-python
   telemetry/           @chemag/telemetry (placeholder; WP-006)
+apps/
+  reference-monorepo/  Realistic demo monorepo used by benchmarks + screenshots (WP-018)
 docs/
   master-plan/         Implementation roadmap (60 work packages)
   adrs/                Architecture decision records
 scripts/
   check-prereqs.ts     CI gate for operator-provisioned external services
+  mcp-smoke.mjs        CI smoke test for the MCP server `where_should_this_go` tool
 ```
 
 See `docs/adrs/0001-monorepo-toolchain.md` for the full toolchain rationale.
+
+## Reference monorepo
+
+`apps/reference-monorepo/` is the canonical demo fixture for chemag — a
+realistic admin-app monorepo with two language sub-trees (TypeScript +
+Python) and ~30 chemag compounds spanning auth, billing (Stripe), sessions,
+search, integrations, a `pg-boss` worker, and a FastAPI service. The repo
+is its **own** pnpm workspace, separate from this development workspace,
+and ships with every chemag artifact (`CLAUDE.md`, `AGENTS.md`,
+`.cursor/rules/architecture.mdc`, `.github/copilot-instructions.md`,
+`.aider/CONVENTIONS.md`, `.clinerules`, `.claude/settings.json`,
+`.husky/pre-commit`) pre-installed and committed.
+
+```bash
+cd apps/reference-monorepo
+pnpm install
+pnpm chemag:check       # validates manifests + bond rules (TS + Python)
+pnpm chemag:analyze     # workspace summary
+pnpm chemag:graph       # Mermaid diagram on stdout
+```
+
+CI (`.github/workflows/reference-monorepo-ci.yml`) runs the full set of
+checks plus the `chemag mcp` `where_should_this_go("add a Stripe payment
+flow")` smoke test on every PR. **Note:** WP-018 dropped the originally-
+planned Go worker for v1.0 because the Go plugin (WP-021) hasn't shipped
+yet — see `docs/master-plan/STATUS.md` for the tracking note.
 
 ## License
 
