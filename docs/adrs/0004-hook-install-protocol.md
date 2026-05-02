@@ -1,8 +1,8 @@
 # ADR 0004 — `chemag install-hooks` protocol and the `--for-hook claude` mode
 
 - Status: Accepted
-- Date: 2026-05-01
-- Stage: WP-010
+- Date: 2026-05-01 (revised 2026-05-02 for WP-011 — Cursor installer)
+- Stage: WP-010, WP-011
 
 ## Context
 
@@ -180,3 +180,106 @@ emit-rules still gives runtime enforcement (the rules are advisory).
 - **Storing `_chemag: true` in a sidecar file from day one.** Rejected as
   premature optimisation — the inline tag is simpler and the sidecar fallback
   is documented above.
+
+## Cursor (WP-011)
+
+Cursor has no deterministic editor-side hook API today, so the "install"
+surface for `chemag install-hooks --tool cursor` is three artifacts, not one
+settings file:
+
+| Artifact                              | Tagging mechanism                          |
+| ------------------------------------- | ------------------------------------------ |
+| `.husky/pre-commit`                   | Trailing line comment `# _chemag`          |
+| `.cursor/rules/architecture.mdc`      | `<!-- chemag:rules:start --> ... -->` (rules markers, owned by `emit-rules`) |
+| `CONTRIBUTING.md`                     | `<!-- chemag:contributing:start --> ... -->` block markers |
+
+Each artifact is line-tagged (shell) or marker-block-tagged (markdown), so
+no `.bak` file is required — `_backup.ts` is **not** consumed by the
+Cursor installer.
+
+### Husky detection (CHEM-INSTALL-HOOKS-007)
+
+Detection is satisfied if **either** of:
+
+- `package.json` declares `husky` in `dependencies`, `devDependencies`, or
+  `peerDependencies`, **or**
+- `.husky/` already exists at the workspace root.
+
+If neither is true, the installer fails with **CHEM-INSTALL-HOOKS-007**
+`cursor_husky_not_detected` and prints the actionable remedy
+(`pnpm add -D husky && pnpm husky init`). Detection is intentionally
+permissive — `pnpm husky init` creates `.husky/` even before husky is
+pinned into `dependencies` on a fresh checkout, and we want to support the
+"husky already initialised but not yet in package.json" intermediate state.
+
+### Pre-commit unparseable (CHEM-INSTALL-HOOKS-008)
+
+If `.husky/pre-commit` already exists but cannot be safely modified —
+binary content (NUL bytes), multiple chemag-tagged lines pointing at
+different commands, or a chemag tag on an empty-command line — the
+installer fails with **CHEM-INSTALL-HOOKS-008** `cursor_precommit_unparseable`
+and **does not modify the file**. The user resolves the conflict by hand
+(or by deleting `.husky/pre-commit`) before re-running.
+
+### The 5-step library flow for `.cursor/rules/architecture.mdc`
+
+The Cursor installer is a sibling of `cmdEmitRules`, not a caller of it.
+`cmdEmitRules` is the CLI entry point for `chemag emit-rules` — it parses
+argv, emits telemetry, and translates errors into exit codes. Calling it
+from another command would be the wrong abstraction level (one CLI command
+invoking another's argv parser).
+
+Instead, `installCursor` performs the same library-level work that
+`cmdEmitRules` does for `--tool cursor`, in five explicit steps:
+
+1. `loadWorkspace(workspace.yaml)` — parse the manifest.
+2. `discoverCompounds(workspace, root, { loadCompound })` — enumerate
+   compound manifests on disk. On failure: log a warning, continue with an
+   empty list (matches `cmdEmitRules` behavior).
+3. `buildRulesContent(workspace, compounds)` — build the language-agnostic
+   intermediate.
+4. `emitCursorMdc(content)` — content-only emitter. Returns an
+   `EmittedFile` with `path`, `block`, `leading`, `trailing`, `body`,
+   `warnings`. Does NOT load workspaces. Does NOT touch disk.
+5. `mergeBetweenMarkers(existing, file.block, { isMdc: true, leading,
+   trailing, overwrite: false })` to produce the merged body, then write to
+   disk (or skip the write under `--dry-run`).
+
+A regression test (`cursor.test.ts` → "5-step flow parity") asserts that
+the installer's MDC output is byte-identical to a fresh
+`chemag emit-rules --tool cursor` run on the same workspace. This is the
+contract that pins the two paths together.
+
+### Cursor uninstall policy
+
+`uninstallCursor`:
+
+- **Removes** every `# _chemag`-tagged line from `.husky/pre-commit`. The
+  file is deleted only when the strip leaves only the default shebang (or
+  whitespace) behind; otherwise the file is kept in place.
+- **Removes** the chemag block from `CONTRIBUTING.md` (between the
+  `chemag:contributing` markers). The file is deleted only when chemag
+  was its sole author (no manual content survives).
+- **Does NOT delete** `.cursor/rules/architecture.mdc`. Deletion is opt-in:
+  the user can hand-remove the file or run `chemag emit-rules --tool cursor`
+  again to refresh it. Rationale: the MDC is the AI-context layer that the
+  developer is most likely to want to keep around, and the installer's
+  responsibility is the deterministic gate (the husky line) plus the doc
+  fragment (CONTRIBUTING.md). The MDC's own idempotence markers make it
+  trivially regenerable on demand.
+
+### Modes for Cursor
+
+Cursor has no deterministic editor hook beyond the husky pre-commit, so
+the `--mode block|warn|context-only` flag (which controls the Claude Code
+PreToolUse downgrade behavior) is **accepted but ignored** for
+`--tool cursor`. The installer surfaces an informational note in the
+summary when a non-default mode is passed, but no behavior changes.
+
+`--scope user|project` is similarly informational-only — husky is always
+project-scoped (lives at `<workspace>/.husky/pre-commit`). User-scope
+makes no sense for a per-repo pre-commit gate.
+
+`--restore` is rejected outright for Cursor: there is no `.bak` file to
+restore from. Users who want to undo the install run
+`chemag install-hooks --tool cursor --uninstall`.
