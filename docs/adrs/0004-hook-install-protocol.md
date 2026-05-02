@@ -2,8 +2,10 @@
 
 - Status: Accepted
 - Date: 2026-05-01 (revised 2026-05-02 for WP-011 — Cursor installer; revised
-  2026-05-03 for WP-012 — Codex installer + tool-agnostic husky diagnostic)
-- Stage: WP-010, WP-011, WP-012
+  2026-05-03 for WP-012 — Codex installer + tool-agnostic husky diagnostic;
+  revised 2026-05-04 for WP-013 — Aider/Cline/Copilot installers + GitHub
+  Action workflow template)
+- Stage: WP-010, WP-011, WP-012, WP-013
 
 ## Context
 
@@ -376,3 +378,118 @@ project-scoped.
 `--restore` is rejected outright for Codex: there is no `.bak` file to
 restore from. Users who want to undo the install run
 `chemag install-hooks --tool codex --uninstall`.
+
+## Aider (WP-013)
+
+Aider reads `.aider/CONVENTIONS.md` and consults `.aider.conf.yml` for
+workflow configuration, so the install surface for `chemag install-hooks
+--tool aider` is three artifacts:
+
+| Artifact                  | Tagging mechanism                                          |
+| ------------------------- | ---------------------------------------------------------- |
+| `.husky/pre-commit`       | Trailing line comment `# _chemag`                          |
+| `.aider/CONVENTIONS.md`   | `<!-- chemag:rules:start --> ... -->` (rules markers, owned by `emit-rules`) |
+| `.aider.conf.yml`         | `# chemag:aider:start` / `# chemag:aider:end` line markers |
+
+The `.aider.conf.yml` block adds an `auto-commands` entry that runs
+`chemag check-edit` after each `/edit`, so violations fail fast before the
+model loops. We do NOT round-trip the user's existing YAML through the
+`yaml` library — that would lose comments, formatting, and key ordering.
+Instead the file is treated as a line-oriented text document with our
+markers; the parser is consulted only to detect malformed YAML on the
+first pass (raising `CHEM-INSTALL-HOOKS-009` so the user can fix the
+syntax error before the installer touches anything).
+
+### `.aider.conf.yml` invalid YAML diagnostic (CHEM-INSTALL-HOOKS-009)
+
+If `.aider.conf.yml` exists but is not parseable as YAML, `installAider`
+throws `AiderConfInvalidYamlError`, the CLI surfaces
+**CHEM-INSTALL-HOOKS-009** `aider_conf_invalid_yaml`, and the file is
+left untouched. This is sequential after WP-011's CHEM-INSTALL-HOOKS-008
+(`cursor_precommit_unparseable`) within the 001-099 runtime block per
+the wp-015 100-block policy.
+
+### Aider uninstall policy
+
+`uninstallAider`:
+
+- Removes `_chemag`-tagged lines from `.husky/pre-commit` (same rules as
+  Cursor / Codex).
+- Removes the chemag block (start..end markers, inclusive) from
+  `.aider.conf.yml`. If the file had only the chemag block, it is
+  deleted; otherwise the surviving content is preserved.
+- Does NOT delete `.aider/CONVENTIONS.md` — same policy as Codex's
+  AGENTS.md.
+
+`--mode block|warn|context-only`, `--scope`, and `--restore` follow the
+same mode/scope/restore policy as Cursor and Codex.
+
+## Cline (WP-013)
+
+Cline reads `.clinerules` at the workspace root and is one of the few
+agents that supports MCP servers natively. The install surface for
+`chemag install-hooks --tool cline` is two artifacts:
+
+| Artifact            | Tagging mechanism                                          |
+| ------------------- | ---------------------------------------------------------- |
+| `.husky/pre-commit` | Trailing line comment `# _chemag`                          |
+| `.clinerules`       | `<!-- chemag:rules:start --> ... -->` (rules markers, owned by `emit-rules`) |
+
+After a successful install the CLI prints a follow-up tip rendered via
+`tr("cli.install_hooks.tip.mcp_register", { clientName: "Cline",
+clientId: "cline" })`. The tip points users at the
+`chemag mcp install --client cline` command introduced by WP-017.
+**Crucially, this is the SAME shared parameterized vocabulary key used by
+the Codex installer** — `wp-013` does NOT introduce a parallel
+`cli.install_hooks.cline.tip` key. Anyone updating the tip text edits
+one entry in `standard.json` + `chemistry.json` and every installer's
+call site updates automatically.
+
+### Cline uninstall policy
+
+Symmetric with Codex: removes `_chemag`-tagged pre-commit lines, leaves
+`.clinerules` in place. The MCP-tip is install-only (not surfaced on
+uninstall).
+
+## Copilot (WP-013)
+
+GitHub Copilot reads `.github/copilot-instructions.md` and PR-level
+enforcement is best-suited to a CI workflow. The install surface for
+`chemag install-hooks --tool copilot` is three artifacts:
+
+| Artifact                                | Tagging mechanism                                          |
+| --------------------------------------- | ---------------------------------------------------------- |
+| `.husky/pre-commit`                     | Trailing line comment `# _chemag`                          |
+| `.github/copilot-instructions.md`       | `<!-- chemag:rules:start --> ... -->` (rules markers, owned by `emit-rules`) |
+| `.github/workflows/chemag-pr.yml`       | Whole-file managed; first line is `# chemag-pr.yml managed by chemag install-hooks` |
+
+The workflow runs `chemag check` and `chemag analyze` on every pull
+request against `main`. The CI installs `chemag` via npm (the published
+binary) so the workflow stays portable across forks and is not coupled
+to the chemag-monorepo's pnpm layout.
+
+### Whole-file ownership of chemag-pr.yml (CHEM-INSTALL-HOOKS-010)
+
+Unlike the marker-block-tagged artifacts above, `chemag-pr.yml` is a
+whole-file regenerated artifact. The chemag-managed header is the
+discriminator: the installer regenerates the file when the header is
+present, refuses to overwrite when the header is absent, and lets the
+user pass `--overwrite` to force a wholesale replacement.
+
+**CHEM-INSTALL-HOOKS-010** `copilot_workflow_exists_no_overwrite` is
+raised when the file exists without the header and `--overwrite` was not
+passed. The number is sequential after `-009` within the 001-099 runtime
+block.
+
+### Copilot uninstall policy
+
+`uninstallCopilot`:
+
+- Removes `_chemag`-tagged lines from `.husky/pre-commit`.
+- Deletes `.github/workflows/chemag-pr.yml` ONLY when it carries the
+  chemag-managed header. Hand-authored workflows survive uninstall
+  unchanged.
+- Does NOT delete `.github/copilot-instructions.md`.
+
+`--mode`, `--scope`, and `--restore` follow the same accepted-but-ignored
+or rejected-outright policy as the other husky-based installers.

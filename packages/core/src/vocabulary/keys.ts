@@ -77,7 +77,11 @@ export type TrKey =
   | "diagnostic.tool_input_invalid" // params: { tool, reason }
   | "diagnostic.tool_unknown" // params: { tool }
   | "diagnostic.tool_handler_failed" // params: { tool, reason }
-  // install-hooks (CHEM-INSTALL-HOOKS-001..008)
+  // mcp client registration (CHEM-MCP-201/202/203)
+  | "diagnostic.mcp_client_unknown" // params: { client, supported }
+  | "diagnostic.mcp_client_config_invalid_json" // params: { path, reason }
+  | "diagnostic.mcp_client_cli_failed" // params: { cli, exitCode, stderr }
+  // install-hooks (CHEM-INSTALL-HOOKS-001..010)
   | "diagnostic.tool_not_yet_implemented" // params: { tool }
   | "diagnostic.settings_file_invalid_json" // params: { path, reason }
   | "diagnostic.hooks_already_installed_no_force" // params: { path }
@@ -86,6 +90,8 @@ export type TrKey =
   | "diagnostic.hook_stdin_unparseable" // params: { reason }
   | "diagnostic.husky_not_detected" // params: { workspace }
   | "diagnostic.cursor_precommit_unparseable" // params: { path, reason }
+  | "diagnostic.aider_conf_invalid_yaml" // params: { path, reason }
+  | "diagnostic.copilot_workflow_exists_no_overwrite" // params: { path }
   // ---- CLI help (top-level + per-command) ----
   | "cli.help.intro" // params: { version }
   | "cli.help.usage"
@@ -109,6 +115,18 @@ export type TrKey =
   | "cli.help.install_hooks.mode"
   | "cli.install_hooks.tip.mcp_register" // params: { clientName, clientId }
   | "cli.install_hooks.codex.help"
+  | "cli.install_hooks.aider.help"
+  | "cli.install_hooks.cline.help"
+  | "cli.install_hooks.copilot.help"
+  // mcp install/uninstall/status help
+  | "cli.command.mcp_install"
+  | "cli.command.mcp_uninstall"
+  | "cli.command.mcp_status"
+  | "cli.help.mcp_install.client"
+  | "cli.help.mcp_install.scope"
+  | "cli.help.mcp_install.no_cli"
+  | "cli.help.mcp_install.dry_run"
+  | "cli.help.mcp_status.format"
   // ---- CLAUDE.md template sections ----
   | "claude_md.intro"
   | "claude_md.roles_table"
@@ -173,6 +191,9 @@ export const ALL_TR_KEYS: readonly TrKey[] = [
   "diagnostic.tool_input_invalid",
   "diagnostic.tool_unknown",
   "diagnostic.tool_handler_failed",
+  "diagnostic.mcp_client_unknown",
+  "diagnostic.mcp_client_config_invalid_json",
+  "diagnostic.mcp_client_cli_failed",
   "diagnostic.tool_not_yet_implemented",
   "diagnostic.settings_file_invalid_json",
   "diagnostic.hooks_already_installed_no_force",
@@ -181,6 +202,8 @@ export const ALL_TR_KEYS: readonly TrKey[] = [
   "diagnostic.hook_stdin_unparseable",
   "diagnostic.husky_not_detected",
   "diagnostic.cursor_precommit_unparseable",
+  "diagnostic.aider_conf_invalid_yaml",
+  "diagnostic.copilot_workflow_exists_no_overwrite",
   "cli.help.intro",
   "cli.help.usage",
   "cli.help.commands",
@@ -203,6 +226,17 @@ export const ALL_TR_KEYS: readonly TrKey[] = [
   "cli.help.install_hooks.mode",
   "cli.install_hooks.tip.mcp_register",
   "cli.install_hooks.codex.help",
+  "cli.install_hooks.aider.help",
+  "cli.install_hooks.cline.help",
+  "cli.install_hooks.copilot.help",
+  "cli.command.mcp_install",
+  "cli.command.mcp_uninstall",
+  "cli.command.mcp_status",
+  "cli.help.mcp_install.client",
+  "cli.help.mcp_install.scope",
+  "cli.help.mcp_install.no_cli",
+  "cli.help.mcp_install.dry_run",
+  "cli.help.mcp_status.format",
   "claude_md.intro",
   "claude_md.roles_table",
   "claude_md.bonds_table",

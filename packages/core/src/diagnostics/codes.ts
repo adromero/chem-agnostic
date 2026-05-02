@@ -10,7 +10,8 @@
 //   * 001..099 — primary block (runtime-emitted diagnostics, the default).
 //   * 101..199 — second block (e.g., MCP tool-protocol errors that are
 //     surfaced through MCP responses rather than CLI runs).
-//   * 201..299 — reserved for future blocks.
+//   * 201..299 — third block (MCP-client-registration diagnostics, surfaced
+//     through chemag mcp install/uninstall/status).
 // Within a block the numbering is contiguous: 001, 002, 003, ..., or
 // 101, 102, 103, .... Gaps WITHIN a block are permitted only when a code
 // has been deprecated (mark the entry with `deprecated: { since, replacement }`);
@@ -93,6 +94,9 @@ export type DiagnosticCode =
   | "CHEM-MCP-101"
   | "CHEM-MCP-102"
   | "CHEM-MCP-103"
+  | "CHEM-MCP-201"
+  | "CHEM-MCP-202"
+  | "CHEM-MCP-203"
   // ---- INSTALL-HOOKS ----
   | "CHEM-INSTALL-HOOKS-001"
   | "CHEM-INSTALL-HOOKS-002"
@@ -101,7 +105,9 @@ export type DiagnosticCode =
   | "CHEM-INSTALL-HOOKS-005"
   | "CHEM-INSTALL-HOOKS-006"
   | "CHEM-INSTALL-HOOKS-007"
-  | "CHEM-INSTALL-HOOKS-008";
+  | "CHEM-INSTALL-HOOKS-008"
+  | "CHEM-INSTALL-HOOKS-009"
+  | "CHEM-INSTALL-HOOKS-010";
 
 /** Subset of `TrKey` containing only `diagnostic.*` keys. */
 export type DiagnosticTrKey = Extract<TrKey, `diagnostic.${string}`>;
@@ -416,6 +422,27 @@ export const DIAGNOSTIC_CODES: Record<DiagnosticCode, DiagnosticCodeMeta> = {
     trKey: "diagnostic.tool_handler_failed",
     helpFragment: "chem-mcp-103-tool-handler-failed",
   },
+  "CHEM-MCP-201": {
+    code: "CHEM-MCP-201",
+    category: "MCP",
+    level: "error",
+    trKey: "diagnostic.mcp_client_unknown",
+    helpFragment: "chem-mcp-201-mcp-client-unknown",
+  },
+  "CHEM-MCP-202": {
+    code: "CHEM-MCP-202",
+    category: "MCP",
+    level: "error",
+    trKey: "diagnostic.mcp_client_config_invalid_json",
+    helpFragment: "chem-mcp-202-mcp-client-config-invalid-json",
+  },
+  "CHEM-MCP-203": {
+    code: "CHEM-MCP-203",
+    category: "MCP",
+    level: "error",
+    trKey: "diagnostic.mcp_client_cli_failed",
+    helpFragment: "chem-mcp-203-mcp-client-cli-failed",
+  },
 
   // ---- INSTALL-HOOKS ----
   "CHEM-INSTALL-HOOKS-001": {
@@ -473,6 +500,20 @@ export const DIAGNOSTIC_CODES: Record<DiagnosticCode, DiagnosticCodeMeta> = {
     level: "error",
     trKey: "diagnostic.cursor_precommit_unparseable",
     helpFragment: "chem-install-hooks-008-cursor-precommit-unparseable",
+  },
+  "CHEM-INSTALL-HOOKS-009": {
+    code: "CHEM-INSTALL-HOOKS-009",
+    category: "INSTALL-HOOKS",
+    level: "error",
+    trKey: "diagnostic.aider_conf_invalid_yaml",
+    helpFragment: "chem-install-hooks-009-aider-conf-invalid-yaml",
+  },
+  "CHEM-INSTALL-HOOKS-010": {
+    code: "CHEM-INSTALL-HOOKS-010",
+    category: "INSTALL-HOOKS",
+    level: "error",
+    trKey: "diagnostic.copilot_workflow_exists_no_overwrite",
+    helpFragment: "chem-install-hooks-010-copilot-workflow-exists-no-overwrite",
   },
 };
 
