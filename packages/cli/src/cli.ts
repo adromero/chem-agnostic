@@ -25,6 +25,7 @@ import { cmdInit } from "./commands/init.js";
 import { cmdAdd } from "./commands/add.js";
 import { cmdConfig } from "./commands/config.js";
 import { cmdCompletion } from "./commands/completion.js";
+import { cmdEmitRules } from "./commands/emit-rules.js";
 import { buildCommandTree, renderHelp } from "./cli-meta.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -144,6 +145,11 @@ export function runCli(argv: string[]): void {
     case "sync":
       cmdSync(commandArgs);
       break;
+    case "emit-rules": {
+      const code = cmdEmitRules(commandArgs);
+      if (code !== 0) process.exit(code);
+      break;
+    }
     case "config":
       cmdConfig(commandArgs);
       break;

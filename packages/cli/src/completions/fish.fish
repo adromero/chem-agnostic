@@ -10,6 +10,7 @@ function __chemag_no_subcommand
       case check-edit; return 1
       case completion; return 1
       case config; return 1
+      case emit-rules; return 1
       case graph; return 1
       case init; return 1
       case scaffold; return 1
@@ -31,6 +32,8 @@ complete -c chemag -n __chemag_no_subcommand -f -a completion -d "Print shell co
 complete -c chem-ag -n __chemag_no_subcommand -f -a completion -d "Print shell completion script (bash | zsh | fish)."
 complete -c chemag -n __chemag_no_subcommand -f -a config -d "Get or set chem-ag configuration values."
 complete -c chem-ag -n __chemag_no_subcommand -f -a config -d "Get or set chem-ag configuration values."
+complete -c chemag -n __chemag_no_subcommand -f -a emit-rules -d "emit-rules — generate AI-editor rule files (AGENTS.md, CLAUDE.md, .cursor/rules, .github/copilot-instructions.md, .aider/CONVENTIONS.md, .clinerules) from workspace.yaml."
+complete -c chem-ag -n __chemag_no_subcommand -f -a emit-rules -d "emit-rules — generate AI-editor rule files (AGENTS.md, CLAUDE.md, .cursor/rules, .github/copilot-instructions.md, .aider/CONVENTIONS.md, .clinerules) from workspace.yaml."
 complete -c chemag -n __chemag_no_subcommand -f -a graph -d "graph — output a Mermaid dependency diagram."
 complete -c chem-ag -n __chemag_no_subcommand -f -a graph -d "graph — output a Mermaid dependency diagram."
 complete -c chemag -n __chemag_no_subcommand -f -a init -d "init — bootstrap a new workspace."

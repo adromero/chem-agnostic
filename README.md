@@ -69,6 +69,22 @@ chemag sync workspace.yaml       # Generate manifests from existing code
 
 The `chem-ag` alias works for every command — call it with whichever name you prefer.
 
+### Emitting AI rule files
+
+`chemag emit-rules` synthesizes compact rule files (≤80 lines each) for every popular AI editor / agent framework. Each file is wrapped in `<!-- chemag:rules:start -->` / `<!-- chemag:rules:end -->` markers so manual content outside the block survives re-runs.
+
+```bash
+chemag emit-rules                          # write all six files
+chemag emit-rules --tool claude            # one tool
+chemag emit-rules --tool codex             # alias for AGENTS.md
+chemag emit-rules --include-violations     # embed current diagnostics as fix-me hints
+chemag emit-rules --dry-run                # print planned actions
+chemag emit-rules --diff                   # show unified diff per file
+chemag emit-rules --overwrite              # replace files that lack chemag markers
+```
+
+Generated files: `AGENTS.md`, `CLAUDE.md`, `.cursor/rules/architecture.mdc`, `.github/copilot-instructions.md`, `.aider/CONVENTIONS.md`, `.clinerules`.
+
 ## Plugin System
 
 `chemag` uses a 16-member `LanguagePlugin` interface covering:

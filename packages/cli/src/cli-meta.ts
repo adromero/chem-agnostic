@@ -29,7 +29,7 @@ import { colors, isColorSupported } from "./ui/colors.js";
 const COMMAND_GROUPS: { title: string; commands: string[] }[] = [
   { title: "Workspace", commands: ["init", "add"] },
   { title: "Validation", commands: ["check", "check-edit", "analyze"] },
-  { title: "Generation", commands: ["scaffold", "graph", "sync"] },
+  { title: "Generation", commands: ["scaffold", "graph", "sync", "emit-rules"] },
   { title: "Utilities", commands: ["config", "completion"] },
 ];
 
@@ -161,6 +161,48 @@ export function buildCommandTree(version: string): CommandDef {
         args: {
           workspace: { type: "positional", description: "Path to workspace.yaml" },
           "dry-run": { type: "boolean", description: "Print actions without writing" },
+        },
+      }),
+
+      "emit-rules": defineCommand({
+        meta: {
+          name: "emit-rules",
+          description: firstLine(tr("cli.command.emit_rules")),
+        },
+        args: {
+          tool: {
+            type: "string",
+            description:
+              "Target tool: claude|agents|codex|cursor|copilot|aider|cline|all (default: all)",
+          },
+          workspace: {
+            type: "string",
+            description: "Path to workspace.yaml (default: ./workspace.yaml)",
+          },
+          "out-dir": {
+            type: "string",
+            description: "Output base directory (default: workspace dir)",
+          },
+          "max-lines": {
+            type: "string",
+            description: "Override default per-tool line budget",
+          },
+          "include-violations": {
+            type: "boolean",
+            description: "Embed current chemag violations as fix-me hints",
+          },
+          "dry-run": {
+            type: "boolean",
+            description: "Print planned actions without writing files",
+          },
+          diff: {
+            type: "boolean",
+            description: "Print unified diff per file that would change",
+          },
+          overwrite: {
+            type: "boolean",
+            description: "Allow replacing files without chemag markers",
+          },
         },
       }),
 

@@ -11,6 +11,7 @@ _chemag() {
     'check-edit:Validate a single file edit against module rules.' \
     'completion:Print shell completion script (bash | zsh | fish).' \
     'config:Get or set chem-ag configuration values.' \
+    'emit-rules:emit-rules — generate AI-editor rule files (AGENTS.md, CLAUDE.md, .cursor/rules, .github/copilot-instructions.md, .aider/CONVENTIONS.md, .clinerules) from workspace.yaml.' \
     'graph:graph — output a Mermaid dependency diagram.' \
     'init:init — bootstrap a new workspace.' \
     'scaffold:scaffold — generate stub files from manifests.' \
