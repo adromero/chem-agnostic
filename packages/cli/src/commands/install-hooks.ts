@@ -1,9 +1,13 @@
 // ---------------------------------------------------------------------------
 // `chemag install-hooks` — install / uninstall AI-editor hook integrations.
 //
-// In WP-010 only the `--tool claude` path is implemented; other tools error
-// with `CHEM-INSTALL-HOOKS-001 not_yet_implemented` (Track 1's WP-011..WP-013
-// fill these in).
+// Implemented tools:
+//   * claude (WP-010)
+//   * cursor (WP-011) — husky pre-commit + .cursor/rules/architecture.mdc
+//                        + CONTRIBUTING.md fragment
+//
+// Pending tools (still error CHEM-INSTALL-HOOKS-001):
+//   * codex / aider / cline / copilot / all
 //
 // Surface:
 //   chemag install-hooks --tool <claude|cursor|codex|aider|cline|copilot|all>
@@ -26,6 +30,13 @@ import {
   type InstallMode,
   type InstallScope,
 } from "../installers/claude-code.js";
+import {
+  HuskyNotDetectedError,
+  PrecommitUnparseableError,
+  installCursor,
+  uninstallCursor,
+  type CursorInstallResult,
+} from "../installers/cursor.js";
 
 const R = "\x1b[0m";
 const RED = "\x1b[31m";
@@ -34,8 +45,9 @@ const YLW = "\x1b[33m";
 const DIM = "\x1b[2m";
 const BLD = "\x1b[1m";
 
-// All recognized tool names. Currently only `claude` is implemented.
+// All recognized tool names. Currently only `claude` and `cursor` are implemented.
 const KNOWN_TOOLS = new Set(["claude", "cursor", "codex", "aider", "cline", "copilot", "all"]);
+const IMPLEMENTED_TOOLS = new Set(["claude", "cursor"]);
 
 interface ParsedArgs {
   tool: string;
@@ -70,9 +82,7 @@ export function cmdInstallHooks(argv: string[]): number {
     return 2;
   }
 
-  // Currently only the claude path is implemented; all/everything else
-  // emits CHEM-INSTALL-HOOKS-001 until WP-011..WP-013 land.
-  if (parsed.tool !== "claude") {
+  if (!IMPLEMENTED_TOOLS.has(parsed.tool)) {
     const code = "CHEM-INSTALL-HOOKS-001";
     console.error(
       `${RED}${code}:${R} ${tr("diagnostic.tool_not_yet_implemented", { tool: parsed.tool })}`,
@@ -82,11 +92,16 @@ export function cmdInstallHooks(argv: string[]): number {
 
   const workspaceRoot = path.resolve(parsed.workspace);
 
+  if (parsed.tool === "cursor") {
+    return runCursor(parsed, workspaceRoot);
+  }
+
+  // claude path
   try {
     if (parsed.uninstall || parsed.restore) {
-      return runUninstall(parsed, workspaceRoot);
+      return runClaudeUninstall(parsed, workspaceRoot);
     }
-    return runInstall(parsed, workspaceRoot);
+    return runClaudeInstall(parsed, workspaceRoot);
   } catch (e) {
     if (e instanceof SettingsParseError) {
       console.error(
@@ -102,7 +117,11 @@ export function cmdInstallHooks(argv: string[]): number {
   }
 }
 
-function runInstall(args: ParsedArgs, workspaceRoot: string): number {
+// ---------------------------------------------------------------------------
+// Claude path
+// ---------------------------------------------------------------------------
+
+function runClaudeInstall(args: ParsedArgs, workspaceRoot: string): number {
   const result = installClaudeCode({
     scope: args.scope,
     mode: args.mode,
@@ -141,7 +160,7 @@ function runInstall(args: ParsedArgs, workspaceRoot: string): number {
   return 0;
 }
 
-function runUninstall(args: ParsedArgs, workspaceRoot: string): number {
+function runClaudeUninstall(args: ParsedArgs, workspaceRoot: string): number {
   // For non-restore uninstalls, emit a no-op note when nothing chemag-tagged
   // is present. CHEM-INSTALL-HOOKS-005 is informational (warning level).
   if (!args.restore) {
@@ -191,6 +210,94 @@ function runUninstall(args: ParsedArgs, workspaceRoot: string): number {
   }).catch(() => {});
 
   return 0;
+}
+
+// ---------------------------------------------------------------------------
+// Cursor path
+// ---------------------------------------------------------------------------
+
+function runCursor(args: ParsedArgs, workspaceRoot: string): number {
+  if (args.restore) {
+    // --restore is a Claude-Code-specific concept (.bak file). Cursor's
+    // deliverables are line/marker tagged, not whole-file replaced.
+    console.error(
+      `${RED}install-hooks failed:${R} --restore is not supported for --tool cursor (Cursor's installer does not write .bak files).`,
+    );
+    return 2;
+  }
+
+  // --scope is irrelevant for husky (always project-scoped). Surface an
+  // informational note without failing.
+  if (args.scope !== "project") {
+    console.warn(
+      `${YLW}note:${R} --scope ${args.scope} ignored for cursor (husky is always project-scoped).`,
+    );
+  }
+
+  try {
+    const result = args.uninstall
+      ? uninstallCursor({ workspaceRoot, dryRun: args.dryRun })
+      : installCursor({ workspaceRoot, mode: args.mode, dryRun: args.dryRun });
+    renderCursorSummary(result, args);
+
+    void emitTelemetry("cli.command.install_hooks", {
+      tool: "cursor",
+      scope: args.scope,
+      mode: args.mode,
+      action: args.uninstall ? "uninstall" : "install",
+    }).catch(() => {});
+
+    return 0;
+  } catch (e) {
+    if (e instanceof HuskyNotDetectedError) {
+      console.error(
+        `${RED}CHEM-INSTALL-HOOKS-007:${R} ${tr("diagnostic.cursor_husky_not_detected", {
+          workspace: e.workspaceRoot,
+        })}`,
+      );
+      return 2;
+    }
+    if (e instanceof PrecommitUnparseableError) {
+      console.error(
+        `${RED}CHEM-INSTALL-HOOKS-008:${R} ${tr("diagnostic.cursor_precommit_unparseable", {
+          path: e.path,
+          reason: e.reason,
+        })}`,
+      );
+      return 2;
+    }
+    console.error(`${RED}install-hooks failed:${R} ${(e as Error).message}`);
+    return 2;
+  }
+}
+
+function renderCursorSummary(result: CursorInstallResult, args: ParsedArgs): void {
+  const headline = args.uninstall ? "chemag install-hooks --uninstall" : "chemag install-hooks";
+  console.log(`\n${BLD}${headline}${R}${args.dryRun ? ` ${DIM}(dry run)${R}` : ""}`);
+  console.log(`  ${DIM}tool:${R}  cursor`);
+  console.log(`  ${DIM}root:${R}  ${result.workspaceRoot}`);
+
+  for (const note of result.infoNotes) {
+    console.log(`  ${DIM}note:${R} ${note}`);
+  }
+
+  for (const artifact of [result.precommit, result.cursorMdc, result.contributing]) {
+    const verb = mapAction(artifact.action);
+    console.log(`  ${verb}  ${artifact.path}`);
+  }
+}
+
+function mapAction(action: "create" | "update" | "no-op" | "skip"): string {
+  switch (action) {
+    case "create":
+      return `${GRN}+${R}`;
+    case "update":
+      return `${GRN}~${R}`;
+    case "no-op":
+      return `${DIM}=${R}`;
+    case "skip":
+      return `${DIM}.${R}`;
+  }
 }
 
 function pathForScope(scope: InstallScope, workspaceRoot: string): string {
@@ -288,7 +395,9 @@ function printHelp(): void {
   console.log(`  ${tr("cli.help.install_hooks.scope")}`);
   console.log(`  ${tr("cli.help.install_hooks.mode")}`);
   console.log("  --uninstall          Remove chemag hook entries (preserves non-chemag entries).");
-  console.log("  --restore            With --uninstall: restore from <settings>.bak.");
+  console.log(
+    "  --restore            With --uninstall: restore from <settings>.bak (claude only).",
+  );
   console.log("  --dry-run            Print planned changes without writing.");
   console.log("  --workspace <path>   Workspace root (defaults to cwd).");
 }
