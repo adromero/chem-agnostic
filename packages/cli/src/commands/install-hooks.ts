@@ -11,9 +11,8 @@
 //   * cline   (WP-013) — husky pre-commit + .clinerules + MCP follow-up tip
 //   * copilot (WP-013) — husky pre-commit + .github/copilot-instructions.md
 //                         + .github/workflows/chemag-pr.yml
-//
-// Pending tools (still error CHEM-INSTALL-HOOKS-001):
-//   * all (WP-018 will fan out across every tool above)
+//   * all     (WP-018) — fan out across every tool above with per-tool error
+//                         aggregation; non-zero exit if any tool failed.
 //
 // Surface:
 //   chemag install-hooks --tool <claude|cursor|codex|aider|cline|copilot|all>
@@ -66,10 +65,27 @@ const YLW = "\x1b[33m";
 const DIM = "\x1b[2m";
 const BLD = "\x1b[1m";
 
-// All recognized tool names. `claude`, `cursor`, `codex`, `aider`, `cline`,
-// and `copilot` are implemented. `all` is reserved for WP-018.
+// All recognized tool names. Single-tool slots route to a dedicated handler;
+// `all` (WP-018) fans out across every member of FAN_OUT_TOOLS with per-tool
+// error aggregation.
 const KNOWN_TOOLS = new Set(["claude", "cursor", "codex", "aider", "cline", "copilot", "all"]);
-const IMPLEMENTED_TOOLS = new Set(["claude", "cursor", "codex", "aider", "cline", "copilot"]);
+const IMPLEMENTED_TOOLS = new Set([
+  "claude",
+  "cursor",
+  "codex",
+  "aider",
+  "cline",
+  "copilot",
+  "all",
+]);
+
+/**
+ * Tools the `--tool all` fan-out iterates over, in deterministic display
+ * order. Order matters because the summary table is rendered in this
+ * sequence and the WP-018 reference-monorepo CI snapshot pins it.
+ */
+const FAN_OUT_TOOLS = ["claude", "cursor", "codex", "aider", "cline", "copilot"] as const;
+type FanOutTool = (typeof FAN_OUT_TOOLS)[number];
 
 interface ParsedArgs {
   tool: string;
@@ -114,6 +130,10 @@ export function cmdInstallHooks(argv: string[]): number {
   }
 
   const workspaceRoot = path.resolve(parsed.workspace);
+
+  if (parsed.tool === "all") {
+    return runAll(parsed, workspaceRoot);
+  }
 
   if (parsed.tool === "cursor") {
     return runCursor(parsed, workspaceRoot);
@@ -671,6 +691,256 @@ function renderCopilotSummary(result: CopilotInstallResult, args: ParsedArgs): v
 
 function pathForScope(scope: InstallScope, workspaceRoot: string): string {
   return getClaudeSettingsPath(scope, workspaceRoot);
+}
+
+// ---------------------------------------------------------------------------
+// Fan-out path (`--tool all`) — WP-018
+// ---------------------------------------------------------------------------
+
+/** Per-tool result row rendered in the fan-out summary table. */
+interface FanOutRow {
+  tool: FanOutTool;
+  /**
+   * `ok`     — installer ran and made changes (create/update/install).
+   * `no-op`  — installer ran and reported nothing to do (idempotent rerun).
+   * `error`  — installer threw or returned a known error code.
+   */
+  status: "ok" | "no-op" | "error";
+  /** Diagnostic code (CHEM-INSTALL-HOOKS-NNN) when status === "error". */
+  code?: string;
+  /** Short human-readable message for the table cell. */
+  message?: string;
+}
+
+/**
+ * Action statuses we treat as no-ops for table rendering. Any other action
+ * (`create`, `update`) means real work happened on this tool's path.
+ */
+function isAllNoOp(actions: Array<"create" | "update" | "no-op" | "skip">): boolean {
+  return actions.every((a) => a === "no-op" || a === "skip");
+}
+
+/** Run each tool in `FAN_OUT_TOOLS`, aggregate status, render summary. */
+function runAll(args: ParsedArgs, workspaceRoot: string): number {
+  // --tool all does not accept --restore / --overwrite / --uninstall in WP-018.
+  // (These are tool-specific and fan-out is install-only by design.)
+  if (args.uninstall || args.restore) {
+    console.error(
+      `${RED}install-hooks failed:${R} --tool all does not support --uninstall / --restore (run per-tool to uninstall).`,
+    );
+    return 2;
+  }
+
+  const headline = "chemag install-hooks --tool all";
+  console.log(`\n${BLD}${headline}${R}${args.dryRun ? ` ${DIM}(dry run)${R}` : ""}`);
+  console.log(`  ${DIM}root:${R}  ${workspaceRoot}`);
+  console.log(`  ${DIM}mode:${R}  ${args.mode}`);
+
+  const rows: FanOutRow[] = [];
+  for (const tool of FAN_OUT_TOOLS) {
+    const row = runOneForFanOut(tool, args, workspaceRoot);
+    rows.push(row);
+
+    // Per-tool telemetry — mirrors the per-tool runners' shape so downstream
+    // analytics see one event per tool regardless of fan-out vs. direct call.
+    void emitTelemetry("cli.command.install_hooks", {
+      tool,
+      scope: args.scope,
+      mode: args.mode,
+      action: "install",
+      result: row.status,
+    }).catch(() => {});
+  }
+
+  renderFanOutSummary(rows);
+
+  const errored = rows.filter((r) => r.status === "error").length;
+  const oks = rows.filter((r) => r.status === "ok" || r.status === "no-op").length;
+  const aggregateResult: "ok" | "partial" | "error" =
+    errored === 0 ? "ok" : oks === 0 ? "error" : "partial";
+
+  // Aggregate telemetry event — emitted exactly once per --tool all invocation.
+  void emitTelemetry("cli.command.install_hooks", {
+    tool: "all",
+    scope: args.scope,
+    mode: args.mode,
+    action: "install",
+    result: aggregateResult,
+    tools_count: FAN_OUT_TOOLS.length,
+    errored_count: errored,
+  }).catch(() => {});
+
+  return errored === 0 ? 0 : 2;
+}
+
+/**
+ * Execute a single tool's installer for the fan-out path. Returns a structured
+ * `FanOutRow` instead of writing per-tool console output. Errors are caught and
+ * converted into `error` rows so the loop can continue with remaining tools.
+ */
+function runOneForFanOut(tool: FanOutTool, args: ParsedArgs, workspaceRoot: string): FanOutRow {
+  try {
+    switch (tool) {
+      case "claude":
+        return runClaudeForFanOut(args, workspaceRoot);
+      case "cursor":
+        return runCursorForFanOut(args, workspaceRoot);
+      case "codex":
+        return runCodexForFanOut(args, workspaceRoot);
+      case "aider":
+        return runAiderForFanOut(args, workspaceRoot);
+      case "cline":
+        return runClineForFanOut(args, workspaceRoot);
+      case "copilot":
+        return runCopilotForFanOut(args, workspaceRoot);
+    }
+  } catch (e) {
+    return classifyFanOutError(tool, e);
+  }
+}
+
+function classifyFanOutError(tool: FanOutTool, e: unknown): FanOutRow {
+  if (e instanceof SettingsParseError) {
+    return {
+      tool,
+      status: "error",
+      code: "CHEM-INSTALL-HOOKS-002",
+      message: e.reason,
+    };
+  }
+  if (e instanceof HuskyNotDetectedError) {
+    return {
+      tool,
+      status: "error",
+      code: "CHEM-INSTALL-HOOKS-007",
+      message: "husky not detected",
+    };
+  }
+  if (e instanceof PrecommitUnparseableError) {
+    return {
+      tool,
+      status: "error",
+      code: "CHEM-INSTALL-HOOKS-008",
+      message: e.reason,
+    };
+  }
+  if (e instanceof AiderConfInvalidYamlError) {
+    return {
+      tool,
+      status: "error",
+      code: "CHEM-INSTALL-HOOKS-009",
+      message: e.reason,
+    };
+  }
+  if (e instanceof CopilotWorkflowExistsNoOverwriteError) {
+    return {
+      tool,
+      status: "error",
+      code: "CHEM-INSTALL-HOOKS-010",
+      message: "workflow exists; pass --overwrite",
+    };
+  }
+  return {
+    tool,
+    status: "error",
+    message: e instanceof Error ? e.message : String(e),
+  };
+}
+
+function runClaudeForFanOut(args: ParsedArgs, workspaceRoot: string): FanOutRow {
+  const result = installClaudeCode({
+    scope: args.scope,
+    mode: args.mode,
+    dryRun: args.dryRun,
+    workspaceRoot,
+  });
+  // Claude installer returns `changed: boolean`; map to ok / no-op.
+  return { tool: "claude", status: result.changed ? "ok" : "no-op" };
+}
+
+function runCursorForFanOut(args: ParsedArgs, workspaceRoot: string): FanOutRow {
+  const result = installCursor({
+    workspaceRoot,
+    mode: args.mode,
+    dryRun: args.dryRun,
+  });
+  const actions = [result.precommit.action, result.cursorMdc.action, result.contributing.action];
+  return { tool: "cursor", status: isAllNoOp(actions) ? "no-op" : "ok" };
+}
+
+function runCodexForFanOut(args: ParsedArgs, workspaceRoot: string): FanOutRow {
+  const result = installCodex({
+    workspaceRoot,
+    mode: args.mode,
+    dryRun: args.dryRun,
+  });
+  const actions = [result.precommit.action, result.agentsMd.action];
+  return { tool: "codex", status: isAllNoOp(actions) ? "no-op" : "ok" };
+}
+
+function runAiderForFanOut(args: ParsedArgs, workspaceRoot: string): FanOutRow {
+  const result = installAider({
+    workspaceRoot,
+    mode: args.mode,
+    dryRun: args.dryRun,
+  });
+  const actions = [result.precommit.action, result.conventions.action, result.aiderConf.action];
+  return { tool: "aider", status: isAllNoOp(actions) ? "no-op" : "ok" };
+}
+
+function runClineForFanOut(args: ParsedArgs, workspaceRoot: string): FanOutRow {
+  const result = installCline({
+    workspaceRoot,
+    mode: args.mode,
+    dryRun: args.dryRun,
+  });
+  const actions = [result.precommit.action, result.clinerules.action];
+  return { tool: "cline", status: isAllNoOp(actions) ? "no-op" : "ok" };
+}
+
+function runCopilotForFanOut(args: ParsedArgs, workspaceRoot: string): FanOutRow {
+  const result = installCopilot({
+    workspaceRoot,
+    mode: args.mode,
+    dryRun: args.dryRun,
+    overwrite: args.overwrite,
+  });
+  const actions = [
+    result.precommit.action,
+    result.copilotInstructions.action,
+    result.prWorkflow.action,
+  ];
+  return { tool: "copilot", status: isAllNoOp(actions) ? "no-op" : "ok" };
+}
+
+function renderFanOutSummary(rows: FanOutRow[]): void {
+  // Compute the column widths so the box stays tidy across tool name lengths.
+  const toolWidth = Math.max(4, ...rows.map((r) => r.tool.length));
+  const statusWidth = Math.max(6, ...rows.map((r) => r.status.length));
+  const codeWidth = Math.max(4, ...rows.map((r) => (r.code ?? "").length));
+
+  console.log("");
+  const header = `  ${"tool".padEnd(toolWidth)}  ${"status".padEnd(statusWidth)}  ${"code".padEnd(
+    codeWidth,
+  )}  message`;
+  console.log(`${BLD}${header}${R}`);
+  console.log(
+    `  ${"-".repeat(toolWidth)}  ${"-".repeat(statusWidth)}  ${"-".repeat(codeWidth)}  -------`,
+  );
+
+  for (const r of rows) {
+    const colored =
+      r.status === "ok"
+        ? `${GRN}${r.status.padEnd(statusWidth)}${R}`
+        : r.status === "no-op"
+          ? `${DIM}${r.status.padEnd(statusWidth)}${R}`
+          : `${RED}${r.status.padEnd(statusWidth)}${R}`;
+    console.log(
+      `  ${r.tool.padEnd(toolWidth)}  ${colored}  ${(r.code ?? "").padEnd(codeWidth)}  ${
+        r.message ?? ""
+      }`,
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
