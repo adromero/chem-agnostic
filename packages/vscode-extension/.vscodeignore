@@ -1,0 +1,34 @@
+# Source — not shipped; only the bundled dist/extension.js is.
+src/**
+test/**
+out/**
+
+# Build configuration — not needed at runtime.
+tsconfig.json
+tsconfig.tsbuildinfo
+esbuild.config.js
+.vscode-test/**
+
+# Tooling artifacts.
+node_modules/**
+*.tsbuildinfo
+.turbo/**
+
+# Source maps — keep the bundle, drop the maps to shrink the .vsix.
+dist/**/*.js.map
+
+# wp-027: the LSP server lives in a sub-package. Exclude its source / build
+# tooling, but explicitly include `server/dist/server.js` in the .vsix so the
+# extension can spawn it as a child process at runtime.
+server/src/**
+server/test/**
+server/scripts/**
+server/tsconfig.json
+server/tsconfig.tsbuildinfo
+server/vitest.config.ts
+server/node_modules/**
+server/dist/**/*.js.map
+!server/dist/server.js
+
+# Built artifacts that shouldn't be re-packed.
+*.vsix

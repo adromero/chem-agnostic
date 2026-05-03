@@ -1,0 +1,17 @@
+workspace: sample
+language: typescript
+
+paths:
+  compounds: compounds
+
+roles:
+  reactions:
+    description: Application logic / use cases
+    folder: reactions
+  catalyst:
+    description: Application bootstrap
+    folder: catalyst
+
+bonds:
+  reactions: []
+  catalyst: [reactions]
