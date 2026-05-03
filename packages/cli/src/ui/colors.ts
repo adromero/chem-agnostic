@@ -17,8 +17,15 @@ import pc from "picocolors";
  * True if color output is supported on the current stdout. Mirrors picocolors'
  * own logic: NO_COLOR=1 disables; explicit FORCE_COLOR enables; otherwise
  * defaults to whether stdout is a TTY.
+ *
+ * IMPORTANT: picocolors caches its own `isColorSupported` at module-init, so
+ * callers (including tests) that set NO_COLOR / FORCE_COLOR AFTER import won't
+ * see the change reflected via `pc.isColorSupported`. We therefore re-check
+ * the env vars on every call so runtime mutations are honored.
  */
 export function isColorSupported(): boolean {
+  if (process.env.NO_COLOR && process.env.NO_COLOR !== "0") return false;
+  if (process.env.FORCE_COLOR === "1" || process.env.FORCE_COLOR === "true") return true;
   return pc.isColorSupported;
 }
 

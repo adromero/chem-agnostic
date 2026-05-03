@@ -46,7 +46,7 @@ function generateBash(subs: Sub[]): string {
 # shellcheck shell=bash
 
 _chemag() {
-  local cur prev words cword
+  local cur prev
   COMPREPLY=()
   cur="\${COMP_WORDS[COMP_CWORD]}"
   prev="\${COMP_WORDS[COMP_CWORD-1]}"
