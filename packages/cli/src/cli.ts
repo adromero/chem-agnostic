@@ -279,9 +279,11 @@ export async function runCliBootstrap(argv: string[]): Promise<void> {
         }
       }
     } else {
-      // Non-interactive: print the one-line hint per the spec. Do NOT write
-      // a config file — that way the next interactive run will still prompt.
-      defaultConsentIO.print("(telemetry off — run chemag config telemetry on to enable)\n");
+      // Non-interactive: print the one-line hint per the spec to STDERR so
+      // it doesn't pollute machine-readable stdout (e.g. `chemag graph > out`,
+      // `chemag analyze --format json | jq ...`). Do NOT write a config file
+      // — that way the next interactive run will still prompt.
+      process.stderr.write("(telemetry off — run chemag config telemetry on to enable)\n");
     }
   }
 
