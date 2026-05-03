@@ -1,12 +1,17 @@
 {
   "name": "@chemag/plugin-python",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Python language plugin for the Chem toolkit — pure-TypeScript Python import parser plus inferImplements helper.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist/**/*.js", "dist/**/*.d.ts", "dist/**/*.d.ts.map", "dist/**/*.js.map"],
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map",
+    "dist/**/*.js.map"
+  ],
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "tsc -p tsconfig.json",

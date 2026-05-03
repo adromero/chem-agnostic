@@ -1,6 +1,6 @@
 {
   "name": "@chemag/core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Shared engine for the Chem toolkit — types, manifest loader, checks, scaffolder, sync, graph, and the language-plugin interface.",
   "license": "MIT",
   "type": "module",

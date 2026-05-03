@@ -1,12 +1,17 @@
 {
   "name": "@chemag/plugin-typescript",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "TypeScript language plugin for the Chem toolkit — uses ts-morph to analyze imports and generate stubs.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist/**/*.js", "dist/**/*.d.ts", "dist/**/*.d.ts.map", "dist/**/*.js.map"],
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map",
+    "dist/**/*.js.map"
+  ],
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "tsc -p tsconfig.json",
