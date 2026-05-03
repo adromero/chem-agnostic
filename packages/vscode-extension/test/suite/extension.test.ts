@@ -13,7 +13,10 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as vscode from "vscode";
 
-const EXTENSION_ID = "chemag.chemag";
+// `<publisher>.<name>` from package.json — wp-026 renamed the npm package
+// from `@chemag/vscode-extension` to `chemag-vscode` (vsce rejects scoped
+// names), so the extension ID is `chemag.chemag-vscode`, not `chemag.chemag`.
+const EXTENSION_ID = "chemag.chemag-vscode";
 
 suite("chemag extension activation", () => {
   test("registers chemag.checkWorkspace and chemag.showGraph commands", async () => {
