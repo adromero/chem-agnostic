@@ -1,12 +1,18 @@
 {
   "name": "@chemag/plugin-go",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Go language plugin for the Chem toolkit — wraps a bundled Go AST helper binary that communicates over JSON-RPC on stdio.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist/**/*.js", "dist/**/*.d.ts", "dist/**/*.d.ts.map", "dist/**/*.js.map", "bin/**"],
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map",
+    "dist/**/*.js.map",
+    "bin/**"
+  ],
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "tsc -p tsconfig.json",

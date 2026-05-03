@@ -1,6 +1,6 @@
 {
   "name": "@chemag/mcp-server",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Model Context Protocol server for the Chem toolkit — exposes chemag tooling to MCP-aware clients (Claude Desktop, Cursor, IDE plugins) over stdio. Per-session vocabulary + manifest cache; never depends on @chemag/cli to keep the dep graph acyclic.",
   "license": "MIT",
   "type": "module",
@@ -16,7 +16,12 @@
       "default": "./dist/test-helpers.js"
     }
   },
-  "files": ["dist/**/*.js", "dist/**/*.d.ts", "dist/**/*.d.ts.map", "dist/**/*.js.map"],
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map",
+    "dist/**/*.js.map"
+  ],
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build:version": "node ./scripts/build-version.mjs",
@@ -25,7 +30,13 @@
     "test": "vitest run",
     "prepublishOnly": "pnpm run build"
   },
-  "keywords": ["mcp", "model-context-protocol", "chem", "chemag", "architecture"],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "chem",
+    "chemag",
+    "architecture"
+  ],
   "dependencies": {
     "@chemag/core": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.29.0",
