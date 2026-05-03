@@ -75,6 +75,7 @@ describe("help — standard vocabulary", () => {
     expect(text).toMatch(/\bemit-rules\b/);
     expect(text).toMatch(/\bmcp\b/);
     expect(text).toMatch(/\binstall-hooks\b/);
+    expect(text).toMatch(/\bci\b/);
     expect(text).toMatch(/\bconfig\b/);
     expect(text).toMatch(/\bcompletion\b/);
 

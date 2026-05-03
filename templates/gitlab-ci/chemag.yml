@@ -1,0 +1,63 @@
+# ----------------------------------------------------------------------------
+# chemag — official GitLab CI include template (WP-024).
+#
+# Add this to your `.gitlab-ci.yml`:
+#
+#   include:
+#     - remote: 'https://chemag.dev/ci/gitlab.yml'
+#
+# (or pin to a tag once chemag publishes a release):
+#
+#   include:
+#     - project: 'chemag/chemag'
+#       ref: 'v0.1.0'
+#       file: '/templates/gitlab-ci/chemag.yml'
+#
+# The job runs on:
+#   - merge_request_event pipelines (so it can post the sticky MR comment),
+#   - and on the project's default branch (so the JUnit artifact lands on
+#     pipeline pages even outside MR runs).
+#
+# JUnit is wired to GitLab's native MR widget via `artifacts.reports.junit`.
+# The sticky MR comment is posted by `chemag ci gitlab` using the canonical
+# JSON envelope from `chemag check --format json`. CI_PROJECT_ID and
+# CI_MERGE_REQUEST_IID are provided automatically by GitLab; GITLAB_TOKEN
+# must be set as a masked CI/CD variable with `api` scope.
+# ----------------------------------------------------------------------------
+
+chemag-check:
+  stage: test
+  image: node:22-alpine
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+  variables:
+    # Override at the project level (Settings > CI/CD > Variables) to pin to
+    # a specific chemag release. `latest` follows the npm `latest` dist-tag.
+    CHEMAG_VERSION: "latest"
+  before_script:
+    - apk add --no-cache git
+    - npm install -g "@chemag/cli@${CHEMAG_VERSION}"
+  script:
+    # 1. Run the architecture check, emit JUnit for the MR widget.
+    - chemag check --format junit > junit.xml || CHEMAG_EXIT=$?
+    # 2. Re-run with --format json so the sticky-comment poster has structured
+    #    diagnostics. The exit code is captured from step 1; this re-run
+    #    intentionally ignores its own exit so we always reach `ci gitlab`.
+    - chemag check --format json > chemag.json || true
+    # 3. Post / update the sticky chemag comment on the MR. Skipped on
+    #    non-MR pipelines (no CI_MERGE_REQUEST_IID set).
+    - |
+      if [ -n "$CI_MERGE_REQUEST_IID" ]; then
+        chemag ci gitlab --input chemag.json
+      fi
+    # 4. Surface the original chemag exit code so the pipeline status reflects
+    #    architectural health.
+    - exit ${CHEMAG_EXIT:-0}
+  artifacts:
+    when: always
+    reports:
+      junit: junit.xml
+    paths:
+      - chemag.json
+    expire_in: 1 week

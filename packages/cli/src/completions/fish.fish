@@ -8,6 +8,7 @@ function __chemag_no_subcommand
       case analyze; return 1
       case check; return 1
       case check-edit; return 1
+      case ci; return 1
       case completion; return 1
       case config; return 1
       case emit-rules; return 1
@@ -30,6 +31,8 @@ complete -c chemag -n __chemag_no_subcommand -f -a check -d "check — validate 
 complete -c chem-ag -n __chemag_no_subcommand -f -a check -d "check — validate workspace manifests and filesystem."
 complete -c chemag -n __chemag_no_subcommand -f -a check-edit -d "Validate a single file edit against module rules."
 complete -c chem-ag -n __chemag_no_subcommand -f -a check-edit -d "Validate a single file edit against module rules."
+complete -c chemag -n __chemag_no_subcommand -f -a ci -d "Post chemag results to a CI provider's MR/PR review surface."
+complete -c chem-ag -n __chemag_no_subcommand -f -a ci -d "Post chemag results to a CI provider's MR/PR review surface."
 complete -c chemag -n __chemag_no_subcommand -f -a completion -d "Print shell completion script (bash | zsh | fish)."
 complete -c chem-ag -n __chemag_no_subcommand -f -a completion -d "Print shell completion script (bash | zsh | fish)."
 complete -c chemag -n __chemag_no_subcommand -f -a config -d "Get or set chem-ag configuration values."

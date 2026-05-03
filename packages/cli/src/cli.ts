@@ -28,6 +28,7 @@ import { cmdCompletion } from "./commands/completion.js";
 import { cmdEmitRules } from "./commands/emit-rules.js";
 import { cmdMcp } from "./commands/mcp.js";
 import { cmdInstallHooks } from "./commands/install-hooks.js";
+import { cmdCi } from "./ci/index.js";
 import { buildCommandTree, renderHelp } from "./cli-meta.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -168,6 +169,17 @@ export function runCli(argv: string[]): void {
       if (code !== 0) process.exit(code);
       break;
     }
+    case "ci":
+      // cmdCi is async (HTTP I/O) but runCli stays synchronous to keep the
+      // existing sync-test harness working. Each provider exits via
+      // process.exit on completion or failure, so we never fall through; the
+      // .catch is a defensive net for unexpected synchronous throws.
+      void cmdCi(commandArgs).catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`Unexpected error in 'chemag ci': ${msg}`);
+        process.exit(2);
+      });
+      break;
     default:
       console.error(`Unknown command: ${command}`);
       console.error(`Run 'chemag --help' for a list of available commands.`);

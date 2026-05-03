@@ -71,6 +71,10 @@
       "types": "./dist/add-unit.d.ts",
       "default": "./dist/add-unit.js"
     },
+    "./ci-marker": {
+      "types": "./dist/ci-marker.d.ts",
+      "default": "./dist/ci-marker.js"
+    },
     "./git-utils": {
       "types": "./dist/git-utils.d.ts",
       "default": "./dist/git-utils.js"

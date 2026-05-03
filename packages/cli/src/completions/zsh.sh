@@ -9,6 +9,7 @@ _chemag() {
     'analyze:analyze — check source imports against dependency rules.' \
     'check:check — validate workspace manifests and filesystem.' \
     'check-edit:Validate a single file edit against module rules.' \
+    'ci:Post chemag results to a CI provider's MR/PR review surface.' \
     'completion:Print shell completion script (bash | zsh | fish).' \
     'config:Get or set chem-ag configuration values.' \
     'emit-rules:emit-rules — generate AI-editor rule files (AGENTS.md, CLAUDE.md, .cursor/rules, .github/copilot-instructions.md, .aider/CONVENTIONS.md, .clinerules) from workspace.yaml.' \

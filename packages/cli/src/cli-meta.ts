@@ -30,7 +30,7 @@ const COMMAND_GROUPS: { title: string; commands: string[] }[] = [
   { title: "Workspace", commands: ["init", "add"] },
   { title: "Validation", commands: ["check", "check-edit", "analyze"] },
   { title: "Generation", commands: ["scaffold", "graph", "sync", "emit-rules"] },
-  { title: "Integrations", commands: ["mcp", "install-hooks"] },
+  { title: "Integrations", commands: ["mcp", "install-hooks", "ci"] },
   { title: "Utilities", commands: ["config", "completion"] },
 ];
 
@@ -347,6 +347,53 @@ export function buildCommandTree(version: string): CommandDef {
             type: "string",
             description: "Workspace root (defaults to cwd)",
           },
+        },
+      }),
+
+      ci: defineCommand({
+        meta: {
+          name: "ci",
+          description: "Post chemag results to a CI provider's MR/PR review surface.",
+        },
+        args: {
+          provider: {
+            type: "positional",
+            description: "CI provider: gitlab | bitbucket",
+          },
+        },
+        subCommands: {
+          gitlab: defineCommand({
+            meta: {
+              name: "gitlab",
+              description: "Post or update a sticky chemag comment on a GitLab MR.",
+            },
+            args: {
+              input: {
+                type: "string",
+                description: "Read chemag --format json from <file> (default: stdin)",
+              },
+              workspace: {
+                type: "string",
+                description: "Workspace name to render in the comment heading",
+              },
+            },
+          }),
+          bitbucket: defineCommand({
+            meta: {
+              name: "bitbucket",
+              description: "Post or update a sticky chemag comment on a Bitbucket PR.",
+            },
+            args: {
+              input: {
+                type: "string",
+                description: "Read chemag --format json from <file> (default: stdin)",
+              },
+              workspace: {
+                type: "string",
+                description: "Workspace name to render in the comment heading",
+              },
+            },
+          }),
         },
       }),
 

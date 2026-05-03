@@ -14,4 +14,5 @@ export * from "./rules-emitters/index.js";
 export * from "./vocabulary/index.js";
 export * from "./diagnostics/index.js";
 export * from "./add-unit.js";
+export * from "./ci-marker.js";
 export * from "./git-utils.js";
