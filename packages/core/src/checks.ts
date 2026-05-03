@@ -660,6 +660,119 @@ const checkAssayReferences: CheckFn = (_ws, compounds) => {
 };
 
 // ---------------------------------------------------------------------------
+// Check 16 — Sub-tree path overlap (multi-language workspaces only)
+// ---------------------------------------------------------------------------
+/**
+ * Returns true when two absolute path roots overlap — i.e. one IS the other
+ * or one is an ancestor of the other. Uses path.relative semantics rather
+ * than string-prefix comparisons so trailing-slash differences and `..`
+ * components are handled correctly.
+ */
+function pathsOverlap(a: string, b: string): boolean {
+  const na = path.resolve(a);
+  const nb = path.resolve(b);
+  if (na === nb) return true;
+  const rel = path.relative(na, nb);
+  if (rel === "" || (!rel.startsWith("..") && !path.isAbsolute(rel))) return true;
+  const relRev = path.relative(nb, na);
+  if (relRev === "" || (!relRev.startsWith("..") && !path.isAbsolute(relRev))) return true;
+  return false;
+}
+
+const checkSubtreePathOverlap: CheckFn = (ws) => {
+  const subtrees = ws.languages ?? [];
+  // Short-circuit for legacy single-language workspaces — they synthesize a
+  // single "default" sub-tree which can never overlap with itself.
+  if (subtrees.length <= 1) return [];
+  if (subtrees.length === 1 && subtrees[0].id === "default") return [];
+
+  const diags: Diagnostic[] = [];
+
+  // Collect absolute path roots per sub-tree. We resolve relative to the
+  // current working directory because the check has no workspaceDir context;
+  // pathsOverlap then compares fully-resolved paths so the relative anchor
+  // is irrelevant — only the relative relationship between roots matters.
+  type Root = { id: string; rel: string; abs: string };
+  const roots: Root[] = [];
+  for (const sub of subtrees) {
+    const collect = (rel: string | undefined) => {
+      if (!rel) return;
+      roots.push({ id: sub.id, rel, abs: path.resolve(rel) });
+    };
+    collect(sub.paths.compounds);
+    collect(sub.paths.reagents);
+    collect(sub.paths.solvents);
+    collect(sub.paths.catalyst);
+  }
+
+  // Compare every pair across DIFFERENT sub-trees only — within a sub-tree,
+  // overlap between e.g. compounds and reagents is the user's choice.
+  const reportedPairs = new Set<string>();
+  for (let i = 0; i < roots.length; i++) {
+    for (let j = i + 1; j < roots.length; j++) {
+      const a = roots[i];
+      const b = roots[j];
+      if (a.id === b.id) continue;
+      if (!pathsOverlap(a.abs, b.abs)) continue;
+
+      // Dedup per (id_a,id_b) — we only emit one error per offending PAIR
+      // of sub-trees, even if multiple roots in each overlap.
+      const key = a.id < b.id ? `${a.id}|${b.id}` : `${b.id}|${a.id}`;
+      if (reportedPairs.has(key)) continue;
+      reportedPairs.add(key);
+
+      const idA = a.id < b.id ? a.id : b.id;
+      const idB = a.id < b.id ? b.id : a.id;
+      const pathA = a.id < b.id ? a.rel : b.rel;
+      const pathB = a.id < b.id ? b.rel : a.rel;
+      diags.push({
+        level: "error",
+        check: "subtree-paths-overlap",
+        code: "CHEM-MANIFEST-003",
+        message: tr("diagnostic.subtree_paths_overlap", {
+          id_a: idA,
+          id_b: idB,
+          path_a: pathA,
+          path_b: pathB,
+        }),
+        hint: "Each language sub-tree must own a non-overlapping path root",
+      });
+    }
+  }
+  return diags;
+};
+
+// ---------------------------------------------------------------------------
+// Check 17 — Sub-tree id duplicates (multi-language workspaces only)
+// ---------------------------------------------------------------------------
+const checkSubtreeIdDuplicates: CheckFn = (ws) => {
+  const subtrees = ws.languages ?? [];
+  if (subtrees.length <= 1) return [];
+  if (subtrees.length === 1 && subtrees[0].id === "default") return [];
+
+  const diags: Diagnostic[] = [];
+  const seen = new Set<string>();
+  const reported = new Set<string>();
+  for (const sub of subtrees) {
+    if (seen.has(sub.id)) {
+      if (!reported.has(sub.id)) {
+        diags.push({
+          level: "error",
+          check: "subtree-id-duplicate",
+          code: "CHEM-MANIFEST-004",
+          message: tr("diagnostic.subtree_id_duplicate", { id: sub.id }),
+          hint: "Every entry in `languages:` must use a unique id",
+        });
+        reported.add(sub.id);
+      }
+    } else {
+      seen.add(sub.id);
+    }
+  }
+  return diags;
+};
+
+// ---------------------------------------------------------------------------
 // Registry — ordered list of all checks
 // ---------------------------------------------------------------------------
 export const allChecks: { name: string; fn: CheckFn }[] = [
@@ -678,4 +791,6 @@ export const allChecks: { name: string; fn: CheckFn }[] = [
   { name: "Singleton constraints", fn: checkSingletons },
   { name: "Role restrictions", fn: checkRoleRestrictions },
   { name: "Assay references", fn: checkAssayReferences },
+  { name: "Sub-tree path overlap", fn: checkSubtreePathOverlap },
+  { name: "Sub-tree id duplicates", fn: checkSubtreeIdDuplicates },
 ];

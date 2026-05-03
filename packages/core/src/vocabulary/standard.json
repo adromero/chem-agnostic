@@ -41,10 +41,13 @@
   "diagnostic.role_not_allowed_for_type": "Unit \"{unit}\" has role \"{role}\" but {type} only allows [{allowed}]",
   "diagnostic.assay_subject_unknown": "Test \"{assay}\" exercises \"{subject}\" which is not a unit in this module",
   "diagnostic.assay_mock_not_interface": "Test \"{assay}\" mocks \"{mock}\" which is not a port in this module",
+  "diagnostic.subtree_paths_overlap": "Sub-trees \"{id_a}\" and \"{id_b}\" declare overlapping path roots: \"{path_a}\" and \"{path_b}\"",
+  "diagnostic.subtree_id_duplicate": "Duplicate sub-tree id \"{id}\" — every entry in `languages:` must use a unique id",
 
   "diagnostic.import_bond_violation": "{file}: {src_role} imports {target_role} \"{names}\" — dependency rule violation",
   "diagnostic.import_undeclared": "{file}: imports from \"{target}\" but it is not in the imports list",
   "diagnostic.import_bypass": "{file}: imports directly from \"{target}\" internal file instead of {surface}",
+  "diagnostic.cross_language_import": "Cross-language import from {src_id} to {target_id}: {file} imports module {target_compound}, which lives in a different language sub-tree.",
   "diagnostic.unresolvable_placement": "Cannot determine module or role for file \"{file}\"",
   "diagnostic.markers_missing_no_overwrite": "Refusing to rewrite \"{path}\": chemag markers are missing. Pass --overwrite to replace the existing file.",
   "diagnostic.line_budget_exceeded": "Emitted {tool} block is {actual} lines (budget {budget}). Trim sections or extend the budget.",

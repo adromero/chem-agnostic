@@ -1,7 +1,7 @@
 import * as path from "node:path";
-import { discoverCompounds, loadWorkspace } from "@chemag/core/loader";
-import { scaffoldWorkspace } from "@chemag/core/scaffold";
-import type { LoadedCompound, Workspace } from "@chemag/core/types";
+import { discoverCompoundsBySubtree, loadWorkspace } from "@chemag/core/loader";
+import { scaffoldWorkspace, type ScaffoldResult } from "@chemag/core/scaffold";
+import type { LanguageSubtree, LoadedCompound, Workspace } from "@chemag/core/types";
 import { applyWorkspaceVocabulary, tr } from "@chemag/core/vocabulary";
 import { loadPlugin } from "../plugin-loader.js";
 
@@ -43,11 +43,11 @@ export function cmdScaffold(argv: string[]): void {
   // settle on a stronger source. Must run before any tr() output below.
   applyWorkspaceVocabulary(ws);
 
-  const plugin = loadPlugin({ language: ws.language });
-
-  let compounds: LoadedCompound[];
+  // WP-020: discover compounds per sub-tree, then scaffold each sub-tree
+  // with its own language plugin.
+  let groups: { scope: LanguageSubtree; compounds: LoadedCompound[] }[];
   try {
-    compounds = discoverCompounds(ws, wsDir);
+    groups = discoverCompoundsBySubtree(ws, wsDir);
   } catch (e: unknown) {
     console.error(`${RED}Failed to discover compounds:${R} ${e instanceof Error ? e.message : e}`);
     process.exit(2);
@@ -57,7 +57,18 @@ export function cmdScaffold(argv: string[]): void {
   console.log(`${BLD}Workspace:${R} ${ws.workspace}`);
   console.log();
 
-  const result = scaffoldWorkspace(ws, compounds, plugin, dryRun);
+  // Run one scaffold per sub-tree, aggregating results. The work itself is
+  // synchronous (file I/O via fs.writeFileSync) — running sub-trees in
+  // parallel via Promise.all would not actually overlap any I/O on a single
+  // event-loop thread, so we iterate sequentially and keep cmdScaffold's
+  // synchronous signature.
+  const result: ScaffoldResult = { created: [], skipped: [] };
+  for (const g of groups) {
+    const plugin = loadPlugin({ language: g.scope.language });
+    const r = scaffoldWorkspace(ws, g.compounds, plugin, dryRun);
+    result.created.push(...r.created);
+    result.skipped.push(...r.skipped);
+  }
 
   for (const f of result.created) {
     const rel = path.relative(wsDir, f);

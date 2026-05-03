@@ -9,15 +9,59 @@ export type VocabularyName = "standard" | "chemistry";
 
 export interface Workspace {
   workspace: string;
+  /**
+   * Primary language for the workspace. For legacy single-language workspaces
+   * this is the authoritative input. For multi-language workspaces (those
+   * declaring `languages:`) this is a DERIVED field — populated by the loader
+   * from `languages[0].language` so existing single-plugin call sites
+   * (`loadPlugin({ language: ws.language })`) keep working without changes.
+   * Always non-null after loader normalization.
+   */
   language: string;
   roles: Record<string, RoleDefinition>;
   bonds: Record<string, string[]>;
   compound_types?: Record<string, CompoundTypeDefinition>;
   signals?: WorkspaceSignals;
+  /**
+   * Top-level paths block. For legacy single-language workspaces this is the
+   * authoritative input. For multi-language workspaces this is a DERIVED field
+   * — populated by the loader from `languages[0].paths`. Always populated
+   * after loader normalization.
+   */
   paths: WorkspacePaths;
   rules?: WorkspaceRules;
   /** Optional locale for diagnostic and CLAUDE.md output. */
   vocabulary?: VocabularyName;
+  /**
+   * Per-language sub-trees. The loader guarantees this is a non-empty array
+   * after normalization: legacy single-language workspaces are synthesized
+   * into a one-element array with id "default"; multi-language workspaces
+   * declare it explicitly. WP-019 minimal wiring — full per-sub-tree plugin
+   * orchestration arrives in WP-020.
+   */
+  languages?: LanguageSubtree[];
+}
+
+/**
+ * One language sub-tree within a multi-language workspace. Each sub-tree owns
+ * its own root paths, language, and language-specific options. The optional
+ * `allowed_cross_language_imports` field is reserved for WP-020's enforcement.
+ */
+export interface LanguageSubtree {
+  /** Unique identifier for this sub-tree within the workspace. */
+  id: string;
+  /** Plugin language ("typescript" | "python" | ...). */
+  language: string;
+  /** Per-sub-tree role-folder roots. */
+  paths: WorkspacePaths;
+  /** Optional override of the workspace-wide public surface filename. */
+  public_surface?: string;
+  /** Python: importable package roots used by the python plugin. */
+  python_packages?: string[];
+  /** Go: module root passed to the future Go plugin. */
+  go_module_root?: string;
+  /** Sub-tree ids this sub-tree may import from across the language boundary. */
+  allowed_cross_language_imports?: string[];
 }
 
 export interface RoleDefinition {
@@ -164,6 +208,13 @@ export interface Diagnostic {
   line?: number;
   /** 1-based column number within `file`. Undefined if not known. */
   column?: number;
+  /**
+   * Sub-tree id (from `Workspace.languages[].id`) the diagnostic was emitted
+   * against. Populated by per-sub-tree orchestrators (wp-020) — left undefined
+   * for legacy single-language workspaces and for workspace-level checks that
+   * do not bind to a single sub-tree.
+   */
+  language_id?: string;
 }
 
 /**

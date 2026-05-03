@@ -1,6 +1,6 @@
 import * as path from "node:path";
 import { loadWorkspace } from "@chemag/core/loader";
-import { syncWorkspace } from "@chemag/core/sync";
+import { syncWorkspace, type SyncResult } from "@chemag/core/sync";
 import type { Workspace } from "@chemag/core/types";
 import { applyWorkspaceVocabulary, tr } from "@chemag/core/vocabulary";
 import { loadPlugin } from "../plugin-loader.js";
@@ -43,12 +43,21 @@ export function cmdSync(argv: string[]): void {
   // settle on a stronger source. Must run before any tr() output below.
   applyWorkspaceVocabulary(ws);
 
-  const plugin = loadPlugin({ language: ws.language });
-
   console.log(`\n${BLD}chem sync${R}${dryRun ? ` ${DIM}(dry run)${R}` : ""}\n`);
   console.log(`${BLD}Workspace:${R} ${ws.workspace}\n`);
 
-  const result = syncWorkspace(ws, wsDir, plugin, dryRun);
+  // WP-020: iterate every sub-tree, loading the matching plugin per
+  // sub-tree and scanning its own path roots. The loader guarantees
+  // ws.languages is non-empty after normalization (legacy single-language
+  // workspaces are synthesized into a one-element "default" sub-tree).
+  const subtrees = ws.languages ?? [{ id: "default", language: ws.language, paths: ws.paths }];
+  const result: SyncResult = { created: [], skipped: [] };
+  for (const sub of subtrees) {
+    const plugin = loadPlugin({ language: sub.language });
+    const r = syncWorkspace(ws, wsDir, plugin, dryRun, sub.paths);
+    result.created.push(...r.created);
+    result.skipped.push(...r.skipped);
+  }
 
   for (const f of result.created) {
     console.log(`  ${GRN}+${R}  ${path.relative(wsDir, f)}`);

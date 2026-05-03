@@ -137,6 +137,7 @@ function addUnit(argv: string[]): void {
   applyWorkspaceVocabulary(ws);
   const wsDir = path.dirname(wsPath);
 
+  // WP-020: iterate ws.languages here for true multi-plugin runs.
   const plugin = loadPlugin({ language: ws.language });
 
   console.log(`\n${BLD}chem add unit${R}\n`);

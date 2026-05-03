@@ -104,6 +104,7 @@ export function cmdEmitRules(argv: string[]): number {
   const wsDir = path.dirname(wsPath);
   const outDir = parsed.outDir === null ? wsDir : path.resolve(parsed.outDir);
 
+  // WP-020: iterate ws.languages here for true multi-plugin runs.
   const plugin = loadPlugin({ language: ws.language });
 
   let compounds: LoadedCompound[] = [];

@@ -27,6 +27,7 @@ export type DiagnosticCategory =
   | "MANIFEST"
   | "BOND"
   | "IMPORT"
+  | "IMPORT-CROSS-LANG"
   | "EXPORT"
   | "WIRING"
   | "SIGNAL"
@@ -48,6 +49,8 @@ export type DiagnosticCode =
   // ---- MANIFEST ----
   | "CHEM-MANIFEST-001"
   | "CHEM-MANIFEST-002"
+  | "CHEM-MANIFEST-003"
+  | "CHEM-MANIFEST-004"
   // ---- ROLE ----
   | "CHEM-ROLE-001"
   | "CHEM-ROLE-002"
@@ -65,6 +68,8 @@ export type DiagnosticCode =
   | "CHEM-IMPORT-002"
   | "CHEM-IMPORT-003"
   | "CHEM-IMPORT-004"
+  // ---- IMPORT-CROSS-LANG ----
+  | "CHEM-IMPORT-CROSS-LANG-001"
   // ---- TYPE ----
   | "CHEM-TYPE-001"
   | "CHEM-TYPE-002"
@@ -150,6 +155,20 @@ export const DIAGNOSTIC_CODES: Record<DiagnosticCode, DiagnosticCodeMeta> = {
     level: "error",
     trKey: "diagnostic.singleton_violated",
     helpFragment: "chem-manifest-002-singleton-violated",
+  },
+  "CHEM-MANIFEST-003": {
+    code: "CHEM-MANIFEST-003",
+    category: "MANIFEST",
+    level: "error",
+    trKey: "diagnostic.subtree_paths_overlap",
+    helpFragment: "chem-manifest-003-subtree-paths-overlap",
+  },
+  "CHEM-MANIFEST-004": {
+    code: "CHEM-MANIFEST-004",
+    category: "MANIFEST",
+    level: "error",
+    trKey: "diagnostic.subtree_id_duplicate",
+    helpFragment: "chem-manifest-004-subtree-id-duplicate",
   },
 
   // ---- ROLE ----
@@ -244,6 +263,15 @@ export const DIAGNOSTIC_CODES: Record<DiagnosticCode, DiagnosticCodeMeta> = {
     level: "error",
     trKey: "diagnostic.import_bypass",
     helpFragment: "chem-import-004-import-bypass",
+  },
+
+  // ---- IMPORT-CROSS-LANG ----
+  "CHEM-IMPORT-CROSS-LANG-001": {
+    code: "CHEM-IMPORT-CROSS-LANG-001",
+    category: "IMPORT-CROSS-LANG",
+    level: "error",
+    trKey: "diagnostic.cross_language_import",
+    helpFragment: "chem-import-cross-lang-001-cross-language-import",
   },
 
   // ---- TYPE ----

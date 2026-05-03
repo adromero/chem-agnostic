@@ -59,10 +59,13 @@ export type TrKey =
   | "diagnostic.role_not_allowed_for_type" // params: { unit, role, type, allowed }
   | "diagnostic.assay_subject_unknown" // params: { assay, subject }
   | "diagnostic.assay_mock_not_interface" // params: { assay, mock }
+  | "diagnostic.subtree_paths_overlap" // params: { id_a, id_b, path_a, path_b }
+  | "diagnostic.subtree_id_duplicate" // params: { id }
   // import-check.ts
   | "diagnostic.import_bond_violation" // params: { file, src_role, target_role, names, allowed }
   | "diagnostic.import_undeclared" // params: { file, target, src_compound }
   | "diagnostic.import_bypass" // params: { file, target, surface }
+  | "diagnostic.cross_language_import" // params: { src_id, target_id, file, target_compound }
   // check-edit.ts
   | "diagnostic.unresolvable_placement" // params: { file }
   // rules-emitters
@@ -182,9 +185,12 @@ export const ALL_TR_KEYS: readonly TrKey[] = [
   "diagnostic.role_not_allowed_for_type",
   "diagnostic.assay_subject_unknown",
   "diagnostic.assay_mock_not_interface",
+  "diagnostic.subtree_paths_overlap",
+  "diagnostic.subtree_id_duplicate",
   "diagnostic.import_bond_violation",
   "diagnostic.import_undeclared",
   "diagnostic.import_bypass",
+  "diagnostic.cross_language_import",
   "diagnostic.unresolvable_placement",
   "diagnostic.markers_missing_no_overwrite",
   "diagnostic.line_budget_exceeded",

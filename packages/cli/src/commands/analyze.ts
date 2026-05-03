@@ -1,9 +1,15 @@
 import * as path from "node:path";
 import { existsSync, readFileSync, statSync } from "node:fs";
-import { discoverCompounds, loadCompound, loadWorkspace } from "@chemag/core/loader";
-import { checkImports } from "@chemag/core/import-check";
+import { discoverCompoundsBySubtree, loadCompound, loadWorkspace } from "@chemag/core/loader";
+import { checkImports, type ImportCheckScope } from "@chemag/core/import-check";
 import type { LanguagePlugin } from "@chemag/core/plugin-interface";
-import type { Diagnostic, LoadedCompound, ParsedImport, Workspace } from "@chemag/core/types";
+import type {
+  Diagnostic,
+  LanguageSubtree,
+  LoadedCompound,
+  ParsedImport,
+  Workspace,
+} from "@chemag/core/types";
 import { applyWorkspaceVocabulary, tr } from "@chemag/core/vocabulary";
 import { emit as emitTelemetry } from "@chemag/telemetry";
 import { contentHash, createImportCache, createManifestCache } from "@chemag/core/cache";
@@ -115,9 +121,9 @@ export function cmdAnalyze(argv: string[]): void {
   // settle on a stronger source. Must run before any tr() output below.
   applyWorkspaceVocabulary(ws);
 
-  let compounds: LoadedCompound[];
+  let groups: { scope: LanguageSubtree; compounds: LoadedCompound[] }[];
   try {
-    compounds = discoverCompounds(ws, wsDir, {
+    groups = discoverCompoundsBySubtree(ws, wsDir, {
       loadCompound: (manifestPath: string): LoadedCompound => {
         const raw = readFileSync(manifestPath, "utf-8");
         const hash = contentHash(raw);
@@ -133,12 +139,24 @@ export function cmdAnalyze(argv: string[]): void {
     process.exit(2);
   }
 
-  const plugin = loadPlugin({ language: ws.language });
+  // WP-020: load one plugin per sub-tree and feed checkImports a list of
+  // {plugin, scope, compounds} triples.
+  const scopes: ImportCheckScope[] = groups.map((g) => ({
+    plugin: loadPlugin({ language: g.scope.language }),
+    scope: g.scope,
+    compounds: g.compounds,
+  }));
 
-  const totalFiles = compounds.reduce((n, c) => n + (c.manifest.units?.length ?? 0), 0);
+  const totalFiles = scopes.reduce(
+    (n, s) => n + s.compounds.reduce((m, c) => m + (c.manifest.units?.length ?? 0), 0),
+    0,
+  );
 
-  const diags = checkImports(ws, compounds, plugin, {
-    parseImportsBatch: (filePaths: string[], p: LanguagePlugin) => {
+  const diags = checkImports(ws, scopes, {
+    parseImportsBatch: (filePaths: string[], p: LanguagePlugin, _scope: LanguageSubtree) => {
+      // The hook is invoked once per sub-tree (wp-020). The per-file content
+      // cache is keyed by absolute path, which remains unique across
+      // sub-trees, so we can ignore `_scope` here without risk of collisions.
       const result = new Map<string, ParsedImport[]>();
       const misses: { abs: string; hash: string }[] = [];
 
@@ -454,7 +472,7 @@ function runWorkspaceAnalyze(wsPath: string): Diagnostic[] {
 
   applyWorkspaceVocabulary(ws);
 
-  const compounds = discoverCompounds(ws, wsDir, {
+  const groups = discoverCompoundsBySubtree(ws, wsDir, {
     loadCompound: (manifestPath: string): LoadedCompound => {
       const r = readFileSync(manifestPath, "utf-8");
       const h = contentHash(r);
@@ -466,10 +484,15 @@ function runWorkspaceAnalyze(wsPath: string): Diagnostic[] {
     },
   });
 
-  const plugin = loadPlugin({ language: ws.language });
+  // WP-020: one plugin per sub-tree.
+  const scopes: ImportCheckScope[] = groups.map((g) => ({
+    plugin: loadPlugin({ language: g.scope.language }),
+    scope: g.scope,
+    compounds: g.compounds,
+  }));
 
-  return checkImports(ws, compounds, plugin, {
-    parseImportsBatch: (filePaths: string[], p: LanguagePlugin) => {
+  return checkImports(ws, scopes, {
+    parseImportsBatch: (filePaths: string[], p: LanguagePlugin, _scope: LanguageSubtree) => {
       const result = new Map<string, ParsedImport[]>();
       const misses: { abs: string; hash: string }[] = [];
       for (const abs of filePaths) {

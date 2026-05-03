@@ -205,6 +205,7 @@ export function cmdCheckEdit(argv: string[]): void {
     process.exit(2);
   }
 
+  // WP-020: iterate ws.languages here for true multi-plugin runs.
   const plugin = loadPlugin({ language: ws.language });
 
   // Validate explicit proposal flags (if both supplied).

@@ -1,8 +1,14 @@
 import * as path from "node:path";
 import { allChecks } from "@chemag/core/checks";
 import { explainCode } from "@chemag/core/diagnostics";
-import { discoverCompounds, loadCompound, loadWorkspace } from "@chemag/core/loader";
-import type { CheckOptions, Diagnostic, LoadedCompound, Workspace } from "@chemag/core/types";
+import { discoverCompoundsBySubtree, loadCompound, loadWorkspace } from "@chemag/core/loader";
+import type {
+  CheckOptions,
+  Diagnostic,
+  LanguageSubtree,
+  LoadedCompound,
+  Workspace,
+} from "@chemag/core/types";
 import { applyWorkspaceVocabulary, tr } from "@chemag/core/vocabulary";
 import { emit as emitTelemetry } from "@chemag/telemetry";
 import { readFileSync } from "node:fs";
@@ -108,9 +114,9 @@ export function cmdCheck(argv: string[]): void {
   // settle on a stronger source. Must run before any tr() output below.
   applyWorkspaceVocabulary(ws);
 
-  let compounds: LoadedCompound[];
+  let groups: { scope: LanguageSubtree; compounds: LoadedCompound[] }[];
   try {
-    compounds = discoverCompounds(ws, wsDir, {
+    groups = discoverCompoundsBySubtree(ws, wsDir, {
       loadCompound: (manifestPath: string): LoadedCompound => {
         const raw = readFileSync(manifestPath, "utf-8");
         const hash = contentHash(raw);
@@ -126,8 +132,15 @@ export function cmdCheck(argv: string[]): void {
     process.exit(2);
   }
 
-  // Load the language plugin to get default public surface filename
-  const plugin = loadPlugin({ language: ws.language });
+  // WP-020: load one plugin per sub-tree. The per-sub-tree plugin contributes
+  // its default public-surface filename (used as a fallback when neither
+  // workspace.rules.public_surface nor sub.public_surface is set).
+  const subtreePlugins = groups.map((g) => ({
+    scope: g.scope,
+    compounds: g.compounds,
+    plugin: loadPlugin({ language: g.scope.language }),
+  }));
+  const compounds: LoadedCompound[] = subtreePlugins.flatMap((g) => g.compounds);
 
   // Stats
   const byType: Record<string, number> = {};
@@ -138,10 +151,16 @@ export function cmdCheck(argv: string[]): void {
   const totalUnits = compounds.reduce((n, c) => n + (c.manifest.units?.length ?? 0), 0);
   const totalAssays = compounds.reduce((n, c) => n + (c.manifest.assays?.length ?? 0), 0);
 
-  // Run checks with plugin's default public surface
-  const opts: CheckOptions = {
+  // Workspace-wide checks (no-duplicates, role-folder mismatches, signal
+  // emitter resolution, ...) need to see ALL compounds so cross-sub-tree
+  // duplicates are caught. We run `allChecks` ONCE on the union list, using
+  // the primary sub-tree's plugin defaults — workspace.rules.public_surface
+  // takes precedence anyway, and per-sub-tree public-surface overrides flow
+  // through `discoverCompoundsBySubtree` below.
+  const primaryPlugin = subtreePlugins[0]?.plugin;
+  const baseOpts: CheckOptions = {
     manifestOnly,
-    defaultPublicSurface: plugin.defaults.publicSurface,
+    defaultPublicSurface: primaryPlugin?.defaults.publicSurface,
   };
   let totalErrors = 0;
   let totalWarnings = 0;
@@ -151,12 +170,39 @@ export function cmdCheck(argv: string[]): void {
   const allDiags: Diagnostic[] = [];
 
   for (const { name, fn } of allChecks) {
-    const diags = fn(ws, compounds, opts);
-    results.push({ check: name, diagnostics: diags });
-    allDiags.push(...diags);
+    const diags = fn(ws, compounds, baseOpts);
 
-    const errors = diags.filter((d) => d.level === "error");
-    const warnings = diags.filter((d) => d.level === "warning");
+    // Re-run the public-surface check per sub-tree when the workspace has
+    // multiple language sub-trees with differing publicSurface defaults —
+    // each sub-tree may use a different filename (`public.ts` for TS,
+    // `__init__.py` for Python). We REPLACE the workspace-wide diagnostics
+    // for this specific check with the per-sub-tree results.
+    let merged = diags;
+    if (
+      name === "public-surface" &&
+      subtreePlugins.length > 1 &&
+      ws.rules?.public_surface === undefined &&
+      !manifestOnly
+    ) {
+      merged = [];
+      for (const g of subtreePlugins) {
+        const subOpts: CheckOptions = {
+          manifestOnly,
+          defaultPublicSurface: g.scope.public_surface ?? g.plugin.defaults.publicSurface,
+        };
+        const subDiags = fn(ws, g.compounds, subOpts).map((d) => ({
+          ...d,
+          language_id: d.language_id ?? g.scope.id,
+        }));
+        merged.push(...subDiags);
+      }
+    }
+
+    results.push({ check: name, diagnostics: merged });
+    allDiags.push(...merged);
+
+    const errors = merged.filter((d) => d.level === "error");
+    const warnings = merged.filter((d) => d.level === "warning");
     totalErrors += errors.length;
     totalWarnings += warnings.length;
 
