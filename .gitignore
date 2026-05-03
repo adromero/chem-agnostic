@@ -16,6 +16,11 @@ coverage/
 **/coverage/
 .DS_Store
 
+# Per-project Claude Code state: conductor scratch (progress.json, stage
+# specs, logs, archives), local settings, scheduled-task state, etc.
+# Always personal/transient — never commit.
+.claude/
+
 # Compiled test output for the VS Code extension (vscode-test runs the
 # .js files written here; the source lives under packages/vscode-extension/test).
 packages/vscode-extension/out/

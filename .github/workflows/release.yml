@@ -43,7 +43,11 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          version: pnpm changeset version
+          # Chain biome format after the version bump: changesets-action
+          # re-serializes package.json files with multi-line arrays for
+          # `files`/`categories`/`keywords`/`enum`, undoing the workspace's
+          # canonical biome formatting and breaking lint on the resulting PR.
+          version: pnpm changeset version && pnpm exec biome format --write .
           # publish: pnpm changeset publish
           # ^ Re-enable once an NPM_TOKEN is configured in repo secrets, OR set
           # up npm trusted publishing for each @chemag/* package on npmjs.com.
