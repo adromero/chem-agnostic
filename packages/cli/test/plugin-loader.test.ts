@@ -18,6 +18,12 @@ describe("loadPlugin", () => {
     expect(plugin.fileExtensions).toContain(".py");
   });
 
+  it("returns Go plugin for language: 'go'", () => {
+    const plugin = loadPlugin({ language: "go" });
+    expect(plugin.name).toBe("go");
+    expect(plugin.fileExtensions).toContain(".go");
+  });
+
   it("returns TypeScript plugin and emits deprecation warning when language is omitted", () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
@@ -29,13 +35,13 @@ describe("loadPlugin", () => {
 
   it("throws error listing available options for language: 'rust'", () => {
     expect(() => loadPlugin({ language: "rust" })).toThrowError(
-      /Unsupported language: "rust".*Available languages: typescript, python/,
+      /Unsupported language: "rust".*Available languages: typescript, python, go/,
     );
   });
 
   it("throws error for empty string language", () => {
     expect(() => loadPlugin({ language: "" })).toThrowError(
-      /Unsupported language: "".*Available languages: typescript, python/,
+      /Unsupported language: "".*Available languages: typescript, python, go/,
     );
   });
 });

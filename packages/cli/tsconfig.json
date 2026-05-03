@@ -10,8 +10,9 @@
   "references": [
     { "path": "../core" },
     { "path": "../mcp-server" },
-    { "path": "../plugin-typescript" },
+    { "path": "../plugin-go" },
     { "path": "../plugin-python" },
+    { "path": "../plugin-typescript" },
     { "path": "../telemetry" }
   ]
 }

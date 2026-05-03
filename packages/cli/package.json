@@ -31,10 +31,20 @@
     "test": "vitest run",
     "prepublishOnly": "pnpm run build"
   },
-  "keywords": ["architecture", "chem", "chemag", "analyzer", "typescript", "python", "scaffolding"],
+  "keywords": [
+    "architecture",
+    "chem",
+    "chemag",
+    "analyzer",
+    "typescript",
+    "python",
+    "go",
+    "scaffolding"
+  ],
   "dependencies": {
     "@chemag/core": "workspace:*",
     "@chemag/mcp-server": "workspace:*",
+    "@chemag/plugin-go": "workspace:*",
     "@chemag/plugin-python": "workspace:*",
     "@chemag/plugin-typescript": "workspace:*",
     "@chemag/telemetry": "workspace:*",

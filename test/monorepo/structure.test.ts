@@ -47,7 +47,15 @@ describe("monorepo structure", () => {
   });
 
   describe("packages/", () => {
-    const pkgs = ["cli", "core", "mcp-server", "plugin-typescript", "plugin-python", "telemetry"];
+    const pkgs = [
+      "cli",
+      "core",
+      "mcp-server",
+      "plugin-typescript",
+      "plugin-python",
+      "plugin-go",
+      "telemetry",
+    ];
     it.each(pkgs.map((p) => [p]))("package %s has package.json + tsconfig.json + src/", (pkg) => {
       expect(existsSync(abs(`packages/${pkg}/package.json`))).toBe(true);
       expect(existsSync(abs(`packages/${pkg}/tsconfig.json`))).toBe(true);
