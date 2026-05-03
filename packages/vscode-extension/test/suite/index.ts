@@ -10,7 +10,9 @@ import Mocha from "mocha";
 
 export async function run(): Promise<void> {
   const mocha = new Mocha({
-    ui: "bdd",
+    // The .test.ts files use Mocha's TDD interface (`suite`/`test`), so use
+    // the matching globals here. BDD would error with "suite is not defined".
+    ui: "tdd",
     color: true,
     timeout: 30_000,
   });
