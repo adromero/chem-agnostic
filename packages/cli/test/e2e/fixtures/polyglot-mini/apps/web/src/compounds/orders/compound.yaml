@@ -1,0 +1,17 @@
+compound: orders
+description: Order placement workflow.
+exports:
+  elements: [OrderId]
+  interfaces: [OrderRepo]
+  reactions: [CreateOrder]
+imports: []
+units:
+  - role: element
+    name: OrderId
+    file: ./elements/OrderId.ts
+  - role: interface
+    name: OrderRepo
+    file: ./interfaces/OrderRepo.ts
+  - role: reaction
+    name: CreateOrder
+    file: ./reactions/CreateOrder.ts

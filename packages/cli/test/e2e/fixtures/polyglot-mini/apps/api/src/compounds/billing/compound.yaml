@@ -1,0 +1,17 @@
+compound: billing
+description: Invoice generation workflow.
+exports:
+  elements: [InvoiceId]
+  interfaces: [InvoiceRepo]
+  reactions: [generate_invoice]
+imports: []
+units:
+  - role: element
+    name: InvoiceId
+    file: ./elements/invoice_id.py
+  - role: interface
+    name: InvoiceRepo
+    file: ./interfaces/invoice_repo.py
+  - role: reaction
+    name: generate_invoice
+    file: ./reactions/generate_invoice.py

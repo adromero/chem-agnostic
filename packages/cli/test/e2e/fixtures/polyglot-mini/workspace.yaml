@@ -1,0 +1,54 @@
+workspace: polyglot-mini
+
+roles:
+  element:
+    description: Immutable value object
+    folder: elements
+  interface:
+    description: Port contract
+    folder: interfaces
+  reaction:
+    description: Workflow
+    folder: reactions
+  adapter:
+    description: Concrete impl
+    folder: adapters
+
+bonds:
+  element: [element]
+  interface: [element]
+  reaction: [element, interface]
+  adapter: [element, interface]
+
+compound_types:
+  compound:
+    description: Standard feature compound
+    importable_by: all
+    can_import: [compound]
+
+languages:
+  - id: web
+    language: typescript
+    paths:
+      compounds: ./apps/web/src/compounds
+    public_surface: public.ts
+  - id: web-shared
+    language: typescript
+    paths:
+      compounds: ./apps/web-shared/src/compounds
+    public_surface: public.ts
+  - id: api
+    language: python
+    paths:
+      compounds: ./apps/api/src/compounds
+    public_surface: __init__.py
+  - id: worker
+    language: go
+    paths:
+      compounds: ./apps/worker/src/compounds
+    public_surface: public.go
+
+rules:
+  cross_compound_imports: public_only
+  role_from_path: true
+  manifest_filename: compound.yaml

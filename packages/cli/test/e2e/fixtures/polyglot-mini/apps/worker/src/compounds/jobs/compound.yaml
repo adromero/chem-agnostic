@@ -1,0 +1,13 @@
+compound: jobs
+description: Background job execution.
+exports:
+  elements: [JobId]
+  reactions: [RunJob]
+imports: []
+units:
+  - role: element
+    name: JobId
+    file: ./elements/job_id.go
+  - role: reaction
+    name: RunJob
+    file: ./reactions/run_job.go

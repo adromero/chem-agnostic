@@ -1,0 +1,9 @@
+compound: admin
+description: Admin-side primitives shared across web sub-trees.
+exports:
+  elements: [AdminId]
+imports: []
+units:
+  - role: element
+    name: AdminId
+    file: ./elements/AdminId.ts
