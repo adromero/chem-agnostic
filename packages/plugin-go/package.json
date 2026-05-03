@@ -6,13 +6,7 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": [
-    "dist/**/*.js",
-    "dist/**/*.d.ts",
-    "dist/**/*.d.ts.map",
-    "dist/**/*.js.map",
-    "bin/**"
-  ],
+  "files": ["dist/**/*.js", "dist/**/*.d.ts", "dist/**/*.d.ts.map", "dist/**/*.js.map", "bin/**"],
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "tsc -p tsconfig.json",

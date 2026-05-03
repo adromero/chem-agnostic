@@ -11,16 +11,8 @@
     "vscode": "^1.85.0",
     "node": ">=22"
   },
-  "categories": [
-    "Linters",
-    "Other"
-  ],
-  "keywords": [
-    "chemag",
-    "architecture",
-    "diagnostics",
-    "mcp"
-  ],
+  "categories": ["Linters", "Other"],
+  "keywords": ["chemag", "architecture", "diagnostics", "mcp"],
   "activationEvents": [
     "workspaceContains:workspace.yaml",
     "onCommand:chemag.checkWorkspace",
@@ -50,20 +42,13 @@
         },
         "chemag.vocabulary": {
           "type": "string",
-          "enum": [
-            "standard",
-            "chemistry"
-          ],
+          "enum": ["standard", "chemistry"],
           "default": "standard",
           "description": "Vocabulary used for diagnostic messages and CLAUDE.md output."
         },
         "chemag.runOn": {
           "type": "string",
-          "enum": [
-            "save",
-            "type",
-            "manual"
-          ],
+          "enum": ["save", "type", "manual"],
           "default": "save",
           "description": "When the chemag LSP server publishes diagnostics. 'save' = on document save only; 'type' = debounced 800ms after each edit (also on save); 'manual' = never auto-publish — use chemag.checkWorkspace to refresh."
         }

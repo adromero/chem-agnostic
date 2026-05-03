@@ -5,13 +5,7 @@
   "license": "MIT",
   "private": true,
   "main": "./dist/index.js",
-  "files": [
-    "action.yml",
-    "dist/**/*.js",
-    "dist/**/*.js.map",
-    "dist/licenses.txt",
-    "README.md"
-  ],
+  "files": ["action.yml", "dist/**/*.js", "dist/**/*.js.map", "dist/licenses.txt", "README.md"],
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "ncc build src/main.ts -o dist --source-map --license licenses.txt",

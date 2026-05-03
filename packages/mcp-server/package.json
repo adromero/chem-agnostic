@@ -16,12 +16,7 @@
       "default": "./dist/test-helpers.js"
     }
   },
-  "files": [
-    "dist/**/*.js",
-    "dist/**/*.d.ts",
-    "dist/**/*.d.ts.map",
-    "dist/**/*.js.map"
-  ],
+  "files": ["dist/**/*.js", "dist/**/*.d.ts", "dist/**/*.d.ts.map", "dist/**/*.js.map"],
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build:version": "node ./scripts/build-version.mjs",
@@ -30,13 +25,7 @@
     "test": "vitest run",
     "prepublishOnly": "pnpm run build"
   },
-  "keywords": [
-    "mcp",
-    "model-context-protocol",
-    "chem",
-    "chemag",
-    "architecture"
-  ],
+  "keywords": ["mcp", "model-context-protocol", "chem", "chemag", "architecture"],
   "dependencies": {
     "@chemag/core": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.29.0",
