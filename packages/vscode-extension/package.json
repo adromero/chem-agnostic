@@ -1,0 +1,82 @@
+{
+  "name": "chemag-vscode",
+  "displayName": "chemag",
+  "version": "0.2.0",
+  "description": "VS Code extension for chemag — surfaces architecture diagnostics inline, shows the active file's compound/role in the status bar, and brokers an MCP connection to the chemag CLI.",
+  "publisher": "chemag",
+  "license": "MIT",
+  "private": true,
+  "main": "./dist/extension.js",
+  "engines": {
+    "vscode": "^1.85.0",
+    "node": ">=22"
+  },
+  "categories": ["Linters", "Other"],
+  "keywords": ["chemag", "architecture", "diagnostics", "mcp"],
+  "activationEvents": [
+    "workspaceContains:workspace.yaml",
+    "onCommand:chemag.checkWorkspace",
+    "onCommand:chemag.showGraph"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "chemag.checkWorkspace",
+        "title": "chemag: Check workspace",
+        "category": "chemag"
+      },
+      {
+        "command": "chemag.showGraph",
+        "title": "chemag: Show graph",
+        "category": "chemag"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "chemag",
+      "properties": {
+        "chemag.cli.path": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the chemag CLI. Empty = auto-detect from PATH."
+        },
+        "chemag.vocabulary": {
+          "type": "string",
+          "enum": ["standard", "chemistry"],
+          "default": "standard",
+          "description": "Vocabulary used for diagnostic messages and CLAUDE.md output."
+        },
+        "chemag.runOn": {
+          "type": "string",
+          "enum": ["save", "type", "manual"],
+          "default": "save",
+          "description": "When the chemag LSP server publishes diagnostics. 'save' = on document save only; 'type' = debounced 800ms after each edit (also on save); 'manual' = never auto-publish — use chemag.checkWorkspace to refresh."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "node esbuild.config.js",
+    "pretest": "tsc -p test/tsconfig.json && node esbuild.config.js",
+    "test": "node ./test/runTest.js",
+    "package": "vsce package --no-dependencies"
+  },
+  "dependencies": {
+    "@chemag/core": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@chemag/cli": "workspace:*",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.9.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/test-electron": "^2.4.1",
+    "@vscode/vsce": "^3.2.1",
+    "esbuild": "^0.24.0",
+    "glob": "^13.0.0",
+    "mocha": "^11.0.1",
+    "typescript": "^5.7.0"
+  }
+}

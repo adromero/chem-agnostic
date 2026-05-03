@@ -1,0 +1,24 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "composite": true,
+    // CommonJS so the bundled server can be spawned as a child process
+    // inside the .vsix (no node_modules access). Mirrors the parent
+    // chemag-vscode tsconfig — both use legacy `node` moduleResolution which
+    // ignores `@chemag/core`'s package.json `exports` map. Subpath imports
+    // (`@chemag/core/check-edit`) would require Node16 resolution, which
+    // refuses to require() the ESM-flagged @chemag/core from CJS at
+    // typecheck time. We sidestep this by importing through the bare
+    // `@chemag/core` barrel; esbuild inlines everything we need.
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "verbatimModuleSyntax": false,
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["dist", "node_modules", "test"]
+}

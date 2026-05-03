@@ -1,2 +1,7 @@
 packages:
   - "packages/*"
+  # Sub-package: LSP server lives one level deeper than the `packages/*` glob
+  # reaches, so it must be listed explicitly. Without this, pnpm fails to
+  # resolve `workspace:*` from the server package and Turbo silently skips
+  # its tests (rendering the wp-027 server-test gate vacuous).
+  - "packages/vscode-extension/server"

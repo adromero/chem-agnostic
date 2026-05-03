@@ -1,0 +1,29 @@
+{
+  "name": "chemag-vscode-lsp-server",
+  "version": "0.1.0",
+  "description": "Chemag LSP server — wraps @chemag/core's check-edit engine and serves diagnostics + quick-fix code actions over the Language Server Protocol. Bundled inside the chemag-vscode extension; can also be spawned directly by non-VS Code editors (Zed/Helix/Neovim) via `node node_modules/chemag-vscode/server/dist/server.js` over stdio.",
+  "license": "MIT",
+  "private": true,
+  "main": "./dist/server.js",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "node scripts/build.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@chemag/core": "workspace:*",
+    "@chemag/plugin-go": "workspace:*",
+    "@chemag/plugin-python": "workspace:*",
+    "@chemag/plugin-typescript": "workspace:*",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.12"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.1.0",
+    "vscode-jsonrpc": "8.2.0",
+    "vscode-languageserver-protocol": "^3.17.5"
+  }
+}
