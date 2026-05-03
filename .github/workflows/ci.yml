@@ -69,6 +69,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build workspace siblings (@chemag/core etc.)
+        # ncc resolves @chemag/* via each package's `main`/`types` (CJS-style
+        # legacy resolution). Sibling dist/ trees must exist before bundling.
+        run: pnpm turbo run build --filter='!@chemag/github-action'
+
       - name: Rebuild action bundle
         run: pnpm --filter @chemag/github-action build
 

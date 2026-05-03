@@ -4,7 +4,6 @@
   "description": "Opt-in usage analytics for the Chem toolkit. Privacy-first: default off, anonymous UUID generated only on consent, no file paths in payloads.",
   "license": "MIT",
   "type": "module",
-  "private": true,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": ["dist/**/*.js", "dist/**/*.d.ts"],

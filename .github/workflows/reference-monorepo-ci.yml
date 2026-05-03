@@ -47,7 +47,9 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           pnpm build
-          pnpm --filter @chemag/cli link --global
+          # pnpm 9: `link --global` no longer accepts `--filter` (which implies
+          # --recursive). cd into the package directory and link from there.
+          cd packages/cli && pnpm link --global
 
       # Reference monorepo is its OWN pnpm workspace — separate install step.
       - name: Install reference-monorepo deps
