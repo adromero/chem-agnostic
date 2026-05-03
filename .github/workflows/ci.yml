@@ -49,3 +49,51 @@ jobs:
 
       - name: Test
         run: pnpm turbo run test
+
+  github-action-bundle:
+    name: GitHub Action — bundle in sync + smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Rebuild action bundle
+        run: pnpm --filter @chemag/github-action build
+
+      - name: Verify dist/ is in sync with src/
+        run: |
+          if ! git diff --exit-code packages/github-action/dist/; then
+            echo "::error::packages/github-action/dist/ is out of sync with src/. Run 'pnpm --filter @chemag/github-action build' and commit the result."
+            exit 1
+          fi
+
+      - name: Smoke — bundle runs with no node_modules
+        run: |
+          set -euo pipefail
+          TMP="$(mktemp -d)"
+          # Copy the full dist/ tree (ncc emits index.js + sibling
+          # sourcemap-register.js for --source-map builds). The point of the
+          # test is that `node` succeeds with NO node_modules anywhere — proving
+          # the ncc bundle is dependency-self-contained. We expect a setFailed
+          # (workspace file not found), NOT a module-resolution or ESM/CJS error.
+          cp -r packages/github-action/dist/. "$TMP/"
+          OUT="$(INPUT_WORKSPACE=/dev/null/missing GITHUB_EVENT_NAME=push GITHUB_WORKSPACE="$TMP" RUNNER_TEMP="$TMP" node "$TMP/index.js" 2>&1 || true)"
+          echo "$OUT"
+          if echo "$OUT" | grep -qE 'MODULE_NOT_FOUND|Cannot find module .@actions|Cannot find module .@octokit|ReferenceError: require is not defined|ERR_REQUIRE_ESM'; then
+            echo "::error::Bundle is not self-contained or has CJS/ESM mismatch."
+            exit 1
+          fi

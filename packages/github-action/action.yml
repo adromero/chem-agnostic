@@ -1,0 +1,55 @@
+name: chemag
+description: >-
+  Run the chemag architecture checker on a pull request or push. Posts a sticky
+  PR comment summarising violations and emits a SARIF log on disk so the caller
+  workflow can upload it via github/codeql-action/upload-sarif@v3.
+author: chemag-org
+branding:
+  icon: check-square
+  color: green
+
+inputs:
+  workspace:
+    description: Path to workspace.yaml (relative to the repository root).
+    required: false
+    default: workspace.yaml
+  command:
+    description: chemag command to run — one of "check", "analyze", "both".
+    required: false
+    default: both
+  fail-on:
+    description: Threshold for failing the step — one of "error", "warning", "never".
+    required: false
+    default: error
+  format:
+    description: Output format — one of "human", "json", "sarif", "junit". The action always also writes a SARIF log to disk regardless of this value.
+    required: false
+    default: sarif
+  comment-mode:
+    description: PR comment behavior — "sticky" (default; one self-updating comment), "append" (new comment per run), or "none".
+    required: false
+    default: sticky
+  changed-only:
+    description: When "true" (default), analyze only files changed in the PR / push. When "false", analyze the entire workspace.
+    required: false
+    default: "true"
+  vocabulary:
+    description: Diagnostic vocabulary — "standard" or "chemistry".
+    required: false
+    default: standard
+  github-token:
+    description: GitHub token used for PR comment posting and listing changed files. Defaults to the workflow-provided GITHUB_TOKEN. Required when `comment-mode` is not "none" or `changed-only` is "true".
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  sarif-path:
+    description: Filesystem path to the emitted SARIF 2.1.0 log. Pass this to `github/codeql-action/upload-sarif@v3` in a follow-up step to publish results to the Code Scanning UI.
+  diagnostics-count:
+    description: Total number of diagnostics emitted across all chemag commands run.
+  failed:
+    description: '"true" if the fail-on threshold was met (the action exited non-zero), otherwise "false".'
+
+runs:
+  using: node20
+  main: dist/index.js

@@ -2,6 +2,10 @@ node_modules/
 **/node_modules/
 dist/
 **/dist/
+# Carve-out: the GitHub Action bundle MUST be committed (Actions runtime
+# requirement — `runs.main: dist/index.js` cannot install deps at start).
+!packages/github-action/dist/
+!packages/github-action/dist/**
 .cache/
 .turbo/
 **/.turbo/
@@ -11,3 +15,11 @@ dist/
 coverage/
 **/coverage/
 .DS_Store
+
+# Compiled test output for the VS Code extension (vscode-test runs the
+# .js files written here; the source lives under packages/vscode-extension/test).
+packages/vscode-extension/out/
+# vsce-produced artifact.
+packages/vscode-extension/*.vsix
+# vscode-test downloads VS Code into here.
+packages/vscode-extension/.vscode-test/
