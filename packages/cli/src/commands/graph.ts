@@ -1,7 +1,7 @@
 import * as path from "node:path";
-import { generateMermaid } from "@chemag/core/graph";
-import { discoverCompounds, loadWorkspace } from "@chemag/core/loader";
-import type { LoadedCompound, Workspace } from "@chemag/core/types";
+import { generateMermaid, type GraphSubtreeGroup } from "@chemag/core/graph";
+import { discoverCompoundsBySubtree, loadWorkspace } from "@chemag/core/loader";
+import type { LanguageSubtree, LoadedCompound, Workspace } from "@chemag/core/types";
 import { applyWorkspaceVocabulary, tr } from "@chemag/core/vocabulary";
 
 const R = "\x1b[0m";
@@ -44,13 +44,24 @@ export function cmdGraph(argv: string[]): void {
   // settle on a stronger source. Must run before any tr() output below.
   applyWorkspaceVocabulary(ws);
 
-  let compounds: LoadedCompound[];
+  let groups: { scope: LanguageSubtree; compounds: LoadedCompound[] }[];
   try {
-    compounds = discoverCompounds(ws, wsDir);
+    groups = discoverCompoundsBySubtree(ws, wsDir);
   } catch (e: unknown) {
     console.error(`${RED}Failed to discover compounds:${R} ${e instanceof Error ? e.message : e}`);
     process.exit(2);
   }
 
-  console.log(generateMermaid(ws, compounds));
+  const compounds: LoadedCompound[] = groups.flatMap((g) => g.compounds);
+
+  // Pass per-sub-tree groups so multi-language workspaces render with one
+  // Mermaid `subgraph` cluster per sub-tree. Single-sub-tree workspaces
+  // fall through to the legacy type-grouped render (byte-stable for the
+  // existing snapshot tests).
+  const subtreeGroups: GraphSubtreeGroup[] = groups.map((g) => ({
+    scope: g.scope,
+    compounds: g.compounds,
+  }));
+
+  console.log(generateMermaid(ws, compounds, subtreeGroups));
 }

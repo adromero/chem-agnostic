@@ -162,7 +162,13 @@ describe("checkImports", () => {
       ]);
 
       const plugin = mockPlugin(importMap, resolutions);
-      const diags = checkImports(ws(), [compoundA], plugin);
+      const diags = checkImports(ws(), [
+        {
+          plugin,
+          scope: { id: "default", language: "typescript", paths: { compounds: "./src" } },
+          compounds: [compoundA],
+        },
+      ]);
 
       expect(diags.length).toBeGreaterThanOrEqual(1);
       const bondDiag = diags.find((d) => d.check === "import-bonds");
@@ -201,7 +207,13 @@ describe("checkImports", () => {
       ]);
 
       const plugin = mockPlugin(importMap, resolutions);
-      const diags = checkImports(ws(), [compoundA], plugin);
+      const diags = checkImports(ws(), [
+        {
+          plugin,
+          scope: { id: "default", language: "typescript", paths: { compounds: "./src" } },
+          compounds: [compoundA],
+        },
+      ]);
 
       expect(diags).toHaveLength(0);
     });
@@ -242,7 +254,13 @@ describe("checkImports", () => {
       ]);
 
       const plugin = mockPlugin(importMap, resolutions);
-      const diags = checkImports(ws(), [compoundA, compoundB], plugin);
+      const diags = checkImports(ws(), [
+        {
+          plugin,
+          scope: { id: "default", language: "typescript", paths: { compounds: "./src" } },
+          compounds: [compoundA, compoundB],
+        },
+      ]);
 
       const bypass = diags.find((d) => d.check === "import-bypass");
       expect(bypass).toBeDefined();
@@ -287,7 +305,13 @@ describe("checkImports", () => {
       ]);
 
       const plugin = mockPlugin(importMap, resolutions);
-      const diags = checkImports(ws(), [compoundA, compoundB], plugin);
+      const diags = checkImports(ws(), [
+        {
+          plugin,
+          scope: { id: "default", language: "typescript", paths: { compounds: "./src" } },
+          compounds: [compoundA, compoundB],
+        },
+      ]);
 
       const undeclared = diags.find((d) => d.check === "import-undeclared");
       expect(undeclared).toBeDefined();
@@ -325,7 +349,13 @@ describe("checkImports", () => {
       ]);
 
       const plugin = mockPlugin(importMap, resolutions);
-      const diags = checkImports(ws(), [compoundA], plugin);
+      const diags = checkImports(ws(), [
+        {
+          plugin,
+          scope: { id: "default", language: "typescript", paths: { compounds: "./src" } },
+          compounds: [compoundA],
+        },
+      ]);
 
       // Type-only should still trigger a bond violation
       const bondDiag = diags.find((d) => d.check === "import-bonds");
@@ -367,7 +397,13 @@ describe("checkImports", () => {
       ]);
 
       const plugin = mockPlugin(importMap, resolutions);
-      const diags = checkImports(ws(), [compoundA, compoundB], plugin);
+      const diags = checkImports(ws(), [
+        {
+          plugin,
+          scope: { id: "default", language: "typescript", paths: { compounds: "./src" } },
+          compounds: [compoundA, compoundB],
+        },
+      ]);
 
       expect(diags.find((d) => d.check === "import-undeclared")).toBeDefined();
       expect(diags.find((d) => d.check === "import-bypass")).toBeDefined();
@@ -403,7 +439,13 @@ describe("checkImports", () => {
       ]);
 
       const plugin = mockPlugin(importMap, resolutions);
-      const diags = checkImports(ws(), [compoundA], plugin);
+      const diags = checkImports(ws(), [
+        {
+          plugin,
+          scope: { id: "default", language: "typescript", paths: { compounds: "./src" } },
+          compounds: [compoundA],
+        },
+      ]);
 
       expect(diags).toHaveLength(0);
     });
@@ -432,7 +474,13 @@ describe("checkImports", () => {
       ]);
 
       const plugin = mockPlugin(importMap, resolutions);
-      const diags = checkImports(ws(), [compoundA], plugin);
+      const diags = checkImports(ws(), [
+        {
+          plugin,
+          scope: { id: "default", language: "typescript", paths: { compounds: "./src" } },
+          compounds: [compoundA],
+        },
+      ]);
 
       expect(diags).toHaveLength(0);
     });
@@ -481,7 +529,13 @@ describe("checkImports", () => {
       ]);
 
       const plugin = mockPlugin(importMap, resolutions);
-      const diags = checkImports(ws(), [compoundA, solvent], plugin);
+      const diags = checkImports(ws(), [
+        {
+          plugin,
+          scope: { id: "default", language: "typescript", paths: { compounds: "./src" } },
+          compounds: [compoundA, solvent],
+        },
+      ]);
 
       // No undeclared error because solvents are implicit
       const undeclared = diags.filter((d) => d.check === "import-undeclared");
@@ -519,7 +573,13 @@ describe("checkImports", () => {
       const resolutions = new Map<string, string | undefined>([["../../b/public", publicPath]]);
 
       const plugin = mockPlugin(importMap, resolutions);
-      const diags = checkImports(ws(), [compoundA, compoundB], plugin);
+      const diags = checkImports(ws(), [
+        {
+          plugin,
+          scope: { id: "default", language: "typescript", paths: { compounds: "./src" } },
+          compounds: [compoundA, compoundB],
+        },
+      ]);
 
       expect(diags).toHaveLength(0);
     });
@@ -562,7 +622,13 @@ describe("checkImports", () => {
       ]);
 
       const plugin = mockPlugin(importMap, resolutions);
-      const diags = checkImports(workspace, [compoundA, compoundB], plugin);
+      const diags = checkImports(workspace, [
+        {
+          plugin,
+          scope: { id: "default", language: "typescript", paths: { compounds: "./src" } },
+          compounds: [compoundA, compoundB],
+        },
+      ]);
 
       // No cross-compound diagnostics
       expect(diags.filter((d) => d.check === "import-undeclared")).toHaveLength(0);

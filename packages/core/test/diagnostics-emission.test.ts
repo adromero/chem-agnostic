@@ -351,7 +351,13 @@ describe("emission coverage — every check carries a code in the registry", () 
     ]);
 
     const plugin = importFixturePlugin(importMap, resolutions);
-    const diags = checkImports(fixture.ws, fixture.compounds, plugin);
+    const diags = checkImports(fixture.ws, [
+      {
+        plugin,
+        scope: { id: "default", language: "typescript", paths: { compounds: "./src" } },
+        compounds: fixture.compounds,
+      },
+    ]);
 
     expect(diags.length).toBeGreaterThan(0);
     for (const d of diags) {

@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { stringify } from "yaml";
-import type { Workspace, Compound } from "./types.js";
+import type { Workspace, Compound, WorkspacePaths } from "./types.js";
 import type { LanguagePlugin } from "./plugin-interface.js";
 
 export interface SyncResult {
@@ -14,20 +14,26 @@ export function syncWorkspace(
   workspaceDir: string,
   plugin: LanguagePlugin,
   dryRun: boolean,
+  /**
+   * (wp-020) Optional explicit paths block. When supplied, sync only scans
+   * these path roots — the multi-language orchestrator passes one per
+   * sub-tree. When omitted, falls back to `workspace.paths` (the legacy
+   * single-sub-tree behaviour, derived from `languages[0]` after loader
+   * normalization).
+   */
+  paths: WorkspacePaths = workspace.paths,
 ): SyncResult {
   const created: string[] = [];
   const skipped: string[] = [];
   const manifestFilename = workspace.rules?.manifest_filename ?? "compound.yaml";
 
   // Directories to scan: [dir, compoundType]
-  const scanDirs: [string, string][] = [
-    [path.resolve(workspaceDir, workspace.paths.compounds), "compound"],
-  ];
-  if (workspace.paths.reagents) {
-    scanDirs.push([path.resolve(workspaceDir, workspace.paths.reagents), "reagent"]);
+  const scanDirs: [string, string][] = [[path.resolve(workspaceDir, paths.compounds), "compound"]];
+  if (paths.reagents) {
+    scanDirs.push([path.resolve(workspaceDir, paths.reagents), "reagent"]);
   }
-  if (workspace.paths.solvents) {
-    scanDirs.push([path.resolve(workspaceDir, workspace.paths.solvents), "solvent"]);
+  if (paths.solvents) {
+    scanDirs.push([path.resolve(workspaceDir, paths.solvents), "solvent"]);
   }
 
   for (const [baseDir, compoundType] of scanDirs) {

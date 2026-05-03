@@ -16,7 +16,7 @@
 import * as path from "node:path";
 import { allChecks } from "@chemag/core/checks";
 import { findChangedFiles } from "@chemag/core/git-utils";
-import { checkImports } from "@chemag/core/import-check";
+import { checkImports, type ImportCheckScope } from "@chemag/core/import-check";
 import type { Diagnostic } from "@chemag/core/types";
 import type { Session } from "../context.js";
 import { resolvePlugin } from "./plugin-resolver.js";
@@ -50,7 +50,20 @@ export async function gatherViolations(
     const out = fn(workspace, compounds, { manifestOnly: false });
     manifestDiagnostics.push(...out);
   }
-  const importDiagnostics = checkImports(workspace, compounds, plugin);
+
+  // wp-020: checkImports now takes a per-sub-tree ImportCheckScope[]. The
+  // MCP server still resolves a single plugin via `resolvePlugin(workspace)`
+  // — a fuller multi-plugin MCP path is out of scope here. We feed every
+  // discovered compound through `languages[0]` (the loader-normalized
+  // primary sub-tree) so cross-language detection short-circuits and the
+  // existing single-language behaviour is preserved verbatim.
+  const primary = workspace.languages?.[0] ?? {
+    id: "default",
+    language: workspace.language,
+    paths: workspace.paths,
+  };
+  const scopes: ImportCheckScope[] = [{ plugin, scope: primary, compounds }];
+  const importDiagnostics = checkImports(workspace, scopes);
   let all: Diagnostic[] = [...manifestDiagnostics, ...importDiagnostics];
 
   if (opts.compound) {

@@ -71,4 +71,76 @@ describe("generateMermaid", () => {
     expect(output).toContain("subgraph reagents");
     expect(output).toContain("subgraph compounds");
   });
+
+  // -----------------------------------------------------------------
+  // wp-020 — multi-sub-tree cluster mode.
+  // -----------------------------------------------------------------
+  it("renders one Mermaid subgraph cluster per language sub-tree (wp-020)", () => {
+    const webA = lc("web_orders", { imports: [{ compound: "api_orders" }] });
+    const apiA = lc("api_orders");
+    const output = generateMermaid(
+      minWs(),
+      [webA, apiA],
+      [
+        {
+          scope: {
+            id: "web",
+            language: "typescript",
+            paths: { compounds: "./apps/web/compounds" },
+          },
+          compounds: [webA],
+        },
+        {
+          scope: { id: "api", language: "python", paths: { compounds: "./apps/api/compounds" } },
+          compounds: [apiA],
+        },
+      ],
+    );
+    expect(output).toContain('subgraph subtree_web["web (typescript)"]');
+    expect(output).toContain('subgraph subtree_api["api (python)"]');
+  });
+
+  it("renders cross-sub-tree import edges as dashed arrows (wp-020)", () => {
+    const webA = lc("web_orders", { imports: [{ compound: "api_orders" }] });
+    const apiA = lc("api_orders");
+    const output = generateMermaid(
+      minWs(),
+      [webA, apiA],
+      [
+        {
+          scope: {
+            id: "web",
+            language: "typescript",
+            paths: { compounds: "./apps/web/compounds" },
+          },
+          compounds: [webA],
+        },
+        {
+          scope: { id: "api", language: "python", paths: { compounds: "./apps/api/compounds" } },
+          compounds: [apiA],
+        },
+      ],
+    );
+    // Cross-sub-tree edge uses dashed `-.->` instead of solid `-->`.
+    expect(output).toContain("web_orders -.-> api_orders");
+    expect(output).not.toContain("web_orders --> api_orders");
+  });
+
+  it("falls through to legacy type-grouped render when only one sub-tree is supplied", () => {
+    const a = lc("a");
+    const output = generateMermaid(
+      minWs(),
+      [a],
+      [
+        {
+          scope: { id: "default", language: "typescript", paths: { compounds: "./compounds" } },
+          compounds: [a],
+        },
+      ],
+    );
+    // Single-sub-tree input must NOT switch into cluster mode (byte-stable
+    // for legacy single-language workspaces).
+    expect(output).not.toContain("subgraph subtree_default");
+    expect(output).toContain("subgraph compounds");
+  });
 });

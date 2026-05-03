@@ -1,18 +1,47 @@
 import * as path from "node:path";
-import type { Workspace, LoadedCompound, Diagnostic, ParsedImport } from "./types.js";
+import type {
+  Workspace,
+  LoadedCompound,
+  Diagnostic,
+  ParsedImport,
+  LanguageSubtree,
+} from "./types.js";
 import type { LanguagePlugin } from "./plugin-interface.js";
 import { tr } from "./vocabulary/index.js";
 
 /**
+ * One per-language sub-tree slice fed into `checkImports`. The CLI / MCP
+ * orchestrator builds one entry per `workspace.languages[]` entry, paired
+ * with the resolved plugin and the compounds discovered inside the
+ * sub-tree's path roots.
+ */
+export interface ImportCheckScope {
+  plugin: LanguagePlugin;
+  scope: LanguageSubtree;
+  compounds: LoadedCompound[];
+}
+
+/**
  * Optional hook the CLI passes when it has a cache layer. The hook is
- * invoked once with the full file list; if it returns a non-null map,
- * the plugin's `parseImportsBatch` is bypassed for those entries.
+ * invoked **once per sub-tree** with the file list for that sub-tree (and
+ * the matching plugin/scope), so callers can keep their per-file content
+ * cache without forcing a global rewrite of the cache layer.
  *
- * The CLI wraps the plugin call so cached entries are returned from disk
- * and missing entries are parsed once and persisted.
+ * If the hook returns a non-null map, the plugin's `parseImportsBatch` is
+ * bypassed for those entries. The CLI wraps the plugin call so cached
+ * entries are returned from disk and missing entries are parsed once and
+ * persisted.
+ *
+ * `scope` may be ignored by the cache implementation — file paths remain
+ * absolute and unique across sub-trees, so no key collision can occur. The
+ * parameter is supplied so per-sub-tree caches (rare) can partition by id.
  */
 export interface CheckImportsHooks {
-  parseImportsBatch?: (filePaths: string[], plugin: LanguagePlugin) => Map<string, ParsedImport[]>;
+  parseImportsBatch?: (
+    filePaths: string[],
+    plugin: LanguagePlugin,
+    scope: LanguageSubtree,
+  ) => Map<string, ParsedImport[]>;
 }
 
 // ---------------------------------------------------------------------------
@@ -20,159 +49,232 @@ export interface CheckImportsHooks {
 // ---------------------------------------------------------------------------
 
 /**
- * Analyze real import statements in source files against bond rules
- * and cross-compound import constraints.
+ * Analyze real import statements in source files against bond rules,
+ * cross-compound import constraints, and (wp-020) cross-language sub-tree
+ * boundaries.
  *
- * This is the language-agnostic orchestrator. All language-specific
- * parsing and resolution is delegated to the provided LanguagePlugin.
+ * The orchestrator iterates each `ImportCheckScope` and invokes the
+ * scope's `plugin.parseImportsBatch` (or the cache-aware hook) once per
+ * sub-tree. Diagnostics from every scope are aggregated into a single list
+ * and tagged with `language_id` (the source sub-tree's id).
  */
 export function checkImports(
   workspace: Workspace,
-  compounds: LoadedCompound[],
-  plugin: LanguagePlugin,
+  scopes: ImportCheckScope[],
   hooks: CheckImportsHooks = {},
 ): Diagnostic[] {
   const diags: Diagnostic[] = [];
 
-  // Build lookup structures
-  const compoundMap = new Map<string, LoadedCompound>();
-  for (const c of compounds) compoundMap.set(c.manifest.compound, c);
+  // -----------------------------------------------------------------
+  // Build a GLOBAL file index that spans every sub-tree. This lets us
+  // detect cross-sub-tree imports (a TS file resolving into a Python
+  // file's path, etc.) without losing the per-sub-tree plugin used to
+  // parse the source.
+  // -----------------------------------------------------------------
+  type FileEntry = {
+    compound: string;
+    unit: string;
+    role: string;
+    /** id of the sub-tree this file lives in. */
+    subtreeId: string;
+  };
+  const fileIndex = new Map<string, FileEntry>();
 
-  // Map absolute file path -> { compound name, unit name, role }
-  const fileIndex = new Map<string, { compound: string; unit: string; role: string }>();
-  for (const c of compounds) {
-    for (const u of c.manifest.units ?? []) {
-      const abs = path.resolve(c.dir, u.file);
-      fileIndex.set(abs, {
-        compound: c.manifest.compound,
-        unit: u.name,
-        role: u.role,
-      });
-    }
-  }
+  // Compound name -> { loaded compound, sub-tree id } across all scopes.
+  type CompoundEntry = { compound: LoadedCompound; subtreeId: string };
+  const compoundMap = new Map<string, CompoundEntry>();
 
-  // Implicit solvents — compounds whose type has implicit: true
+  // Implicit solvents are a workspace-wide concept (compound type rule).
   const implicitNames = new Set<string>();
-  for (const c of compounds) {
-    const typeDef = workspace.compound_types?.[c.manifest.type ?? "compound"];
-    if (typeDef?.implicit) implicitNames.add(c.manifest.compound);
-  }
 
-  // Collect all unit file paths to analyze
-  const filesToAnalyze: { abs: string; compound: LoadedCompound }[] = [];
-  for (const c of compounds) {
-    for (const u of c.manifest.units ?? []) {
-      const abs = path.resolve(c.dir, u.file);
-      filesToAnalyze.push({ abs, compound: c });
-    }
-  }
+  for (const { scope, compounds } of scopes) {
+    for (const c of compounds) {
+      compoundMap.set(c.manifest.compound, { compound: c, subtreeId: scope.id });
+      const typeDef = workspace.compound_types?.[c.manifest.type ?? "compound"];
+      if (typeDef?.implicit) implicitNames.add(c.manifest.compound);
 
-  if (filesToAnalyze.length === 0) return diags;
-
-  // Batch-parse all imports via the language plugin (or the cache-aware
-  // hook supplied by the CLI).
-  const allFilePaths = filesToAnalyze.map((f) => f.abs);
-  const batchResult = hooks.parseImportsBatch
-    ? hooks.parseImportsBatch(allFilePaths, plugin)
-    : plugin.parseImportsBatch(allFilePaths);
-
-  // Analyze each file's imports
-  for (const { abs, compound: srcCompound } of filesToAnalyze) {
-    const imports = batchResult.get(abs);
-    if (!imports || imports.length === 0) continue;
-
-    const srcInfo = fileIndex.get(abs);
-    if (!srcInfo) continue;
-
-    const srcRole = srcInfo.role;
-    const allowedRoles = workspace.bonds[srcRole];
-
-    for (const imp of imports) {
-      // Resolve module specifier to absolute path via the plugin
-      const resolvedPath = plugin.resolveModulePath(abs, imp.moduleSpecifier);
-
-      // Skip external/stdlib modules (unresolvable)
-      if (resolvedPath === undefined) continue;
-
-      // Look up the resolved path in the file index
-      const targetInfo = fileIndex.get(resolvedPath);
-
-      // Not a known chem unit — skip
-      if (!targetInfo) continue;
-
-      const targetCompound = targetInfo.compound;
-      const targetRole = targetInfo.role;
-      const importedNames = imp.names.length > 0 ? imp.names.join(", ") : "(side-effect)";
-
-      // --- Check 1: Bond rules ---
-      if (allowedRoles && !allowedRoles.includes(targetRole)) {
-        diags.push({
-          level: "error",
-          check: "import-bonds",
-          code: "CHEM-BOND-003",
-          compound: srcCompound.manifest.compound,
-          message: tr("diagnostic.import_bond_violation", {
-            file: path.basename(abs),
-            src_role: srcRole,
-            target_role: targetRole,
-            names: importedNames,
-          }),
-          hint: `${srcRole} can only import from [${allowedRoles.join(", ")}]`,
-          // wp-005: source-level diagnostics MUST populate `file` (absolute path).
-          file: abs,
+      for (const u of c.manifest.units ?? []) {
+        const abs = path.resolve(c.dir, u.file);
+        fileIndex.set(abs, {
+          compound: c.manifest.compound,
+          unit: u.name,
+          role: u.role,
+          subtreeId: scope.id,
         });
       }
+    }
+  }
 
-      // --- Check 2: Cross-compound import rules ---
-      if (targetCompound !== srcCompound.manifest.compound) {
-        const crossRule = workspace.rules?.cross_compound_imports ?? "public_only";
+  // -----------------------------------------------------------------
+  // Iterate sub-trees. For each, invoke the parse-batch hook (or the
+  // plugin's batch parser) ONCE per sub-tree, then walk every file's
+  // imports and emit diagnostics.
+  // -----------------------------------------------------------------
+  for (const { plugin, scope, compounds } of scopes) {
+    if (compounds.length === 0) continue;
 
-        if (crossRule === "public_only") {
-          const surfaceFile = workspace.rules?.public_surface ?? plugin.defaults.publicSurface;
-          const targetC = compoundMap.get(targetCompound);
+    const filesToAnalyze: { abs: string; compound: LoadedCompound }[] = [];
+    for (const c of compounds) {
+      for (const u of c.manifest.units ?? []) {
+        const abs = path.resolve(c.dir, u.file);
+        filesToAnalyze.push({ abs, compound: c });
+      }
+    }
 
-          if (targetC) {
-            const surfaceAbs = path.resolve(targetC.dir, surfaceFile);
+    if (filesToAnalyze.length === 0) continue;
 
-            // The resolved import should point to the public surface
-            if (resolvedPath !== surfaceAbs) {
-              // Check if the source compound declares the target as an import
-              const isImported = (srcCompound.manifest.imports ?? []).some(
-                (i) => i.compound === targetCompound,
-              );
-              const isImplicit = implicitNames.has(targetCompound);
+    const allFilePaths = filesToAnalyze.map((f) => f.abs);
+    const batchResult = hooks.parseImportsBatch
+      ? hooks.parseImportsBatch(allFilePaths, plugin, scope)
+      : plugin.parseImportsBatch(allFilePaths);
 
-              if (!isImported && !isImplicit) {
+    for (const { abs, compound: srcCompound } of filesToAnalyze) {
+      const imports = batchResult.get(abs);
+      if (!imports || imports.length === 0) continue;
+
+      const srcInfo = fileIndex.get(abs);
+      if (!srcInfo) continue;
+
+      const srcRole = srcInfo.role;
+      const allowedRoles = workspace.bonds[srcRole];
+
+      for (const imp of imports) {
+        // Resolve module specifier to absolute path via the scope's plugin.
+        const resolvedPath = plugin.resolveModulePath(abs, imp.moduleSpecifier);
+
+        // Skip external/stdlib modules (unresolvable).
+        if (resolvedPath === undefined) continue;
+
+        // Look up the resolved path in the global file index.
+        const targetInfo = fileIndex.get(resolvedPath);
+
+        // Not a known chem unit — skip.
+        if (!targetInfo) continue;
+
+        const targetCompound = targetInfo.compound;
+        const targetRole = targetInfo.role;
+        const importedNames = imp.names.length > 0 ? imp.names.join(", ") : "(side-effect)";
+
+        // ---- Check 0 (wp-020): Cross-language sub-tree boundary ----
+        // If the resolved file lives in a different sub-tree than the
+        // source file, the import crosses a language boundary. Emit
+        // CHEM-IMPORT-CROSS-LANG-001 unless the source sub-tree explicitly
+        // allow-lists the target sub-tree id.
+        if (targetInfo.subtreeId !== srcInfo.subtreeId) {
+          const allowed = scope.allowed_cross_language_imports ?? [];
+          if (!allowed.includes(targetInfo.subtreeId)) {
+            diags.push({
+              level: "error",
+              check: "import-cross-lang",
+              code: "CHEM-IMPORT-CROSS-LANG-001",
+              compound: srcCompound.manifest.compound,
+              language_id: srcInfo.subtreeId,
+              message: tr("diagnostic.cross_language_import", {
+                src_id: srcInfo.subtreeId,
+                target_id: targetInfo.subtreeId,
+                file: path.basename(abs),
+                target_compound: targetCompound,
+              }),
+              hint:
+                `Compound "${targetCompound}" lives in sub-tree "${targetInfo.subtreeId}". ` +
+                `Add "${targetInfo.subtreeId}" to languages[${srcInfo.subtreeId}].allowed_cross_language_imports to permit it explicitly.`,
+              file: abs,
+            });
+            // Skip the per-sub-tree import-bonds / cross-compound checks for
+            // a cross-language import — the cross-language diagnostic is the
+            // first-class violation. Reporting downstream rule violations
+            // (bond, undeclared, bypass) on a forbidden import would just
+            // generate noise.
+            continue;
+          }
+          // Allow-listed cross-language import: fall through to the
+          // standard bond / cross-compound checks below so the architecture
+          // rules still apply across the boundary.
+        }
+
+        // --- Check 1: Bond rules ---
+        if (allowedRoles && !allowedRoles.includes(targetRole)) {
+          diags.push({
+            level: "error",
+            check: "import-bonds",
+            code: "CHEM-BOND-003",
+            compound: srcCompound.manifest.compound,
+            language_id: srcInfo.subtreeId,
+            message: tr("diagnostic.import_bond_violation", {
+              file: path.basename(abs),
+              src_role: srcRole,
+              target_role: targetRole,
+              names: importedNames,
+            }),
+            hint: `${srcRole} can only import from [${allowedRoles.join(", ")}]`,
+            // wp-005: source-level diagnostics MUST populate `file` (absolute path).
+            file: abs,
+          });
+        }
+
+        // --- Check 2: Cross-compound import rules ---
+        if (targetCompound !== srcCompound.manifest.compound) {
+          const crossRule = workspace.rules?.cross_compound_imports ?? "public_only";
+
+          if (crossRule === "public_only") {
+            // Resolve the public-surface filename: prefer the target
+            // sub-tree's per-language override, fall back to the
+            // workspace-wide `rules.public_surface`, then finally to the
+            // target compound's plugin defaults.
+            const targetEntry = compoundMap.get(targetCompound);
+            const targetSubtree = scopes.find((s) => s.scope.id === targetEntry?.subtreeId);
+            const surfaceFile =
+              targetSubtree?.scope.public_surface ??
+              workspace.rules?.public_surface ??
+              targetSubtree?.plugin.defaults.publicSurface ??
+              plugin.defaults.publicSurface;
+            const targetC = targetEntry?.compound;
+
+            if (targetC) {
+              const surfaceAbs = path.resolve(targetC.dir, surfaceFile);
+
+              // The resolved import should point to the public surface.
+              if (resolvedPath !== surfaceAbs) {
+                // Check if the source compound declares the target as an import.
+                const isImported = (srcCompound.manifest.imports ?? []).some(
+                  (i) => i.compound === targetCompound,
+                );
+                const isImplicit = implicitNames.has(targetCompound);
+
+                if (!isImported && !isImplicit) {
+                  diags.push({
+                    level: "error",
+                    check: "import-undeclared",
+                    code: "CHEM-IMPORT-003",
+                    compound: srcCompound.manifest.compound,
+                    language_id: srcInfo.subtreeId,
+                    message: tr("diagnostic.import_undeclared", {
+                      file: path.basename(abs),
+                      target: targetCompound,
+                      src_compound: srcCompound.manifest.compound,
+                    }),
+                    hint: `Add "- compound: ${targetCompound}" to imports in ${srcCompound.manifest.compound}/compound.yaml`,
+                    // wp-005: source-level diagnostics MUST populate `file`.
+                    file: abs,
+                  });
+                }
+
                 diags.push({
                   level: "error",
-                  check: "import-undeclared",
-                  code: "CHEM-IMPORT-003",
+                  check: "import-bypass",
+                  code: "CHEM-IMPORT-004",
                   compound: srcCompound.manifest.compound,
-                  message: tr("diagnostic.import_undeclared", {
+                  language_id: srcInfo.subtreeId,
+                  message: tr("diagnostic.import_bypass", {
                     file: path.basename(abs),
                     target: targetCompound,
-                    src_compound: srcCompound.manifest.compound,
+                    surface: surfaceFile,
                   }),
-                  hint: `Add "- compound: ${targetCompound}" to imports in ${srcCompound.manifest.compound}/compound.yaml`,
+                  hint: `Import from "${targetCompound}/${surfaceFile}" instead`,
                   // wp-005: source-level diagnostics MUST populate `file`.
                   file: abs,
                 });
               }
-
-              diags.push({
-                level: "error",
-                check: "import-bypass",
-                code: "CHEM-IMPORT-004",
-                compound: srcCompound.manifest.compound,
-                message: tr("diagnostic.import_bypass", {
-                  file: path.basename(abs),
-                  target: targetCompound,
-                  surface: surfaceFile,
-                }),
-                hint: `Import from "${targetCompound}/${surfaceFile}" instead`,
-                // wp-005: source-level diagnostics MUST populate `file`.
-                file: abs,
-              });
             }
           }
         }
