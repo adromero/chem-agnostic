@@ -48,6 +48,9 @@ const goAvailable = hasGoToolchain();
 let adhocHelper: string | undefined;
 let adhocCleanup: (() => void) | undefined;
 
+// vitest's default hookTimeout is 10s, but the first `go build` on a cold
+// CI runner (no GOCACHE / no compiled stdlib cache) routinely needs 30-60s.
+// Match the inner spawn timeout (120s) on the hook.
 beforeAll(() => {
   if (!goAvailable) return;
   const dir = mkdtempSync(path.join(tmpdir(), "chemag-go-helper-build-"));
@@ -67,7 +70,7 @@ beforeAll(() => {
   } else {
     rmSync(dir, { recursive: true, force: true });
   }
-});
+}, 120_000);
 
 afterAll(() => {
   adhocCleanup?.();
