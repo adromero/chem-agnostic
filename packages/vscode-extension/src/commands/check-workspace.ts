@@ -40,7 +40,7 @@ export function makeCheckWorkspaceCommand(opts: CheckWorkspaceOptions): () => vo
     // file (in the Problems panel).
     const lsp = opts.getLspClient?.();
     const activeUri = vscode.window.activeTextEditor?.document.uri;
-    if (lsp && lsp.isRunning() && activeUri) {
+    if (lsp?.isRunning() && activeUri) {
       lsp.forceCheck(activeUri).catch((err: unknown) => {
         const msg = err instanceof Error ? err.message : String(err);
         opts.output.appendLine(`[check] LSP forceCheck failed: ${msg}`);

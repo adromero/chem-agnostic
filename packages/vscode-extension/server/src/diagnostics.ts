@@ -15,11 +15,7 @@
 import * as fs from "node:fs";
 import * as url from "node:url";
 import { runCheckEdit, type CheckEditDiagnostic, type LanguagePlugin } from "@chemag/core";
-import {
-  Diagnostic as LspDiagnostic,
-  DiagnosticSeverity,
-  Range,
-} from "vscode-languageserver/node";
+import { Diagnostic as LspDiagnostic, DiagnosticSeverity, Range } from "vscode-languageserver/node";
 import type { WorkspaceState } from "./workspace-state.js";
 
 // ---------------------------------------------------------------------------

@@ -380,9 +380,9 @@ describe("chemag LSP server — diagnostics + code actions", () => {
       // At least one should be `import_via_public_surface`-shaped (title
       // mentions "public surface") OR `add_compound_import`-shaped.
       const titles = list.map((a) => a.title);
-      expect(
-        titles.some((t) => /public surface/i.test(t) || /add compound import/i.test(t)),
-      ).toBe(true);
+      expect(titles.some((t) => /public surface/i.test(t) || /add compound import/i.test(t))).toBe(
+        true,
+      );
     } finally {
       dispose();
     }
