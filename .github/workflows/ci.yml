@@ -79,8 +79,15 @@ jobs:
 
       - name: Verify dist/ is in sync with src/
         run: |
-          if ! git diff --exit-code packages/github-action/dist/; then
-            echo "::error::packages/github-action/dist/ is out of sync with src/. Run 'pnpm --filter @chemag/github-action build' and commit the result."
+          # Sourcemap files (.js.map, .d.ts.map) embed absolute build paths
+          # (file:///home/runner/... vs file:///home/alfonso/...) and ALWAYS
+          # differ between local and CI builds. The actual GHA-loaded artifact
+          # is dist/index.js — that's what the sync check enforces.
+          if ! git diff --exit-code -- \
+              'packages/github-action/dist/index.js' \
+              'packages/github-action/dist/sourcemap-register.js' \
+              'packages/github-action/dist/licenses.txt'; then
+            echo "::error::packages/github-action/dist/index.js is out of sync with src/. Run 'pnpm --filter @chemag/github-action build' and commit the result."
             exit 1
           fi
 

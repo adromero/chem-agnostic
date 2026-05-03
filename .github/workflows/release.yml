@@ -39,12 +39,16 @@ jobs:
       - name: Build
         run: pnpm turbo run build
 
-      - name: Create release PR or publish
+      - name: Create release PR (publish requires NPM_TOKEN — uncomment when ready)
         id: changesets
         uses: changesets/action@v1
         with:
           version: pnpm changeset version
-          publish: pnpm changeset publish
+          # publish: pnpm changeset publish
+          # ^ Re-enable once an NPM_TOKEN is configured in repo secrets, OR set
+          # up npm trusted publishing for each @chemag/* package on npmjs.com.
+          # Without this, the action attempts ENEEDAUTH publishing on every
+          # push to main and fails the workflow.
           commit: "chore(release): version packages"
           title: "chore(release): version packages"
         env:

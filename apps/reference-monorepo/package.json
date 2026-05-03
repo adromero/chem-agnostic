@@ -11,10 +11,10 @@
   },
   "packageManager": "pnpm@9.12.0",
   "scripts": {
-    "chemag:check": "chemag check && chemag check --workspace apps/api/workspace.yaml",
-    "chemag:check:ts": "chemag check",
+    "chemag:check": "chemag check workspace.yaml && chemag check --workspace apps/api/workspace.yaml",
+    "chemag:check:ts": "chemag check workspace.yaml",
     "chemag:check:python": "chemag check --workspace apps/api/workspace.yaml",
-    "chemag:analyze": "chemag analyze && chemag analyze --workspace apps/api/workspace.yaml",
+    "chemag:analyze": "chemag analyze workspace.yaml && chemag analyze --workspace apps/api/workspace.yaml",
     "chemag:graph": "chemag graph workspace.yaml",
     "chemag:graph:snapshot": "chemag graph workspace.yaml > test/chemag-graph.snapshot.txt",
     "chemag:emit-rules": "chemag emit-rules --tool all",
