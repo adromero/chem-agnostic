@@ -1,0 +1,53 @@
+# ---------------------------------------------------------------------------
+# Bitbucket Pipe manifest for chemag.
+#
+# Consumed by the Bitbucket Pipes registry; the Docker image referenced by
+# `image:` MUST be published separately (release-time concern, not built in
+# this stage). When that publish lands, replace the placeholder image tag
+# below with the published coordinate.
+#
+# References:
+#   - https://support.atlassian.com/bitbucket-cloud/docs/write-a-pipe-for-bitbucket-pipelines/
+#   - packages/cli/src/ci/bitbucket.ts (the entrypoint script invokes this)
+# ---------------------------------------------------------------------------
+
+name: chemag
+image: chemag/bitbucket-pipe:latest
+description: >
+  Run chemag architecture checks against a Bitbucket pull request and post
+  (or update in place) a sticky PR comment summarising the diagnostics.
+
+# Variables consumed by the pipe. Required vars must be set on the
+# repository/workspace; Bitbucket Pipelines populates the
+# BITBUCKET_REPO_FULL_NAME and BITBUCKET_PR_ID variables automatically on
+# pull-request triggered pipelines.
+variables:
+  - name: BITBUCKET_TOKEN
+    description: >-
+      OAuth token or app password with `pullrequest:write` scope. Sent as
+      `Authorization: Bearer <BITBUCKET_TOKEN>`. Set this as a secured
+      repository variable.
+  - name: BITBUCKET_REPO_FULL_NAME
+    description: >-
+      `<workspace>/<repo>` slug. Bitbucket Pipelines provides this
+      automatically on PR pipelines.
+    default: $BITBUCKET_REPO_FULL_NAME
+  - name: BITBUCKET_PR_ID
+    description: >-
+      Numeric pull-request id. Bitbucket Pipelines provides this
+      automatically on PR pipelines.
+    default: $BITBUCKET_PR_ID
+  - name: CHEMAG_WORKSPACE
+    description: >-
+      Optional path to workspace.yaml (default: ./workspace.yaml).
+    default: workspace.yaml
+
+repository: https://bitbucket.org/chemag/bitbucket-pipe
+maintainer: chemag
+tags:
+  - architecture
+  - chem
+  - chemag
+  - lint
+  - typescript
+  - python
