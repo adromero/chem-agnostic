@@ -13,15 +13,15 @@
 // THIS test only proves the protocol-to-UI plumbing for ONE representative
 // kind: `import_via_public_surface` (CHEM-IMPORT-004's remediation).
 //
-// didSave-no-op trap (round-2 arbiter note):
-//   The LSP server's default `runOn: "save"` triggers checks only via
-//   `documents.onDidSave`. VS Code's `TextDocument.save()` is a documented
-//   no-op when the document is not dirty, and `openTextDocument` returns a
-//   clean document — so `await doc.save()` here would silently produce no
-//   `didSave` notification and the diagnostics poll would time out. We
-//   instead switch `chemag.runOn` to `"type"` (forwarded live to the server
-//   by client/client.ts via `workspace/didChangeConfiguration`) so the
-//   server's debounced `documents.onDidChangeContent` path drives the check.
+// runOn race trap (CI-pinned, post-arbiter):
+//   Earlier the test switched `chemag.runOn` to "type" so didChange would
+//   drive the check. In practice the round-trip
+//   (workspace/didChangeConfiguration → server.setRunOn → didOpen →
+//   debounced 800ms run) is racey on slow CI hosts and the 10s diagnostic
+//   poll times out. Instead, we keep the runOn default and force a check
+//   explicitly via `chemag.checkWorkspace`, which calls
+//   `ChemagLspClient.forceCheck` — that runs `runAndPublish` synchronously
+//   on the server regardless of runOn mode.
 // ---------------------------------------------------------------------------
 
 import * as assert from "node:assert/strict";
@@ -30,34 +30,19 @@ import * as vscode from "vscode";
 
 const EXTENSION_ID = "chemag.chemag-vscode";
 
-// How long we'll wait for chemag-coded diagnostics after switching runOn to
-// "type" + opening the offending file. The server debounces didChange by
-// ~800ms; 10s gives generous headroom for slow CI hosts.
-const DIAGNOSTIC_TIMEOUT_MS = 10_000;
+// Diagnostic poll budget AFTER `chemag.checkWorkspace` has been kicked off.
+// forceCheck publishes synchronously from the server's perspective, but the
+// notification has to round-trip back to the client; 15s gives generous
+// headroom for slow CI hosts.
+const DIAGNOSTIC_TIMEOUT_MS = 15_000;
 
 suite("chemag extension — Quick Fix wiring (wp-026b)", () => {
-  let prevRunOn: string | undefined;
-
   suiteSetup(async () => {
     const ext = vscode.extensions.getExtension(EXTENSION_ID);
     assert.ok(ext, `extension ${EXTENSION_ID} should be discoverable`);
     if (!ext.isActive) {
       await ext.activate();
     }
-
-    // Capture the prior chemag.runOn value (so we can restore it in
-    // suiteTeardown), then switch to "type" so the server's didChange path
-    // publishes diagnostics for the freshly-opened (clean) fixture document.
-    const cfg = vscode.workspace.getConfiguration("chemag");
-    prevRunOn = cfg.get<string>("runOn", "save");
-    await cfg.update("runOn", "type", vscode.ConfigurationTarget.Workspace);
-  });
-
-  suiteTeardown(async () => {
-    // Always restore the prior runOn so this test does not leak state into
-    // other suites. Use the same scope (Workspace) as the update.
-    const cfg = vscode.workspace.getConfiguration("chemag");
-    await cfg.update("runOn", prevRunOn ?? undefined, vscode.ConfigurationTarget.Workspace);
   });
 
   test("CHEM-IMPORT-004 surfaces an import_via_public_surface QuickFix with a WorkspaceEdit", async function () {
@@ -81,6 +66,13 @@ suite("chemag extension — Quick Fix wiring (wp-026b)", () => {
     // belt-and-braces for clients that gate didOpen on visibility.
     const doc = await vscode.workspace.openTextDocument(uri);
     await vscode.window.showTextDocument(doc, { preview: false });
+
+    // Force a check. `chemag.checkWorkspace` spawns the chemag CLI AND calls
+    // `lsp.forceCheck(activeUri)` on the LSP client; the latter triggers
+    // `runAndPublish` on the server synchronously, bypassing the runOn mode
+    // entirely. Avoids the runOn=type config-change race that fails on slow
+    // CI hosts.
+    await vscode.commands.executeCommand("chemag.checkWorkspace");
 
     // Poll for at least one chemag-coded diagnostic. The LSP server publishes
     // CHEM-IMPORT-003 (undeclared compound import) AND CHEM-IMPORT-004
