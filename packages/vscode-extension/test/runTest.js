@@ -60,10 +60,7 @@ function runVsCodeTests() {
   const vscodeDir = path.join(fixtureWorkspace, ".vscode");
   const settingsPath = path.join(vscodeDir, "settings.json");
   fs.mkdirSync(vscodeDir, { recursive: true });
-  fs.writeFileSync(
-    settingsPath,
-    JSON.stringify({ "chemag.cli.path": cliBin }, null, 2) + "\n",
-  );
+  fs.writeFileSync(settingsPath, `${JSON.stringify({ "chemag.cli.path": cliBin }, null, 2)}\n`);
 
   const cleanup = () => {
     try {
