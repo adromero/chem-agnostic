@@ -70,7 +70,7 @@ suite("chemag extension — Architecture tree view (wp-026c)", () => {
     await vscode.commands.executeCommand("workbench.view.extension.chemag");
   });
 
-  test("tree populates: alpha (empty placeholder) + beta (reactions/thing)", () => {
+  test("tree populates: alpha (reactions/bad) + beta (reactions/thing)", () => {
     const view = new ChemagTreeView({ workspaceDir });
     try {
       const provider = providerOf(view);
@@ -79,25 +79,27 @@ suite("chemag extension — Architecture tree view (wp-026c)", () => {
       const labels = roots.map((n) => (n.kind === "compound" ? n.name : "?"));
       assert.deepEqual(labels.sort(), ["alpha", "beta"], "top level should be alpha + beta only");
 
-      const alpha = roots.find((n) => n.kind === "compound" && n.name === "alpha");
-      assert.ok(alpha && alpha.kind === "compound");
-      const alphaChildren = provider.getChildren(alpha) as TreeNode[];
-      assert.equal(alphaChildren.length, 1, "alpha (units: []) should yield one placeholder child");
-      assert.equal(alphaChildren[0]?.kind, "empty");
+      // alpha was originally `units: []` but now declares `bad` so the LSP's
+      // import-check sees the cross-compound bypass (wp-026b CI fix). Both
+      // compounds therefore exhibit the same compound → role → unit shape.
+      for (const [compoundName, expectedUnit] of [
+        ["alpha", "bad"],
+        ["beta", "thing"],
+      ] as const) {
+        const compound = roots.find((n) => n.kind === "compound" && n.name === compoundName);
+        assert.ok(compound && compound.kind === "compound");
+        const compoundChildren = provider.getChildren(compound) as TreeNode[];
+        assert.equal(compoundChildren.length, 1, `${compoundName} should have one role folder`);
+        const role = compoundChildren[0];
+        assert.ok(role && role.kind === "role");
+        assert.equal(role.role, "reactions");
 
-      const beta = roots.find((n) => n.kind === "compound" && n.name === "beta");
-      assert.ok(beta && beta.kind === "compound");
-      const betaChildren = provider.getChildren(beta) as TreeNode[];
-      assert.equal(betaChildren.length, 1, "beta should have one role folder");
-      const role = betaChildren[0];
-      assert.ok(role && role.kind === "role");
-      assert.equal(role.role, "reactions");
-
-      const unitNodes = provider.getChildren(role) as TreeNode[];
-      assert.equal(unitNodes.length, 1);
-      const unit = unitNodes[0];
-      assert.ok(unit && unit.kind === "unit");
-      assert.equal(unit.unit.name, "thing");
+        const unitNodes = provider.getChildren(role) as TreeNode[];
+        assert.equal(unitNodes.length, 1);
+        const unit = unitNodes[0];
+        assert.ok(unit && unit.kind === "unit");
+        assert.equal(unit.unit.name, expectedUnit);
+      }
     } finally {
       view.dispose();
     }

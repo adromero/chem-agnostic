@@ -1,2 +1,5 @@
 compound: alpha
-units: []
+units:
+  - name: bad
+    role: reactions
+    file: reactions/bad.ts
