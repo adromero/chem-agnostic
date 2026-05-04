@@ -44,19 +44,46 @@ function reexecUnderXvfb() {
 
 function runVsCodeTests() {
   const { runTests } = require("@vscode/test-electron");
+  const fs = require("node:fs");
 
   const extensionDevelopmentPath = path.resolve(__dirname, "..");
   const extensionTestsPath = path.resolve(__dirname, "..", "out", "test", "suite");
   const fixtureWorkspace = path.resolve(__dirname, "fixtures/sample-workspace");
 
+  // The extension's `activate()` returns early via `registerStubCommands` when
+  // the chemag binary isn't on PATH — that path is reachable in CI (the
+  // workspace builds chemag but doesn't `pnpm link --global` it). Pin
+  // `chemag.cli.path` to the workspace's bin shim so the extension activates
+  // fully (LSP starts, commands register, panels open). Cleaned up after the
+  // run so subsequent local invocations against this fixture aren't sticky.
+  const cliBin = path.resolve(__dirname, "..", "..", "cli", "bin", "chem-ag");
+  const vscodeDir = path.join(fixtureWorkspace, ".vscode");
+  const settingsPath = path.join(vscodeDir, "settings.json");
+  fs.mkdirSync(vscodeDir, { recursive: true });
+  fs.writeFileSync(
+    settingsPath,
+    JSON.stringify({ "chemag.cli.path": cliBin }, null, 2) + "\n",
+  );
+
+  const cleanup = () => {
+    try {
+      fs.rmSync(vscodeDir, { recursive: true, force: true });
+    } catch {
+      // Best-effort: never let cleanup mask the test exit code.
+    }
+  };
+
   runTests({
     extensionDevelopmentPath,
     extensionTestsPath,
     launchArgs: [fixtureWorkspace],
-  }).catch((err) => {
-    console.error("Failed to run tests:", err);
-    process.exit(1);
-  });
+  })
+    .then(() => cleanup())
+    .catch((err) => {
+      cleanup();
+      console.error("Failed to run tests:", err);
+      process.exit(1);
+    });
 }
 
 if (process.platform === "linux" && !process.env.DISPLAY && !process.env.CHEMAG_TEST_NO_XVFB) {
