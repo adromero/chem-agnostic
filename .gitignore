@@ -28,3 +28,7 @@ packages/vscode-extension/out/
 packages/vscode-extension/*.vsix
 # vscode-test downloads VS Code into here.
 packages/vscode-extension/.vscode-test/
+# runTest.js writes a per-run .vscode/settings.json into the fixture so the
+# extension finds the chemag CLI; cleaned up after each run, but ignored to
+# defend against an interrupted test run leaking it into a commit.
+packages/vscode-extension/test/fixtures/sample-workspace/.vscode/
