@@ -13,35 +13,58 @@
 // THIS test only proves the protocol-to-UI plumbing for ONE representative
 // kind: `import_via_public_surface` (CHEM-IMPORT-004's remediation).
 //
-// runOn race trap (CI-pinned, post-arbiter):
-//   Earlier the test switched `chemag.runOn` to "type" so didChange would
-//   drive the check. In practice the round-trip
-//   (workspace/didChangeConfiguration → server.setRunOn → didOpen →
-//   debounced 800ms run) is racey on slow CI hosts and the 10s diagnostic
-//   poll times out. Instead, we keep the runOn default and force a check
-//   explicitly via `chemag.checkWorkspace`, which calls
-//   `ChemagLspClient.forceCheck` — that runs `runAndPublish` synchronously
-//   on the server regardless of runOn mode.
+// CI-robust trigger:
+//   Two earlier approaches turned out to be racey under @vscode/test-electron
+//   on the GHA ubuntu-latest runner:
+//     1. Setting `chemag.runOn = "type"` to drive a debounced didChange:
+//        the workspace/didChangeConfiguration → server.setRunOn → didOpen →
+//        800ms debounce chain has too narrow a margin.
+//     2. Calling `chemag.checkWorkspace` to invoke `ChemagLspClient.forceCheck`:
+//        check-workspace.ts only forceChecks when both `lsp?.isRunning()` AND
+//        `activeTextEditor` are truthy; either can be false during the brief
+//        window between activation and the first test running.
+//   The most reliable trigger is also the simplest: keep runOn at its default
+//   ("save"), modify the document so it becomes dirty, then save it. The
+//   server's documents.onDidSave handler fires unconditionally for save mode
+//   and runs runDiagnostics + publishes synchronously. Restore the file in a
+//   teardown so subsequent test runs see the original bytes.
 // ---------------------------------------------------------------------------
 
 import * as assert from "node:assert/strict";
+import * as fs from "node:fs";
 import * as path from "node:path";
 import * as vscode from "vscode";
 
 const EXTENSION_ID = "chemag.chemag-vscode";
 
-// Diagnostic poll budget AFTER `chemag.checkWorkspace` has been kicked off.
-// forceCheck publishes synchronously from the server's perspective, but the
-// notification has to round-trip back to the client; 15s gives generous
-// headroom for slow CI hosts.
+// Diagnostic poll budget after the dirty-then-save trigger fires. The LSP
+// server's onDidSave runs runDiagnostics synchronously on the server side,
+// but the publishDiagnostics notification has to round-trip back to the
+// client; 15s gives generous headroom for slow CI hosts.
 const DIAGNOSTIC_TIMEOUT_MS = 15_000;
 
 suite("chemag extension — Quick Fix wiring (wp-026b)", () => {
+  let originalBadBytes: Buffer | null = null;
+  let badPath = "";
+
   suiteSetup(async () => {
     const ext = vscode.extensions.getExtension(EXTENSION_ID);
     assert.ok(ext, `extension ${EXTENSION_ID} should be discoverable`);
     if (!ext.isActive) {
       await ext.activate();
+    }
+
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    assert.ok(workspaceFolder, "fixture workspace folder should be open");
+    badPath = path.join(workspaceFolder.uri.fsPath, "compounds", "alpha", "reactions", "bad.ts");
+    // Capture original bytes so we can restore in suiteTeardown — the test
+    // mutates the file (via WorkspaceEdit + save) to drive onDidSave.
+    originalBadBytes = fs.readFileSync(badPath);
+  });
+
+  suiteTeardown(() => {
+    if (originalBadBytes && badPath) {
+      fs.writeFileSync(badPath, originalBadBytes);
     }
   });
 
@@ -50,29 +73,26 @@ suite("chemag extension — Quick Fix wiring (wp-026b)", () => {
     // needs the diagnostic poll budget plus VS Code's command latency.
     this.timeout(45_000);
 
-    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-    assert.ok(workspaceFolder, "fixture workspace folder should be open");
-
-    const badPath = path.join(
-      workspaceFolder.uri.fsPath,
-      "compounds",
-      "alpha",
-      "reactions",
-      "bad.ts",
-    );
     const uri = vscode.Uri.file(badPath);
 
     // Open + show the offending document. Showing it (not just opening) is
     // belt-and-braces for clients that gate didOpen on visibility.
     const doc = await vscode.workspace.openTextDocument(uri);
-    await vscode.window.showTextDocument(doc, { preview: false });
+    const editor = await vscode.window.showTextDocument(doc, { preview: false });
 
-    // Force a check. `chemag.checkWorkspace` spawns the chemag CLI AND calls
-    // `lsp.forceCheck(activeUri)` on the LSP client; the latter triggers
-    // `runAndPublish` on the server synchronously, bypassing the runOn mode
-    // entirely. Avoids the runOn=type config-change race that fails on slow
-    // CI hosts.
-    await vscode.commands.executeCommand("chemag.checkWorkspace");
+    // Trigger the LSP's onDidSave path (runOn=save, the default). Step 1:
+    // make the document dirty by appending a trailing newline via WorkspaceEdit.
+    // VS Code's TextDocument.save() is a documented no-op on a clean document,
+    // so we have to mutate first. Step 2: save — this fires didSave, the
+    // server runs runDiagnostics, and publishDiagnostics rolls the violations
+    // back to the client.
+    const endOfFile = editor.document.lineAt(editor.document.lineCount - 1).range.end;
+    const edit = new vscode.WorkspaceEdit();
+    edit.insert(uri, endOfFile, "\n");
+    const applied = await vscode.workspace.applyEdit(edit);
+    assert.ok(applied, "WorkspaceEdit (trailing newline) should apply cleanly");
+    const saved = await editor.document.save();
+    assert.ok(saved, "save() should succeed after the dirty WorkspaceEdit");
 
     // Poll for at least one chemag-coded diagnostic. The LSP server publishes
     // CHEM-IMPORT-003 (undeclared compound import) AND CHEM-IMPORT-004
