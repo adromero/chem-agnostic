@@ -59,15 +59,16 @@ suite("chemag extension activation", () => {
   test("LSP server bundle path resolves under the extension installation", () => {
     const ext = vscode.extensions.getExtension(EXTENSION_ID);
     assert.ok(ext, "extension manifest should be discoverable");
-    // The LSP client constructs `path.join(extensionPath, "server", "dist",
-    // "server.js")`. We don't assert it exists (the test runner pre-build
-    // step builds the extension bundle but doesn't necessarily build the
-    // server bundle), but we DO assert the path is well-formed and lives
-    // under the expected sub-directory.
-    const expected = path.join(ext!.extensionPath, "server", "dist", "server.js");
+    // Post-WP-027b the LSP client constructs `path.join(extensionPath,
+    // "dist", "server.js")` — the parallel-esbuild output that lives next
+    // to dist/extension.js inside the .vsix. We don't assert the file
+    // exists (the test runner's pre-build step builds the extension bundle
+    // alongside the server bundle, but we keep the assertion path-shape-
+    // only so a missing pre-build still produces a clear failure).
+    const expected = path.join(ext!.extensionPath, "dist", "server.js");
     assert.ok(
-      expected.endsWith(path.join("server", "dist", "server.js")),
-      "LSP server bundle path must live under <ext>/server/dist/",
+      expected.endsWith(path.join("dist", "server.js")),
+      "LSP server bundle path must live under <ext>/dist/",
     );
     // Soft assertion: when the bundle does exist, ensure it's a regular file.
     if (fs.existsSync(expected)) {

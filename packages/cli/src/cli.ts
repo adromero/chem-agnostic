@@ -27,6 +27,7 @@ import { cmdConfig } from "./commands/config.js";
 import { cmdCompletion } from "./commands/completion.js";
 import { cmdEmitRules } from "./commands/emit-rules.js";
 import { cmdMcp } from "./commands/mcp.js";
+import { cmdLsp } from "./commands/lsp.js";
 import { cmdInstallHooks } from "./commands/install-hooks.js";
 import { cmdCi } from "./ci/index.js";
 import { buildCommandTree, renderHelp } from "./cli-meta.js";
@@ -161,6 +162,11 @@ export function runCli(argv: string[]): void {
       break;
     case "mcp": {
       const code = cmdMcp(commandArgs);
+      if (code !== 0) process.exit(code);
+      break;
+    }
+    case "lsp": {
+      const code = cmdLsp(commandArgs);
       if (code !== 0) process.exit(code);
       break;
     }

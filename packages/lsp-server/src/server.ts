@@ -86,9 +86,33 @@ export function resolveWorkspaceDir(initParams: {
 }
 
 // ---------------------------------------------------------------------------
-// startServer — bootstraps a connection. Default export expects stdio when
-// process.argv contains --stdio; tests pass an explicit Connection.
+// startServer — bootstraps a connection. When `opts.connection` is omitted,
+// we honour vscode-languageserver's argv-driven transport selection if the
+// caller passed --stdio / --node-ipc / --socket=N (the typical case when
+// the server is spawned by vscode-languageclient or the chemag-vscode
+// extension), and otherwise fall back to a stdio connection bound to
+// process.stdin / process.stdout (the typical case when the server is
+// invoked in-process by `chemag lsp` from @chemag/cli).
+// Tests pass an explicit Connection via opts.connection and bypass both
+// branches entirely.
 // ---------------------------------------------------------------------------
+
+/**
+ * Build the default Connection for `startServer` callers that don't supply
+ * their own. Honours argv-driven transport selection when present, else
+ * binds explicitly to process.stdin/process.stdout so an in-process caller
+ * (e.g. `chemag lsp`) doesn't need to mutate argv.
+ */
+function createDefaultConnection(): Connection {
+  const argv = process.argv;
+  const argvHasTransport = argv.some(
+    (a) => a === "--stdio" || a === "--node-ipc" || a === "--socket" || a.startsWith("--socket="),
+  );
+  if (argvHasTransport) {
+    return createConnection(ProposedFeatures.all);
+  }
+  return createConnection(ProposedFeatures.all, process.stdin, process.stdout);
+}
 
 export interface StartServerOptions {
   /** Pre-built connection (used by tests). When omitted, stdio is chosen. */
@@ -112,7 +136,7 @@ export interface ServerHandle {
 
 export function startServer(opts: StartServerOptions = {}): ServerHandle {
   const debounceMs = opts.debounceMs ?? TYPE_DEBOUNCE_MS;
-  const connection: Connection = opts.connection ?? createConnection(ProposedFeatures.all);
+  const connection: Connection = opts.connection ?? createDefaultConnection();
   const documents = new TextDocuments(TextDocument);
 
   let state: WorkspaceState | null = null;
@@ -282,6 +306,14 @@ export function startServer(opts: StartServerOptions = {}): ServerHandle {
     },
   };
 }
+
+/**
+ * Public alias for `startServer`. Exposed so non-VS Code consumers (the
+ * `chemag lsp` CLI subcommand, future Zed/Helix/Neovim plugins) can import a
+ * verb that reads naturally outside of the protocol-test context the original
+ * `startServer` name was scoped to. Both names point at the same function.
+ */
+export const runServer = startServer;
 
 // When invoked directly (the bundle's main module), boot a stdio server.
 if (require.main === module) {

@@ -15,3 +15,6 @@ roles:
 bonds:
   reactions: []
   catalyst: [reactions]
+
+rules:
+  cross_compound_imports: public_only

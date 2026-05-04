@@ -1,6 +1,7 @@
 // ---------------------------------------------------------------------------
-// chemag LSP client — spawns the bundled LSP server (server/dist/server.js)
-// as a Node child process and relays text-document events.
+// chemag LSP client — spawns the bundled LSP server (dist/server.js, produced
+// by the parallel esbuild step inside esbuild.config.js) as a Node child
+// process and relays text-document events.
 //
 // Configuration:
 //   - `chemag.runOn` is read from VS Code settings and forwarded to the
@@ -55,10 +56,10 @@ export class ChemagLspClient implements vscode.Disposable {
    * server has been built.
    */
   async start(): Promise<void> {
-    const serverModule = path.join(this.opts.extensionPath, "server", "dist", "server.js");
+    const serverModule = path.join(this.opts.extensionPath, "dist", "server.js");
     if (!fs.existsSync(serverModule)) {
       throw new Error(
-        `chemag LSP server bundle not found at ${serverModule}. Run \`pnpm --filter chemag-vscode-lsp-server build\` to produce it.`,
+        `chemag LSP server bundle not found at ${serverModule}. Run \`pnpm --filter chemag-vscode build\` to produce it (esbuild bundles @chemag/lsp-server's source into dist/server.js).`,
       );
     }
 
@@ -74,6 +75,17 @@ export class ChemagLspClient implements vscode.Disposable {
     const initialRunOn = readRunOn();
     const documentSelector = await buildDocumentSelector(this.opts.workspaceDir);
 
+    // CodeAction wiring (wp-026b): we deliberately do NOT set
+    // `clientCapabilities.textDocument.codeAction.codeActionLiteralSupport`
+    // here. `vscode-languageclient/node` advertises it automatically from the
+    // host's `vscode.LanguageFeatures` capabilities whenever the server's
+    // `initialize` reply declares `codeActionProvider.codeActionKinds` (which
+    // our LSP server does — see packages/lsp-server/src/server.ts onInitialize).
+    // The negotiated literal support is what allows the server's
+    // `CodeAction[]` (carrying `kind: "quickfix"` + `edit: WorkspaceEdit`) to
+    // round-trip through `textDocument/codeAction` and surface natively in
+    // VS Code's lightbulb / Quick Fix menu — no extra client-side provider
+    // registration is required.
     const clientOptions: LanguageClientOptions = {
       documentSelector,
       synchronize: {

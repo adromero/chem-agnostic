@@ -23,6 +23,8 @@ export function chemagAliases(repoRoot: string): Record<string, string> {
     "@chemag/core/ci-marker": r("packages/core/src/ci-marker.ts"),
     "@chemag/core/git-utils": r("packages/core/src/git-utils.ts"),
     "@chemag/core": r("packages/core/src/index.ts"),
+    "@chemag/lsp-server": r("packages/lsp-server/src/index.ts"),
+    "@chemag/lsp-server/dist/server.js": r("packages/lsp-server/src/server.ts"),
     "@chemag/mcp-server": r("packages/mcp-server/src/index.ts"),
     "@chemag/plugin-go": r("packages/plugin-go/src/index.ts"),
     "@chemag/plugin-python": r("packages/plugin-python/src/index.ts"),

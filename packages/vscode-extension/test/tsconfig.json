@@ -1,8 +1,8 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../out/test",
-    "rootDir": ".",
+    "outDir": "../out",
+    "rootDir": "..",
     "composite": false,
     "module": "CommonJS",
     "moduleResolution": "node",
@@ -14,5 +14,5 @@
     "declarationMap": false,
     "sourceMap": true
   },
-  "include": ["suite/**/*.ts"]
+  "include": ["suite/**/*.ts", "../src/**/*.ts"]
 }

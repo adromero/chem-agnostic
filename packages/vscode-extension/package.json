@@ -6,6 +6,12 @@
   "publisher": "chemag",
   "license": "MIT",
   "private": true,
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adromero/chem-agnostic.git",
+    "directory": "packages/vscode-extension"
+  },
   "main": "./dist/extension.js",
   "engines": {
     "vscode": "^1.85.0",
@@ -16,7 +22,12 @@
   "activationEvents": [
     "workspaceContains:workspace.yaml",
     "onCommand:chemag.checkWorkspace",
-    "onCommand:chemag.showGraph"
+    "onCommand:chemag.showGraph",
+    "onCommand:chemag.addCompound",
+    "onCommand:chemag.addUnit",
+    "onCommand:chemag.whereShouldThisGo",
+    "onCommand:chemag.installHooks",
+    "onView:chemag.architecture"
   ],
   "contributes": {
     "commands": [
@@ -29,8 +40,45 @@
         "command": "chemag.showGraph",
         "title": "chemag: Show graph",
         "category": "chemag"
+      },
+      {
+        "command": "chemag.addCompound",
+        "title": "Chemag: Add Compound",
+        "category": "chemag"
+      },
+      {
+        "command": "chemag.addUnit",
+        "title": "Chemag: Add Unit",
+        "category": "chemag"
+      },
+      {
+        "command": "chemag.whereShouldThisGo",
+        "title": "Chemag: Where should this go?",
+        "category": "chemag"
+      },
+      {
+        "command": "chemag.installHooks",
+        "title": "Chemag: Install AI editor hooks",
+        "category": "chemag"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "chemag",
+          "title": "chemag",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "chemag": [
+        {
+          "id": "chemag.architecture",
+          "name": "Architecture"
+        }
+      ]
+    },
     "configuration": {
       "type": "object",
       "title": "chemag",
@@ -53,7 +101,47 @@
           "description": "When the chemag LSP server publishes diagnostics. 'save' = on document save only; 'type' = debounced 800ms after each edit (also on save); 'manual' = never auto-publish — use chemag.checkWorkspace to refresh."
         }
       }
-    }
+    },
+    "walkthroughs": [
+      {
+        "id": "chemag.gettingStarted",
+        "title": "Get started with chemag",
+        "description": "Learn the chemag mental model — compounds, units, bonds — and run your first architecture check in under two minutes.",
+        "steps": [
+          {
+            "id": "chemag.gettingStarted.whatIsChemag",
+            "title": "What is chemag?",
+            "description": "A one-screen overview of compounds, units, and bonds — the entire chemag vocabulary.",
+            "media": {
+              "markdown": "media/walkthrough/step1.md",
+              "image": "media/walkthrough/step1.png",
+              "altText": "Diagram of compounds connected by bonds, each containing units."
+            }
+          },
+          {
+            "id": "chemag.gettingStarted.openWorkspace",
+            "title": "Open a workspace",
+            "description": "Open a folder containing a workspace.yaml so the extension activates.",
+            "media": {
+              "markdown": "media/walkthrough/step2.md",
+              "image": "media/walkthrough/step2.png",
+              "altText": "VS Code activity bar showing the chemag icon after opening a workspace."
+            }
+          },
+          {
+            "id": "chemag.gettingStarted.firstCheck",
+            "title": "Run your first check",
+            "description": "Run chemag: Check workspace from the command palette and read the diagnostics in the Problems panel.",
+            "media": {
+              "markdown": "media/walkthrough/step3.md",
+              "image": "media/walkthrough/step3.png",
+              "altText": "VS Code Problems panel showing chemag diagnostics with stable CHEM-CATEGORY-NNN codes."
+            },
+            "completionEvents": ["onCommand:chemag.checkWorkspace"]
+          }
+        ]
+      }
+    ]
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -64,6 +152,7 @@
   },
   "dependencies": {
     "@chemag/core": "workspace:*",
+    "@chemag/lsp-server": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "vscode-languageclient": "^9.0.1"
   },
@@ -76,6 +165,7 @@
     "@vscode/vsce": "^3.2.1",
     "esbuild": "^0.24.0",
     "glob": "^13.0.0",
+    "mermaid": "^11.0.0",
     "mocha": "^11.0.1",
     "typescript": "^5.7.0"
   }

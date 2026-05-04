@@ -43,6 +43,7 @@
   ],
   "dependencies": {
     "@chemag/core": "workspace:*",
+    "@chemag/lsp-server": "workspace:*",
     "@chemag/mcp-server": "workspace:*",
     "@chemag/plugin-go": "workspace:*",
     "@chemag/plugin-python": "workspace:*",

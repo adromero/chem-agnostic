@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Stylized flask: a chemag activity-bar placeholder. -->
+  <path d="M6.5 2.5h3" />
+  <path d="M6.8 2.5v3.4l-3 5.6a1.6 1.6 0 0 0 1.4 2.4h5.6a1.6 1.6 0 0 0 1.4-2.4l-3-5.6V2.5" />
+  <path d="M5.4 9.4h5.2" />
+</svg>

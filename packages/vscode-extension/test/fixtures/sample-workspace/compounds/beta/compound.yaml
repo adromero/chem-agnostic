@@ -1,0 +1,5 @@
+compound: beta
+units:
+  - name: thing
+    role: reactions
+    file: reactions/thing.ts

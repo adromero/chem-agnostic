@@ -15,4 +15,4 @@
 //
 // Release flow: the `prebuild` npm script calls `npm run build:version`
 // which rewrites this file, and the regenerated content is committed.
-export const VERSION = "0.1.0";
+export const VERSION = "0.2.0";

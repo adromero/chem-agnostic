@@ -4,8 +4,9 @@
 // Activation:
 //   1. Resolve the `chemag` CLI path (config first, then PATH lookup).
 //   2. Locate the workspace folder containing workspace.yaml.
-//   3. Boot the LSP client (which spawns server/dist/server.js as a child
-//      process and starts publishing diagnostics + code actions).
+//   3. Boot the LSP client (which spawns dist/server.js — produced by the
+//      parallel esbuild step that bundles @chemag/lsp-server's source —
+//      as a child process and starts publishing diagnostics + code actions).
 //   4. Wire status bar, MCP bridge, and the 2 commands.
 //   5. Each subsystem registers its own disposables on context.subscriptions.
 //
@@ -22,9 +23,14 @@ import { spawnSync } from "node:child_process";
 
 import { ChemagLspClient } from "./client/client";
 import { StatusBarManager } from "./status-bar";
+import { ChemagTreeView } from "./tree-view";
 import { McpBridge } from "./mcp-bridge";
 import { makeCheckWorkspaceCommand } from "./commands/check-workspace";
 import { makeShowGraphCommand } from "./commands/show-graph";
+import { makeAddCompoundCommand } from "./commands/add-compound";
+import { makeAddUnitCommand } from "./commands/add-unit";
+import { makeWhereShouldThisGoCommand } from "./commands/where-should-this-go";
+import { makeInstallHooksCommand } from "./commands/install-hooks";
 
 const OUTPUT_CHANNEL_NAME = "chemag";
 
@@ -64,9 +70,20 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   outputChannel.appendLine(`[activate] cli=${cliPath} workspace=${workspaceDir}`);
 
-  // LSP client — spawns server/dist/server.js, publishes diagnostics, serves
+  // LSP client — spawns dist/server.js (the .vsix-bundled @chemag/lsp-server
+  // produced by the parallel esbuild step), publishes diagnostics, serves
   // code actions. Failure here is non-fatal; the rest of the extension stays
   // functional and the user gets a warning.
+  //
+  // Quick-fix wiring (wp-026b): we deliberately do NOT register a parallel
+  // `vscode.languages.registerCodeActionsProvider`. The LSP client surfaces
+  // server-supplied `CodeAction[]` (each carrying `kind: "quickfix"` and a
+  // `WorkspaceEdit`) through VS Code's native lightbulb because
+  // vscode-languageclient/node negotiates `codeActionLiteralSupport`
+  // automatically when the server advertises
+  // `codeActionProvider.codeActionKinds` — see client/client.ts for the
+  // matching note. Adding a second provider here would duplicate every
+  // action and create authorship ambiguity for future remediation kinds.
   lspClient = new ChemagLspClient({
     extensionPath: context.extensionPath,
     workspaceDir,
@@ -93,6 +110,19 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const statusBar = new StatusBarManager(workspaceDir);
   context.subscriptions.push(statusBar);
 
+  // Architecture sidebar tree view (wp-026c). Non-fatal: a failure to
+  // instantiate logs to the output channel and skips the view registration
+  // — the tree is independent of the LSP client (badge counts read from
+  // vscode.languages.getDiagnostics, but the structure still populates from
+  // the loader even when the LSP server failed to start).
+  try {
+    const treeView = new ChemagTreeView({ workspaceDir, output: outputChannel });
+    context.subscriptions.push(treeView);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    outputChannel.appendLine(`[activate] tree view failed to instantiate: ${msg}`);
+  }
+
   // MCP bridge — spawn chemag mcp + connect via StdioClientTransport. Failure
   // here is non-fatal (the rest of the extension stays functional).
   mcpBridge = new McpBridge({ cliPath, workspaceDir, output: outputChannel });
@@ -108,7 +138,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     outputChannel?.appendLine(`[activate] MCP bridge failed to start: ${msg}`);
   });
 
-  // Commands.
+  // Commands. Note: `getMcpBridge` is a lazy accessor mirroring `getLspClient`
+  // — DO NOT capture `mcpBridge` by value here. The bridge is assigned after
+  // `mcpBridge.start()` resolves above (fire-and-forget) and may be cleared
+  // on dispose. The whereShouldThisGo command must always read the live
+  // module-level reference.
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "chemag.checkWorkspace",
@@ -121,7 +155,31 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     ),
     vscode.commands.registerCommand(
       "chemag.showGraph",
-      makeShowGraphCommand({ cliPath, workspaceDir, output: outputChannel }),
+      makeShowGraphCommand({
+        cliPath,
+        workspaceDir,
+        output: outputChannel,
+        extensionUri: context.extensionUri,
+      }),
+    ),
+    vscode.commands.registerCommand(
+      "chemag.addCompound",
+      makeAddCompoundCommand({ cliPath, workspaceDir, output: outputChannel }),
+    ),
+    vscode.commands.registerCommand(
+      "chemag.addUnit",
+      makeAddUnitCommand({ cliPath, workspaceDir, output: outputChannel }),
+    ),
+    vscode.commands.registerCommand(
+      "chemag.whereShouldThisGo",
+      makeWhereShouldThisGoCommand({
+        output: outputChannel,
+        getMcpBridge: () => mcpBridge,
+      }),
+    ),
+    vscode.commands.registerCommand(
+      "chemag.installHooks",
+      makeInstallHooksCommand({ cliPath, workspaceDir, output: outputChannel }),
     ),
   );
 }
@@ -155,9 +213,10 @@ export async function deactivate(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 /**
- * Register the two MVP commands as no-ops that surface a "CLI not found" or
- * "no workspace" message. Keeps the command IDs available so palette /
- * keybinding wiring doesn't error out and the activation test still passes.
+ * Register all 6 chemag commands as no-ops that surface a "CLI not found" or
+ * "no workspace" message. Keeps every command ID available on the no-CLI /
+ * no-workspace activation paths so palette / keybinding wiring doesn't error
+ * out and the registration test stays green regardless of the path taken.
  */
 function registerStubCommands(context: vscode.ExtensionContext): void {
   const stub = (msg: string) => () => {
@@ -165,10 +224,15 @@ function registerStubCommands(context: vscode.ExtensionContext): void {
   };
   const noCli = "chemag: CLI not found. Install chemag on PATH or set chemag.cli.path.";
   const noWs = "chemag: no workspace.yaml found in the open folders.";
+  const reason = resolveCliPath() ? noWs : noCli;
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("chemag.checkWorkspace", stub(resolveCliPath() ? noWs : noCli)),
-    vscode.commands.registerCommand("chemag.showGraph", stub(resolveCliPath() ? noWs : noCli)),
+    vscode.commands.registerCommand("chemag.checkWorkspace", stub(reason)),
+    vscode.commands.registerCommand("chemag.showGraph", stub(reason)),
+    vscode.commands.registerCommand("chemag.addCompound", stub(reason)),
+    vscode.commands.registerCommand("chemag.addUnit", stub(reason)),
+    vscode.commands.registerCommand("chemag.whereShouldThisGo", stub(reason)),
+    vscode.commands.registerCommand("chemag.installHooks", stub(reason)),
   );
 }
 

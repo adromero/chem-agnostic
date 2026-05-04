@@ -8,7 +8,7 @@ _chemag() {
   cur="${COMP_WORDS[COMP_CWORD]}"
   prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-  local commands="add analyze check check-edit ci completion config emit-rules graph init install-hooks mcp scaffold sync"
+  local commands="add analyze check check-edit ci completion config emit-rules graph init install-hooks lsp mcp scaffold sync"
   local global_flags="--vocabulary --no-cache --no-telemetry --quiet --help --version"
 
   if [ "${COMP_CWORD}" -eq 1 ]; then

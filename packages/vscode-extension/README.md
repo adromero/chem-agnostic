@@ -1,26 +1,33 @@
+<img src="media/icon.png" alt="chemag" width="96" align="right" />
+
 # chemag — VS Code extension (v0.2)
 
 Surfaces chemag architecture diagnostics inline (via an embedded Language
 Server), shows the active file's compound/role in the status bar, and brokers
 an MCP connection to the `chemag mcp` subprocess for AI-assisted UX.
 
+## Getting started
+
+After installing the extension, VS Code opens the **Get started with chemag**
+walkthrough automatically on first run. You can re-open it any time from the
+command palette: **Help: Welcome → chemag: Get started**, or via the deep
+link [`command:workbench.action.openWalkthrough?["chemag.gettingStarted"]`](command:workbench.action.openWalkthrough?%5B%22chemag.gettingStarted%22%5D).
+
+The walkthrough takes about two minutes and covers the chemag mental model
+(compounds / units / bonds), how to open a workspace that the extension can
+activate against, and how to run your first `chemag: Check workspace` pass.
+
 v0.2 introduces an LSP-based architecture: diagnostics and quick-fix code
-actions are produced by a standalone Node process bundled at
-`server/dist/server.js`. The VS Code extension is a thin LSP client; other
+actions are produced by a standalone Node process. The server lives in the
+`@chemag/lsp-server` workspace package; the .vsix bundles a parallel-esbuild
+copy at `dist/server.js`. The VS Code extension is a thin LSP client; other
 LSP-capable editors (Zed, Helix, Neovim) can spawn the same server directly
-(see "Using the LSP server from non-VS Code editors" below).
+via the `chemag lsp` CLI subcommand (see "Using the LSP server from non-VS
+Code editors" below).
 
 The following surfaces remain deliberately deferred to follow-up work:
 
-- Architecture sidebar tree view
-- First-run walkthrough + media assets
-- `chemag: Add compound`, `chemag: Add unit`, `chemag: Where should this go?`,
-  `chemag: Install hooks` commands
-- Rich Mermaid webview rendering (v0.2 still dumps the Mermaid source into an
-  untitled markdown document)
 - VS Code Marketplace publishing
-- The `chemag lsp` CLI command (deferred to v0.3 — until then, spawn the
-  server module directly as documented below)
 
 ## Commands
 
@@ -71,13 +78,17 @@ kinds defined by the check-edit schema to LSP `CodeAction[]` (kind:
 
 ## Using the LSP server from non-VS Code editors
 
-The LSP server is a self-contained CommonJS Node module bundled into the
-chemag-vscode npm package. Plugin authors targeting Zed, Helix, Neovim or
-JetBrains can spawn it directly over stdio:
+The LSP server is published as the standalone `@chemag/lsp-server` package and
+is also exposed via the `chemag lsp` CLI subcommand. The recommended way for
+Zed / Helix / Neovim plugin authors to spawn the server is:
 
 ```bash
-node node_modules/chemag-vscode/server/dist/server.js --stdio
+chemag lsp
 ```
+
+See [`packages/lsp-server/README.md`](https://github.com/adromero/chem-agnostic/blob/main/packages/lsp-server/README.md)
+for editor configuration examples and the full `initializationOptions` /
+`chemag/forceCheck` reference.
 
 The server reads its initial mode from the LSP `initializationOptions`:
 
@@ -99,7 +110,3 @@ regardless of the current mode:
 ```jsonc
 { "method": "chemag/forceCheck", "params": { "uri": "file:///path/to/file.ts" } }
 ```
-
-A future `chemag lsp` CLI subcommand (v0.3) will re-export the same module
-through the main `chemag` binary so plugin authors don't have to know the
-extension's npm-package internal layout.

@@ -30,7 +30,7 @@ const COMMAND_GROUPS: { title: string; commands: string[] }[] = [
   { title: "Workspace", commands: ["init", "add"] },
   { title: "Validation", commands: ["check", "check-edit", "analyze"] },
   { title: "Generation", commands: ["scaffold", "graph", "sync", "emit-rules"] },
-  { title: "Integrations", commands: ["mcp", "install-hooks", "ci"] },
+  { title: "Integrations", commands: ["mcp", "lsp", "install-hooks", "ci"] },
   { title: "Utilities", commands: ["config", "completion"] },
 ];
 
@@ -308,6 +308,17 @@ export function buildCommandTree(version: string): CommandDef {
             },
           }),
         },
+      }),
+
+      lsp: defineCommand({
+        meta: {
+          name: "lsp",
+          description: "lsp — run a Language Server Protocol server for chemag (stdio).",
+        },
+        // No flags today: workspace root is discovered from the LSP
+        // `initialize` request, not from CLI argv. --help is handled by the
+        // dispatcher's per-command parser.
+        args: {},
       }),
 
       "install-hooks": defineCommand({

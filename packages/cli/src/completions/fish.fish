@@ -15,6 +15,7 @@ function __chemag_no_subcommand
       case graph; return 1
       case init; return 1
       case install-hooks; return 1
+      case lsp; return 1
       case mcp; return 1
       case scaffold; return 1
       case sync; return 1
@@ -45,6 +46,8 @@ complete -c chemag -n __chemag_no_subcommand -f -a init -d "init — bootstrap a
 complete -c chem-ag -n __chemag_no_subcommand -f -a init -d "init — bootstrap a new workspace."
 complete -c chemag -n __chemag_no_subcommand -f -a install-hooks -d "install-hooks — install or uninstall AI-editor hook integrations that call chemag check-edit / analyze around tool edits."
 complete -c chem-ag -n __chemag_no_subcommand -f -a install-hooks -d "install-hooks — install or uninstall AI-editor hook integrations that call chemag check-edit / analyze around tool edits."
+complete -c chemag -n __chemag_no_subcommand -f -a lsp -d "lsp — run a Language Server Protocol server for chemag (stdio)."
+complete -c chem-ag -n __chemag_no_subcommand -f -a lsp -d "lsp — run a Language Server Protocol server for chemag (stdio)."
 complete -c chemag -n __chemag_no_subcommand -f -a mcp -d "mcp — run an MCP server exposing chemag tools to MCP-aware clients."
 complete -c chem-ag -n __chemag_no_subcommand -f -a mcp -d "mcp — run an MCP server exposing chemag tools to MCP-aware clients."
 complete -c chemag -n __chemag_no_subcommand -f -a scaffold -d "scaffold — generate stub files from manifests."
