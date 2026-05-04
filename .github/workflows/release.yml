@@ -47,7 +47,9 @@ jobs:
           # re-serializes package.json files with multi-line arrays for
           # `files`/`categories`/`keywords`/`enum`, undoing the workspace's
           # canonical biome formatting and breaking lint on the resulting PR.
-          version: pnpm changeset version && pnpm exec biome format --write .
+          # The action passes this string as ARGV (no shell), so `&&` does not
+          # work here — the chain lives in the `changeset:version` npm script.
+          version: pnpm run changeset:version
           # publish: pnpm changeset publish
           # ^ Re-enable once an NPM_TOKEN is configured in repo secrets, OR set
           # up npm trusted publishing for each @chemag/* package on npmjs.com.
