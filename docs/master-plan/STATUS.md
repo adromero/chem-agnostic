@@ -5,38 +5,38 @@ The conductor updates this file as work completes. Format per row: `[ ]` pending
 ## Track 0 — Foundations
 
 - [x] WP-001 — Monorepo conversion + project prerequisites (2026-04-25)
-- [ ] WP-002 — Vocabulary system
-- [ ] WP-003 — Manifest cache layer
-- [ ] WP-004 — `check-edit` subcommand
-- [ ] WP-005 — Output formats: JSON, SARIF, JUnit
-- [ ] WP-006 — Telemetry library (opt-in)
-- [ ] WP-007 — Error code system + diagnostic taxonomy
-- [ ] WP-008 — CLI ergonomics overhaul
+- [x] WP-002 — Vocabulary system (verified 2026-05-09 via codebase audit — packages/core/src/vocabulary/)
+- [x] WP-003 — Manifest cache layer (verified 2026-05-09 — packages/core/src/cache/, proper-lockfile)
+- [x] WP-004 — `check-edit` subcommand (verified 2026-05-09 — packages/cli/src/commands/check-edit.ts + bench)
+- [x] WP-005 — Output formats: JSON, SARIF, JUnit (verified 2026-05-09 — packages/cli/src/format/)
+- [x] WP-006 — Telemetry library (opt-in) (verified 2026-05-09 — packages/telemetry/, --no-telemetry honored)
+- [x] WP-007 — Error code system + diagnostic taxonomy (verified 2026-05-09 — packages/core/src/diagnostics/codes.ts, --explain)
+- [x] WP-008 — CLI ergonomics overhaul (verified 2026-05-09 — citty + packages/cli/src/ui/ + completion)
 
 ## Track 1 — AI-Agent Integration
 
-- [ ] WP-009 — `emit-rules` subcommand
-- [ ] WP-010 — `install-hooks` for Claude Code
-- [ ] WP-011 — `install-hooks` for Cursor
-- [ ] WP-012 — `install-hooks` for Codex / OpenAI
-- [ ] WP-013 — `install-hooks` for Aider, Cline, Copilot
-- [ ] WP-014 — MCP server scaffold
-- [ ] WP-015 — MCP tools
-- [ ] WP-016 — MCP resources + subscriptions
-- [ ] WP-017 — MCP registration helpers
+- [x] WP-009 — `emit-rules` subcommand (verified 2026-05-09 — 6 emitters, idempotent markers)
+- [x] WP-010 — `install-hooks` for Claude Code (verified 2026-05-09 — packages/cli/src/installers/claude-code.ts)
+- [x] WP-011 — `install-hooks` for Cursor (verified 2026-05-09 — installers/cursor.ts)
+- [x] WP-012 — `install-hooks` for Codex / OpenAI (verified 2026-05-09 — installers/codex.ts)
+- [x] WP-013 — `install-hooks` for Aider, Cline, Copilot (verified 2026-05-09 — three installers)
+- [x] WP-014 — MCP server scaffold (verified 2026-05-09 — packages/mcp-server/)
+- [x] WP-015 — MCP tools (verified 2026-05-09 — 8 tools, 63+ test cases)
+- [x] WP-016 — MCP resources + subscriptions (verified 2026-05-09 — 6 resources + chokidar watcher)
+- [x] WP-017 — MCP registration helpers (verified 2026-05-09 — mcp-install + per-tool adapters)
 - [x] WP-018 — Reference monorepo (2026-05-02; **Go service dropped for v1.0**, revisit after WP-021)
 
 ## Track 2 — Cross-Language + CI
 
-- [ ] WP-019 — Multi-language workspace schema
-- [ ] WP-020 — Multi-language plugin orchestration
-- [ ] WP-021 — Go language plugin
-- [ ] WP-022 — Cross-language E2E test suite
-- [ ] WP-023 — GitHub Action
-- [ ] WP-024 — GitLab CI template
-- [ ] WP-025 — Bitbucket Pipes
-- [ ] WP-026 — VS Code extension
-- [ ] WP-027 — LSP server polish
+- [x] WP-019 — Multi-language workspace schema (verified 2026-05-09 — Track 2 closed)
+- [x] WP-020 — Multi-language plugin orchestration (verified 2026-05-09)
+- [x] WP-021 — Go language plugin (verified 2026-05-09 — packages/plugin-go/)
+- [x] WP-022 — Cross-language E2E test suite (verified 2026-05-09)
+- [x] WP-023 — GitHub Action (verified 2026-05-09 — packages/github-action/)
+- [x] WP-024 — GitLab CI template (verified 2026-05-09)
+- [x] WP-025 — Bitbucket Pipes (verified 2026-05-09)
+- [x] WP-026 — VS Code extension (2026-05-04 + 04b follow-ups WP-026b–f)
+- [x] WP-027 — LSP server polish (2026-05-04 + WP-027b — promoted to standalone @chemag/lsp-server)
 
 ## Track 3 — Commercial Cloud
 
