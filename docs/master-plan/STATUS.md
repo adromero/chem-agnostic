@@ -38,7 +38,23 @@ The conductor updates this file as work completes. Format per row: `[ ]` pending
 - [x] WP-026 — VS Code extension (2026-05-04 + 04b follow-ups WP-026b–f)
 - [x] WP-027 — LSP server polish (2026-05-04 + WP-027b — promoted to standalone @chemag/lsp-server)
 
+## Track R — Rule Remediation (blocks Tracks 3+)
+
+Driven by NEGATIVE outcome of `spend-tracker-bench` (2026-05-11). See
+[11-track-r-rule-remediation.md](./11-track-r-rule-remediation.md) and
+ADR-0006.
+
+- [ ] WP-R01 — Test-fixture scaffolding for semantic rules
+- [ ] WP-R02 — CHEM-PORT-001 (compound with concrete I/O needs interface)
+- [ ] WP-R03 — CHEM-PORT-003 (cross-compound class import is a warning)
+- [ ] **Gate 1** — Tier-1 bench re-run; PASS unblocks Track 3
+- [ ] WP-R04 — CHEM-PORT-004 (adapter instantiation only in catalyst) — ships only if Gate 1 partial/fail
+- [ ] WP-R05 — CHEM-DRY-001 (duplicated function suggests reagent) — ships only if Gate 1 partial/fail
+- [ ] **Gate 2** — Tier-2 bench re-run; FAIL triggers value-prop reframe (separate ADR)
+
 ## Track 3 — Commercial Cloud
+
+> Blocked by Track R Gate 1.
 
 - [ ] WP-028 — Cloud architecture and scaffolding
 - [ ] WP-029 — Auth + multi-org
