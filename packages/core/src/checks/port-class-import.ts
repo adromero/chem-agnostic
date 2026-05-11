@@ -156,8 +156,12 @@ export function checkPortClassImport(input: PortClassImportInput): Diagnostic[] 
  * misfire on `treats.ts`, `mistreats.ts`, etc. We split on `path.sep` AND
  * `/` because `srcAbs` is typically POSIX-style even on Windows when the
  * caller constructed it via `path.resolve` on a POSIX runner.
+ *
+ * Exported because both CHEM-PORT-003 and CHEM-PORT-004 share this
+ * test-exemption logic; duplicating it would let the two checks drift
+ * silently.
  */
-function isTestPath(srcAbs: string, plugin: LanguagePlugin): boolean {
+export function isTestPath(srcAbs: string, plugin: LanguagePlugin): boolean {
   const basename = path.basename(srcAbs);
   if (plugin.defaults.testFilePattern.test(basename)) return true;
 

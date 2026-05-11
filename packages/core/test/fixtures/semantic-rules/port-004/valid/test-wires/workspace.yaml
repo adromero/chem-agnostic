@@ -1,0 +1,25 @@
+workspace: port-004-test-wires
+language: typescript
+roles:
+  reaction:
+    description: Workflow
+    folder: reactions
+  interface:
+    description: Contract
+    folder: interfaces
+  adapter:
+    description: Implementation
+    folder: adapters
+bonds:
+  reaction: [interface, adapter]
+  interface: []
+  adapter: [interface]
+paths:
+  compounds: ./src/compounds
+compound_types:
+  compound:
+    allowed_roles: [reaction, interface, adapter]
+rules:
+  cross_compound_imports: unrestricted
+  role_from_path: true
+  public_surface: public.ts

@@ -94,6 +94,10 @@ export function buildCommandTree(version: string): CommandDef {
             description: "Skip filesystem checks",
           },
           verbose: { type: "boolean", description: "Verbose output" },
+          suggestions: {
+            type: "boolean",
+            description: "Surface suggestion-level diagnostics (e.g. CHEM-DRY-001)",
+          },
           format: {
             type: "enum",
             description: "Output format",
@@ -129,6 +133,10 @@ export function buildCommandTree(version: string): CommandDef {
             type: "enum",
             description: "Output format",
             options: ["pretty", "json", "sarif", "junit"],
+          },
+          suggestions: {
+            type: "boolean",
+            description: "Surface suggestion-level diagnostics (e.g. CHEM-DRY-001)",
           },
         },
       }),

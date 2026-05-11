@@ -39,7 +39,8 @@ export type DiagnosticCategory =
   | "EMIT-RULES"
   | "MCP"
   | "INSTALL-HOOKS"
-  | "PORT";
+  | "PORT"
+  | "DRY";
 
 /**
  * String-literal union of every emitted diagnostic code. Adding a new code
@@ -57,6 +58,9 @@ export type DiagnosticCode =
   // NOTE: CHEM-PORT-002 is RESERVED (Tier 3, see proposed-rules.md) — no entry.
   | "CHEM-PORT-001"
   | "CHEM-PORT-003"
+  | "CHEM-PORT-004"
+  // ---- DRY ----
+  | "CHEM-DRY-001"
   // ---- ROLE ----
   | "CHEM-ROLE-001"
   | "CHEM-ROLE-002"
@@ -132,7 +136,7 @@ export type DiagnosticTrKey = Extract<TrKey, `diagnostic.${string}`>;
 export interface DiagnosticCodeMeta {
   code: DiagnosticCode;
   category: DiagnosticCategory;
-  level: "error" | "warning";
+  level: "error" | "warning" | "suggestion";
   /** The TrKey emitted alongside this code. Must be a `diagnostic.*` member. */
   trKey: DiagnosticTrKey;
   /** Section anchor in the docs site (rendered as `#<helpFragment>`). */
@@ -199,6 +203,22 @@ export const DIAGNOSTIC_CODES: Record<DiagnosticCode, DiagnosticCodeMeta> = {
     level: "error",
     trKey: "diagnostic.port_class_cross_compound",
     helpFragment: "chem-port-003-port-class-cross-compound",
+  },
+  "CHEM-PORT-004": {
+    code: "CHEM-PORT-004",
+    category: "PORT",
+    level: "error",
+    trKey: "diagnostic.port.adapter_instantiation",
+    helpFragment: "chem-port-004-port-adapter-instantiation",
+  },
+
+  // ---- DRY ----
+  "CHEM-DRY-001": {
+    code: "CHEM-DRY-001",
+    category: "DRY",
+    level: "suggestion",
+    trKey: "diagnostic.dry.function_duplicated",
+    helpFragment: "chem-dry-001-function-duplicated",
   },
 
   // ---- ROLE ----

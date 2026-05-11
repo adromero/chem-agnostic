@@ -46,6 +46,8 @@
   "diagnostic.invalid_io_module_pattern": "Invalid regex in workspace.yaml rules.io_modules: \"{pattern}\" — {error}. The impurity was filtered out.",
   "diagnostic.port_needs_interface": "Compound \"{compound}\" has reaction units and adapter units that import I/O modules ({io_modules}) but no interface unit. Extract a port interface and bind the adapter through a catalyst.",
   "diagnostic.port_class_cross_compound": "In {file}: imports concrete class \"{name}\" from compound \"{target_compound}\". Bond to an interface and catalyze the adapter via the catalyst.",
+  "diagnostic.port.adapter_instantiation": "In {file}: compound \"{src_compound}\" reacts with adapter class \"{class_name}\" outside a catalyst. Move the `new` into a catalyst, bond to an interface and inject the adapter, or annotate the class with `// @chemag-transient` when it has no instance state.",
+  "diagnostic.dry.function_duplicated": "Reaction \"{name}\" precipitates in {count} files: {locations}. Distill into a single reagent unit and bond from each caller.",
 
   "diagnostic.import_bond_violation": "{file}: {src_role} imports {target_role} \"{names}\" — bond violation",
   "diagnostic.import_undeclared": "{file}: imports from \"{target}\" but it is not in the imports list",

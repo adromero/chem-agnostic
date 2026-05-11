@@ -1,0 +1,6 @@
+compound: a
+type: compound
+units:
+  - role: reaction
+    name: handlers
+    file: ./reactions/handlers.test.ts

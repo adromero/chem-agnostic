@@ -47,6 +47,7 @@ export function cmdAnalyze(argv: string[]): void {
       "\x1b[1mOptions:\x1b[0m\n" +
         "  --format <fmt>   Output format: human|json|sarif|junit (default: human)\n" +
         "  --json           DEPRECATED. Alias for --format json that preserves the legacy ad-hoc shape. Use --format json instead.\n" +
+        "  --suggestions    Surface suggestion-level diagnostics (e.g. CHEM-DRY-001)\n" +
         "  --for-hook claude  Emit Claude Code PostToolUse envelope; reads stdin JSON for tool_input.file_path.\n" +
         "  --workspace <path>   Workspace root or path to workspace.yaml.\n",
     );
@@ -55,12 +56,18 @@ export function cmdAnalyze(argv: string[]): void {
 
   const forHook = parseForHookFlag(argv);
   const explicitWorkspace = parseWorkspaceFlag(argv);
+  // --suggestions (default off): when absent, suggestion-level diagnostics
+  // (e.g. CHEM-DRY-001) are filtered out before any downstream consumer
+  // — legacy JSON, formatters, exit-code accounting, AND the --for-hook
+  // claude `additionalContext` payload. A noisy DRY-001 in every
+  // PostToolUse envelope would degrade Claude Code's hook UX.
+  const suggestionsFlag = argv.includes("--suggestions");
 
   // --for-hook claude takes precedence: it routes through the hook envelope
   // emitter, never emits the standard analyze output, and always exits 0
   // (PostToolUse is informational; engine errors are stderr-only).
   if (forHook === "claude") {
-    runForHookClaude(argv, explicitWorkspace);
+    runForHookClaude(argv, explicitWorkspace, suggestionsFlag);
     return;
   }
 
@@ -206,7 +213,12 @@ export function cmdAnalyze(argv: string[]): void {
   // Loader diagnostics surface alongside source-import diagnostics. They
   // appear first so the user sees workspace-config errors before per-file
   // findings.
-  const diags: Diagnostic[] = [...loaderDiagnostics, ...importDiags];
+  const rawDiags: Diagnostic[] = [...loaderDiagnostics, ...importDiags];
+  // --suggestions filter applied at the diagnostic-list level BEFORE every
+  // downstream consumer (errors/warnings totals, legacy JSON, formatters,
+  // telemetry). Exit codes are unaffected — `errors` counts `"error"` only
+  // and suggestions match neither error nor warning.
+  const diags = suggestionsFlag ? rawDiags : rawDiags.filter((d) => d.level !== "suggestion");
   const errors = diags.filter((d) => d.level === "error");
   const warnings = diags.filter((d) => d.level === "warning");
 
@@ -301,6 +313,7 @@ function stripFlags(argv: string[]): string[] {
       continue;
     }
     if (a.startsWith("--workspace=")) continue;
+    if (a === "--suggestions") continue;
     out.push(a);
   }
   return out;
@@ -368,7 +381,11 @@ interface PostToolUseEnvelope {
  *   - engine crash → no envelope, stderr trace, exit 0 (we never block tool
  *     edits via PostToolUse — the tool already ran).
  */
-function runForHookClaude(argv: string[], explicitWorkspace: string | null): void {
+function runForHookClaude(
+  argv: string[],
+  explicitWorkspace: string | null,
+  suggestionsFlag: boolean,
+): void {
   // Read stdin envelope first; failure → stderr 006 + exit 0.
   let raw: string;
   try {
@@ -434,13 +451,17 @@ function runForHookClaude(argv: string[], explicitWorkspace: string | null): voi
 
   // Run analyze. Wrap in try/catch — any engine error is logged to stderr
   // (with no envelope) so PostToolUse stays silent on the model side.
-  let diags: Diagnostic[] = [];
+  let rawDiags: Diagnostic[] = [];
   try {
-    diags = runWorkspaceAnalyze(wsPath);
+    rawDiags = runWorkspaceAnalyze(wsPath);
   } catch (e) {
     console.error(`analyze (--for-hook claude) failed: ${(e as Error).message}`);
     process.exit(0);
   }
+
+  // Filter suggestions BEFORE formatPostHookSummary — otherwise the model
+  // sees DRY-001 noise on every PostToolUse envelope by default.
+  const diags = suggestionsFlag ? rawDiags : rawDiags.filter((d) => d.level !== "suggestion");
 
   if (diags.length === 0) {
     // Clean workspace — no envelope, exit 0.

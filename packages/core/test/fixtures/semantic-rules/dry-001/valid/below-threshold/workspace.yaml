@@ -1,0 +1,16 @@
+workspace: dry-001-below-threshold
+language: typescript
+roles:
+  reaction:
+    description: Workflow
+    folder: reactions
+bonds:
+  reaction: []
+paths:
+  compounds: ./src/compounds
+compound_types:
+  compound:
+    allowed_roles: [reaction]
+rules:
+  cross_compound_imports: unrestricted
+  role_from_path: true

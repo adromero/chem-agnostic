@@ -10,6 +10,8 @@ import type { LanguagePlugin } from "./plugin-interface.js";
 import { tr } from "./vocabulary/index.js";
 import { checkPortNeedsInterface, compileIoModulePatterns } from "./checks/port-needs-interface.js";
 import { checkPortClassImport, compileClassAllowlist } from "./checks/port-class-import.js";
+import { checkPortAdapterInstantiation } from "./checks/port-adapter-instantiation.js";
+import { checkDuplicatedFunction } from "./checks/duplicated-function.js";
 
 /**
  * One per-language sub-tree slice fed into `checkImports`. The CLI / MCP
@@ -161,6 +163,14 @@ export function checkImports(
     const batchResult = hooks.parseImportsBatch
       ? hooks.parseImportsBatch(allFilePaths, plugin, scope)
       : plugin.parseImportsBatch(allFilePaths);
+
+    // CHEM-PORT-004 input: scan `new` expressions across the sub-tree
+    // ONCE. Plugins that omit the optional method (plugin-python today)
+    // contribute an empty map — the core check then skips this sub-tree
+    // and emits no diagnostics.
+    const newExprSites = plugin.scanNewExpressions
+      ? plugin.scanNewExpressions(allFilePaths)
+      : new Map();
 
     for (const { abs, compound: srcCompound } of filesToAnalyze) {
       const imports = batchResult.get(abs);
@@ -371,6 +381,38 @@ export function checkImports(
       );
       if (portDiag) diags.push(portDiag);
     }
+
+    // ---- Check 4 (PORT-004): stateful adapter instantiation outside a
+    // catalyst. Consumes the per-sub-tree `newExprSites` map collected
+    // before the per-file loop and the global fileIndex/compoundMap
+    // already built above. Emits one diagnostic per offending
+    // `new XAdapter()` call site.
+    const port004Diags = checkPortAdapterInstantiation({
+      sites: newExprSites,
+      fileIndex,
+      compoundMap,
+      workspace,
+      plugin,
+      classAllowlist,
+      subtreeId: scope.id,
+    });
+    if (port004Diags.length > 0) diags.push(...port004Diags);
+
+    // ---- Check 5 (DRY-001): function declared in N+ non-test files.
+    // Plugins that omit `scanFunctionDeclarations` (plugin-python today)
+    // contribute an empty map; the core check then emits nothing for the
+    // sub-tree. Test-file exclusion happens in core so the plugin can stay
+    // AST-only — mirrors PORT-004's separation of concerns.
+    const fnSites = plugin.scanFunctionDeclarations
+      ? plugin.scanFunctionDeclarations(allFilePaths)
+      : new Map();
+    const dry001Diags = checkDuplicatedFunction({
+      sites: fnSites,
+      workspace,
+      plugin,
+      subtreeId: scope.id,
+    });
+    if (dry001Diags.length > 0) diags.push(...dry001Diags);
   }
 
   return diags;

@@ -2,8 +2,10 @@ import * as path from "node:path";
 import type { LanguagePlugin } from "@chemag/core/plugin-interface";
 import type {
   AssayDeclaration,
+  FunctionDeclarationSite,
   InferredUnit,
   LoadedCompound,
+  NewExpressionSite,
   ParsedImport,
   ResolvedImport,
   UnitDeclaration,
@@ -13,6 +15,8 @@ import {
   parseImportsBatch as doParseBatch,
   parseImports as doParseImports,
   resolveModulePath as doResolve,
+  scanFunctionDeclarationsBatch as doScanFunctionDecls,
+  scanNewExpressionsBatch as doScanNewExprs,
 } from "./parser.js";
 import {
   generateUnitStub as doUnitStub,
@@ -40,6 +44,14 @@ export const typescriptPlugin: LanguagePlugin = {
 
   parseImports(filePath: string): ParsedImport[] {
     return doParseImports(filePath);
+  },
+
+  scanNewExpressions(filePaths: string[]): Map<string, NewExpressionSite[]> {
+    return doScanNewExprs(filePaths);
+  },
+
+  scanFunctionDeclarations(filePaths: string[]): Map<string, FunctionDeclarationSite[]> {
+    return doScanFunctionDecls(filePaths);
   },
 
   resolveModulePath(fromFile: string, moduleSpec: string): string | undefined {

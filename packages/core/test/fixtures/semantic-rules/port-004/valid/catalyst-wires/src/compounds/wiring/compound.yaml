@@ -1,0 +1,8 @@
+compound: wiring
+type: catalyst
+imports:
+  - compound: vendors
+units:
+  - role: reaction
+    name: apiServer
+    file: ./reactions/apiServer.ts

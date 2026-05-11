@@ -1,7 +1,9 @@
 import type {
   AssayDeclaration,
+  FunctionDeclarationSite,
   InferredUnit,
   LoadedCompound,
+  NewExpressionSite,
   ParsedImport,
   ResolvedImport,
   UnitDeclaration,
@@ -42,6 +44,40 @@ export interface LanguagePlugin {
    * Parse import statements from a single source file.
    */
   parseImports(filePath: string): ParsedImport[];
+
+  /**
+   * Locate `new X(...)` expressions in the given files and return their
+   * AST-extracted facts. OPTIONAL — plugins that cannot resolve constructor
+   * symbols (e.g. plugin-python) MAY omit this method, in which case the
+   * core check skips and emits no diagnostics for that sub-tree.
+   *
+   * The plugin MUST NOT consult workspace state. All filtering against
+   * roles / compound types happens in `@chemag/core/checks`.
+   *
+   * Returns a Map from each input file path to its sites. Files with no
+   * `new` expressions MAY be omitted from the result (callers must treat
+   * a missing entry as an empty list).
+   */
+  scanNewExpressions?(filePaths: string[]): Map<string, NewExpressionSite[]>;
+
+  /**
+   * Enumerate top-level `function` declarations in the given files and return
+   * their AST-extracted facts. OPTIONAL — plugins that cannot enumerate
+   * function declarations (e.g. plugin-python in v1) MAY omit this method, in
+   * which case the core duplicated-function check skips the sub-tree entirely.
+   *
+   * The plugin MUST scan ONLY top-level `FunctionDeclaration` nodes (parent
+   * is `SourceFile`). Arrow functions, methods, named exports of arrow
+   * assignments, and class members are intentionally out of scope.
+   *
+   * Workspace filtering (test-file exclusion, exclude-list, threshold) lives
+   * in `@chemag/core/checks/duplicated-function.ts` — the plugin must NOT
+   * consult workspace state.
+   *
+   * Returns a Map from each input file path to its sites. Files with no
+   * top-level function declarations MAY be omitted from the result.
+   */
+  scanFunctionDeclarations?(filePaths: string[]): Map<string, FunctionDeclarationSite[]>;
 
   /**
    * Resolve a module specifier to an absolute file path.

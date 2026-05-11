@@ -20,7 +20,7 @@ const inputSchema = {
 export interface ExplainDiagnosticOutput {
   code: string;
   description: string;
-  level: "error" | "warning";
+  level: "error" | "warning" | "suggestion";
   doc_url: string;
   examples: string[];
 }

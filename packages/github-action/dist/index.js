@@ -30041,7 +30041,7 @@ exports.findStickyComment = findStickyComment;
 // see the file header for the moduleResolution=node rationale. The forwarding
 // `export ... from "@chemag/core"` at the bottom keeps the existing
 // `import { STICKY_MARKER, hasMarker } from "./comment"` test imports valid.
-const core_1 = __nccwpck_require__(5689);
+const core_1 = __nccwpck_require__(4083);
 /**
  * Post (or update) a sticky comment on the given PR.
  *
@@ -30119,7 +30119,7 @@ async function findStickyComment(issues, owner, repo, pullNumber) {
 // consumer that imported the marker directly from this module pre-wp-024).
 // The canonical definitions live in `@chemag/core/ci-marker`.
 // ---------------------------------------------------------------------------
-var core_2 = __nccwpck_require__(5689);
+var core_2 = __nccwpck_require__(4083);
 Object.defineProperty(exports, "STICKY_MARKER", ({ enumerable: true, get: function () { return core_2.STICKY_MARKER; } }));
 Object.defineProperty(exports, "hasMarker", ({ enumerable: true, get: function () { return core_2.hasMarker; } }));
 Object.defineProperty(exports, "wrapWithMarker", ({ enumerable: true, get: function () { return core_2.wrapWithMarker; } }));
@@ -41190,7 +41190,7 @@ exports.visitAsync = visitAsync;
 
 /***/ }),
 
-/***/ 5689:
+/***/ 4083:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
 
 "use strict";
@@ -41267,9 +41267,9 @@ var external_node_path_ = __nccwpck_require__(6760);
 // EXTERNAL MODULE: ../../node_modules/.pnpm/yaml@2.8.3/node_modules/yaml/dist/index.js
 var dist = __nccwpck_require__(5278);
 ;// CONCATENATED MODULE: ../core/dist/vocabulary/standard.json
-const standard_namespaceObject = /*#__PURE__*/JSON.parse('{"role.element":"value-object","role.molecule":"entity","role.reaction":"use-case","role.interface":"port","role.adapter":"adapter","role.buffer":"middleware","container.compound":"module","container.reagent":"shared-kernel","container.solvent":"infrastructure","container.catalyst":"composition-root","concept.bond":"dependency rule","concept.unit":"unit","concept.signal":"event","concept.assay":"test","diagnostic.duplicate_compound":"Duplicate module name \\"{name}\\"","diagnostic.unknown_role":"Unit \\"{unit}\\" has unknown role \\"{role}\\"","diagnostic.file_missing_unit":"Unit \\"{unit}\\" — file not found: {file}","diagnostic.file_missing_assay":"Test \\"{assay}\\" — file not found: {file}","diagnostic.public_surface_missing":"Module exports units but has no {surface}","diagnostic.role_folder_mismatch":"Unit \\"{unit}\\" ({role}) path does not contain \\"{expected}/\\"","diagnostic.export_no_unit":"Export \\"{name}\\" ({key}) has no matching unit with role \\"{role}\\"","diagnostic.import_existence":"Imports \\"{compound}\\" which does not exist","diagnostic.import_specificity":"Imports \\"{name}\\" from \\"{compound}\\" but it is not exported","diagnostic.compound_type_cannot_import":"Cannot import \\"{target}\\" ({target_type}) — {self_type} may only import from [{allowed}]","diagnostic.compound_type_target_uniport":"Cannot import \\"{target}\\" — {target_type} modules are not importable","diagnostic.compound_type_target_same_type":"Cannot import \\"{target}\\" — {target_type} modules are only importable by other {target_type} modules","diagnostic.bond_unresolved":"\\"{src_name}\\" depends on \\"{dep}\\" which cannot be resolved","diagnostic.bond_violation":"\\"{src_name}\\" ({src_role}) depends on \\"{dep}\\" ({dep_role}) — dependency rule violation","diagnostic.signal_emitter_not_reaction":"Event \\"{signal}\\" references emitter \\"{emitter}\\" — not a use-case in this module","diagnostic.signal_handler_not_reaction":"Event listener for \\"{signal}\\" references handler \\"{handler}\\" — not a use-case in this module","diagnostic.signal_orphaned_listener":"Listening for event \\"{signal}\\" but no module emits it","diagnostic.wiring_compound_missing":"Wiring references module \\"{compound}\\" which does not exist","diagnostic.wiring_interface_missing":"Port \\"{iface}\\" not found in module \\"{compound}\\"","diagnostic.wiring_adapter_missing":"Adapter \\"{adapter}\\" not found in module \\"{compound}\\"","diagnostic.wiring_adapter_no_implements":"Adapter \\"{adapter}\\" does not declare that it implements \\"{iface}\\"","diagnostic.singleton_violated":"Type \\"{type}\\" is singleton but has {count} instances: [{names}]","diagnostic.role_not_allowed_for_type":"Unit \\"{unit}\\" has role \\"{role}\\" but {type} only allows [{allowed}]","diagnostic.assay_subject_unknown":"Test \\"{assay}\\" exercises \\"{subject}\\" which is not a unit in this module","diagnostic.assay_mock_not_interface":"Test \\"{assay}\\" mocks \\"{mock}\\" which is not a port in this module","diagnostic.subtree_paths_overlap":"Sub-trees \\"{id_a}\\" and \\"{id_b}\\" declare overlapping path roots: \\"{path_a}\\" and \\"{path_b}\\"","diagnostic.subtree_id_duplicate":"Duplicate sub-tree id \\"{id}\\" — every entry in `languages:` must use a unique id","diagnostic.invalid_io_module_pattern":"Invalid regex in workspace.yaml rules.io_modules: \\"{pattern}\\" — {error}. The entry was ignored.","diagnostic.port_needs_interface":"Module \\"{compound}\\" has use-case units and adapter units that import I/O modules ({io_modules}) but no port unit. Extract a port and bind the adapter through a composition-root.","diagnostic.import_bond_violation":"{file}: {src_role} imports {target_role} \\"{names}\\" — dependency rule violation","diagnostic.import_undeclared":"{file}: imports from \\"{target}\\" but it is not in the imports list","diagnostic.import_bypass":"{file}: imports directly from \\"{target}\\" internal file instead of {surface}","diagnostic.cross_language_import":"Cross-language import from {src_id} to {target_id}: {file} imports module {target_compound}, which lives in a different language sub-tree.","diagnostic.unresolvable_placement":"Cannot determine module or role for file \\"{file}\\"","diagnostic.markers_missing_no_overwrite":"Refusing to rewrite \\"{path}\\": chemag markers are missing. Pass --overwrite to replace the existing file.","diagnostic.line_budget_exceeded":"Emitted {tool} block is {actual} lines (budget {budget}). Trim sections or extend the budget.","diagnostic.unknown_emitter_tool":"Unknown --tool value \\"{tool}\\". Supported: {supported}.","diagnostic.mcp_workspace_required":"chemag mcp requires a workspace. Pass --workspace <path> or run from a directory containing workspace.yaml.","diagnostic.mcp_transport_unsupported":"MCP transport \\"{transport}\\" is not supported. Use --transport stdio.","diagnostic.mcp_initialize_failed":"MCP server failed to initialize: {reason}","diagnostic.tool_input_invalid":"Invalid input for MCP tool \\"{tool}\\": {reason}","diagnostic.tool_unknown":"Unknown MCP tool: \\"{tool}\\"","diagnostic.tool_handler_failed":"MCP tool \\"{tool}\\" handler failed: {reason}","diagnostic.mcp_client_unknown":"Unknown --client value \\"{client}\\". Supported: {supported}.","diagnostic.mcp_client_config_invalid_json":"MCP client config is not valid JSON: {path} ({reason})","diagnostic.mcp_client_cli_failed":"Client CLI \\"{cli}\\" exited with code {exitCode}: {stderr}","diagnostic.resource_uri_invalid":"Invalid resource URI \\"{uri}\\": {reason}","diagnostic.resource_compound_not_found":"Compound \\"{name}\\" not found in this workspace.","diagnostic.resource_docs_section_unknown":"Unknown docs section \\"{section}\\". Supported: {supported}.","diagnostic.tool_not_yet_implemented":"Tool \\"{tool}\\" is not yet supported by chemag install-hooks. Currently supported: claude, cursor, codex, aider, cline, copilot.","diagnostic.settings_file_invalid_json":"Settings file is not valid JSON: {path} ({reason})","diagnostic.hooks_already_installed_no_force":"chemag hooks already present in {path}; use --uninstall first or pass --overwrite (reserved).","diagnostic.unknown_scope":"Unknown --scope value \\"{scope}\\". Use user|project.","diagnostic.no_chemag_entries_to_uninstall":"No chemag-tagged hook entries found in {path}; nothing to uninstall.","diagnostic.hook_stdin_unparseable":"Hook stdin could not be parsed ({reason}); falling back to allow.","diagnostic.husky_not_detected":"Husky not detected in {workspace}. Install husky first: `pnpm add -D husky && pnpm husky init` (or your package manager\'s equivalent), then re-run chemag install-hooks.","diagnostic.cursor_precommit_unparseable":"Existing .husky/pre-commit at {path} cannot be safely modified ({reason}). Resolve the conflict by hand or remove the file before re-running.","diagnostic.aider_conf_invalid_yaml":"Existing .aider.conf.yml at {path} is not valid YAML ({reason}). Fix the YAML by hand or remove the file before re-running.","diagnostic.copilot_workflow_exists_no_overwrite":"Refusing to overwrite {path}: file exists without the chemag-managed header. Pass --overwrite to replace it.","cli.help.intro":"chemag v{version} — language-agnostic module architecture toolkit","cli.help.usage":"Usage: chemag [options] [command]\\n       chem-ag [options] [command]   (alias)","cli.help.commands":"Commands:\\n  init         Bootstrap a new workspace\\n  add          Add a module or unit\\n  check        Validate manifests and file structure\\n  analyze      Check real imports against dependency rules\\n  scaffold     Generate stub files from manifests\\n  graph        Output Mermaid dependency diagram\\n  sync         Generate manifests from existing code","cli.help.options":"Options:\\n  --version          Show version number\\n  --help             Show this help text\\n  --vocabulary <v>   standard (default) or chemistry\\n  --no-cache         Disable the manifest/imports cache for this run\\n  --no-telemetry     Disable usage telemetry for this run (config unchanged)","cli.help.no_cache":"--no-cache         Disable the on-disk manifest/imports cache for this run","cli.command.init":"init — bootstrap a new workspace.\\nUsage: chemag init <name> [--path <dir>] [--language typescript|python]","cli.command.add":"add — add a module or unit.\\nUsage: chemag add module <name> [--type module|shared-kernel|infrastructure]\\n       chemag add unit <module> <role> <name> [--export] [--implements <port>]","cli.command.check":"check — validate workspace manifests and filesystem.\\nUsage: chemag check <workspace.yaml> [--manifest-only] [--verbose] [--json]","cli.command.analyze":"analyze — check source imports against dependency rules.\\nUsage: chemag analyze <workspace.yaml> [--json]","cli.command.scaffold":"scaffold — generate stub files from manifests.\\nUsage: chemag scaffold <workspace.yaml> [--dry-run]","cli.command.graph":"graph — output a Mermaid dependency diagram.\\nUsage: chemag graph <workspace.yaml>","cli.command.sync":"sync — generate manifests from existing code.\\nUsage: chemag sync <workspace.yaml> [--dry-run]","cli.command.emit_rules":"emit-rules — generate AI-editor rule files (AGENTS.md, CLAUDE.md, .cursor/rules, .github/copilot-instructions.md, .aider/CONVENTIONS.md, .clinerules) from workspace.yaml.\\nUsage: chemag emit-rules [--tool <name>] [--out-dir <path>] [--include-violations] [--dry-run] [--diff] [--overwrite]","cli.command.mcp":"mcp — run an MCP server exposing chemag tools to MCP-aware clients.\\nUsage: chemag mcp [--workspace <path>] [--transport stdio]","cli.help.mcp.workspace":"--workspace <path>   Workspace directory containing workspace.yaml (defaults to cwd)","cli.help.mcp.transport":"--transport <name>   Transport to expose the server on (stdio; sse is reserved for v1.0.x)","cli.command.install_hooks":"install-hooks — install or uninstall AI-editor hook integrations that call chemag check-edit / analyze around tool edits.\\nUsage: chemag install-hooks --tool <claude|cursor|codex|aider|cline|copilot|all> [--scope user|project] [--mode block|warn|context-only] [--uninstall] [--restore] [--dry-run]","cli.help.install_hooks.tool":"--tool <name>        Editor / agent target (claude, cursor, codex, aider, cline, copilot)","cli.help.install_hooks.scope":"--scope <user|project>  Where to install the hook (defaults to project)","cli.help.install_hooks.mode":"--mode <block|warn|context-only>  block (default), warn (downgrade deny→ask), or context-only (PostToolUse only)","cli.install_hooks.tip.mcp_register":"To register the chemag MCP server with {clientName}, run `chemag mcp install --client {clientId}`.","cli.install_hooks.codex.help":"install-hooks --tool codex — emit AGENTS.md and a husky pre-commit line that runs `chemag check`.","cli.install_hooks.aider.help":"install-hooks --tool aider — emit .aider/CONVENTIONS.md, add a chemag block to .aider.conf.yml, and install a husky pre-commit line that runs `chemag check`.","cli.install_hooks.cline.help":"install-hooks --tool cline — emit .clinerules and a husky pre-commit line that runs `chemag check`. Print a tip pointing at `chemag mcp install --client cline`.","cli.install_hooks.copilot.help":"install-hooks --tool copilot — emit .github/copilot-instructions.md, write a .github/workflows/chemag-pr.yml workflow, and install a husky pre-commit line that runs `chemag check`.","cli.command.mcp_install":"mcp install — register chemag\'s MCP server with one or more MCP clients.\\nUsage: chemag mcp install --client <claude|cursor|cline|continue|all> [--scope user|project] [--workspace <path>] [--no-cli] [--dry-run]","cli.command.mcp_uninstall":"mcp uninstall — remove chemag\'s MCP server registration from one or more MCP clients.\\nUsage: chemag mcp uninstall --client <claude|cursor|cline|continue|all> [--scope user|project] [--no-cli] [--dry-run]","cli.command.mcp_status":"mcp status — show whether chemag is registered with each known MCP client.\\nUsage: chemag mcp status [--format pretty|json]","cli.help.mcp_install.client":"--client <name>      MCP client to target (claude, cursor, cline, continue, or all)","cli.help.mcp_install.scope":"--scope <user|project>  Where to register chemag (defaults to project)","cli.help.mcp_install.no_cli":"--no-cli             Skip the client\'s CLI; write the MCP config file directly","cli.help.mcp_install.dry_run":"--dry-run            Print the planned changes without writing or invoking any CLI","cli.help.mcp_status.format":"--format <pretty|json>  Output format (default: pretty)","claude_md.intro":"# {name} — Module Architecture\\n\\nThis project uses a chemistry-inspired module architecture (presented here in standard vocabulary). Read this entire file before writing any code.\\n\\n## Core Concept\\n\\nCode is organized into **modules** (feature units). Each module contains **units** — source files with assigned **roles**. Roles determine what a unit can depend on. These dependency rules are called **dependency rules**.\\n\\nEvery module has a manifest (`compound.yaml`) declaring its units, exports, and imports. The workspace config (`workspace.yaml`) defines the global rules.\\n\\n**Before writing any code**: read `workspace.yaml`, then the target module\'s `compound.yaml`.","claude_md.roles_table":"## Roles — What Each Unit Type Means\\n\\n| Role | What it is | Examples |\\n|------|-----------|----------|\\n| **value-object** | Immutable value object. The simplest building block. | `UserId`, `Email`, `Money`, `DateRange` |\\n| **entity** | Domain state composed of value-objects/entities. | `UserProfile`, `Order`, `ReportDocument` |\\n| **use-case** | Workflow. Orchestrates state through ports. | `createOrder`, `generateReport`, `processPayment` |\\n| **port** | Contract / port. Defines a capability without implementation. | `OrderRepository`, `PaymentGateway`, `EmailSender` |\\n| **adapter** | Concrete implementation of a port. Touches the outside world. | `PgOrderRepository`, `StripeGateway`, `SmtpEmailSender` |\\n| **middleware** | Wraps use-cases for cross-cutting concerns. | `authGuard`, `rateLimiter`, `validateInput` |","claude_md.bonds_table":"## Dependency Rules — What Can Depend on What\\n\\nThis is the **most important constraint**. Violations are architectural errors.\\n\\n| Role | Can depend on |\\n|------|--------------|\\n| value-object | value-object |\\n| entity | value-object, entity |\\n| use-case | value-object, entity, port |\\n| port | value-object, entity |\\n| adapter | value-object, entity, port, adapter |\\n| middleware | value-object, entity, port |\\n\\n**Key implications:**\\n- Use-cases NEVER depend on adapters — they depend on ports. Adapters are injected.\\n- Value-objects are pure — they depend only on other value-objects.\\n- Adapters are the only role that can touch the outside world (DB, HTTP, filesystem).","claude_md.compound_types":"## Module Types\\n\\n| Type | Purpose | Import rules |\\n|------|---------|-------------|\\n| **module** | Standard feature unit | Can import other modules + shared-kernels |\\n| **shared-kernel** | Shared domain building blocks | Can only import other shared-kernels. Available to all. |\\n| **infrastructure** | Cross-cutting infrastructure (logging, config, auth) | Implicitly available everywhere. Can only import shared-kernels. |\\n| **composition-root** | Wires adapters to ports. | Singleton. Cannot be imported. |","claude_md.workflow":"## Workflow — How to Add a Feature\\n\\n### Adding a new feature module:\\n```bash\\nchemag add module <name>\\nchemag add unit <name> value-object SomeId --export\\nchemag add unit <name> entity SomeEntity --export\\nchemag add unit <name> port SomeRepo --export\\nchemag add unit <name> adapter PgSomeRepo --implements SomeRepo\\nchemag add unit <name> use-case doSomething --export\\n```\\n\\nThen implement each stub file. Run validation:\\n```bash\\nchemag check workspace.yaml      # manifest + filesystem checks\\nchemag analyze workspace.yaml    # verify real imports respect dependency rules\\n```","claude_md.tool_reference":"## Tool Reference\\n\\n| Command | Purpose |\\n|---------|---------|\\n| `chemag check <workspace.yaml>` | Validate manifests and file structure |\\n| `chemag scaffold <workspace.yaml>` | Generate stub files from manifests |\\n| `chemag analyze <workspace.yaml>` | Check real imports against dependency rules |\\n| `chemag graph <workspace.yaml>` | Output Mermaid dependency diagram |\\n| `chemag add module <name>` | Create a new module |\\n| `chemag add unit <module> <role> <name>` | Add a unit (flags: `--export`, `--implements <port>`) |\\n| `chemag sync <workspace.yaml>` | Generate manifests from existing code |","claude_md.ai_rules":"## Rules for AI Assistants\\n\\n1. **Read before write.** Always read `workspace.yaml` and the target `compound.yaml` before touching any code.\\n2. **Use the tool.** Use `chemag add` to create new modules and units — don\'t create files manually.\\n3. **Respect dependency rules.** Never import across role boundaries. If the analyzer fails, fix the violation.\\n4. **Public surface only.** Cross-module imports go through the public surface. Never import internal files.\\n5. **Validate after changes.** Run `chemag check workspace.yaml && chemag analyze workspace.yaml` after every meaningful change.\\n6. **Adapters are leaf nodes.** They implement ports and are only instantiated in the composition-root.\\n7. **Use-cases are the entry points.** They orchestrate the domain logic. External callers invoke use-cases, not entities directly.\\n8. **When in doubt, read the manifest.** The `compound.yaml` is the source of truth for what exists and how it connects."}');
+const standard_namespaceObject = /*#__PURE__*/JSON.parse('{"role.element":"value-object","role.molecule":"entity","role.reaction":"use-case","role.interface":"port","role.adapter":"adapter","role.buffer":"middleware","container.compound":"module","container.reagent":"shared-kernel","container.solvent":"infrastructure","container.catalyst":"composition-root","concept.bond":"dependency rule","concept.unit":"unit","concept.signal":"event","concept.assay":"test","diagnostic.duplicate_compound":"Duplicate module name \\"{name}\\"","diagnostic.unknown_role":"Unit \\"{unit}\\" has unknown role \\"{role}\\"","diagnostic.file_missing_unit":"Unit \\"{unit}\\" — file not found: {file}","diagnostic.file_missing_assay":"Test \\"{assay}\\" — file not found: {file}","diagnostic.public_surface_missing":"Module exports units but has no {surface}","diagnostic.role_folder_mismatch":"Unit \\"{unit}\\" ({role}) path does not contain \\"{expected}/\\"","diagnostic.export_no_unit":"Export \\"{name}\\" ({key}) has no matching unit with role \\"{role}\\"","diagnostic.import_existence":"Imports \\"{compound}\\" which does not exist","diagnostic.import_specificity":"Imports \\"{name}\\" from \\"{compound}\\" but it is not exported","diagnostic.compound_type_cannot_import":"Cannot import \\"{target}\\" ({target_type}) — {self_type} may only import from [{allowed}]","diagnostic.compound_type_target_uniport":"Cannot import \\"{target}\\" — {target_type} modules are not importable","diagnostic.compound_type_target_same_type":"Cannot import \\"{target}\\" — {target_type} modules are only importable by other {target_type} modules","diagnostic.bond_unresolved":"\\"{src_name}\\" depends on \\"{dep}\\" which cannot be resolved","diagnostic.bond_violation":"\\"{src_name}\\" ({src_role}) depends on \\"{dep}\\" ({dep_role}) — dependency rule violation","diagnostic.signal_emitter_not_reaction":"Event \\"{signal}\\" references emitter \\"{emitter}\\" — not a use-case in this module","diagnostic.signal_handler_not_reaction":"Event listener for \\"{signal}\\" references handler \\"{handler}\\" — not a use-case in this module","diagnostic.signal_orphaned_listener":"Listening for event \\"{signal}\\" but no module emits it","diagnostic.wiring_compound_missing":"Wiring references module \\"{compound}\\" which does not exist","diagnostic.wiring_interface_missing":"Port \\"{iface}\\" not found in module \\"{compound}\\"","diagnostic.wiring_adapter_missing":"Adapter \\"{adapter}\\" not found in module \\"{compound}\\"","diagnostic.wiring_adapter_no_implements":"Adapter \\"{adapter}\\" does not declare that it implements \\"{iface}\\"","diagnostic.singleton_violated":"Type \\"{type}\\" is singleton but has {count} instances: [{names}]","diagnostic.role_not_allowed_for_type":"Unit \\"{unit}\\" has role \\"{role}\\" but {type} only allows [{allowed}]","diagnostic.assay_subject_unknown":"Test \\"{assay}\\" exercises \\"{subject}\\" which is not a unit in this module","diagnostic.assay_mock_not_interface":"Test \\"{assay}\\" mocks \\"{mock}\\" which is not a port in this module","diagnostic.subtree_paths_overlap":"Sub-trees \\"{id_a}\\" and \\"{id_b}\\" declare overlapping path roots: \\"{path_a}\\" and \\"{path_b}\\"","diagnostic.subtree_id_duplicate":"Duplicate sub-tree id \\"{id}\\" — every entry in `languages:` must use a unique id","diagnostic.invalid_io_module_pattern":"Invalid regex in workspace.yaml rules.io_modules: \\"{pattern}\\" — {error}. The entry was ignored.","diagnostic.port_needs_interface":"Module \\"{compound}\\" has use-case units and adapter units that import I/O modules ({io_modules}) but no port unit. Extract a port and bind the adapter through a composition-root.","diagnostic.port_class_cross_compound":"In {file}: imports concrete class \\"{name}\\" from module \\"{target_compound}\\". Depend on a port and bind the implementation via the composition-root.","diagnostic.port.adapter_instantiation":"In {file}: module \\"{src_compound}\\" instantiates adapter class \\"{class_name}\\" outside a composition-root. Move the `new` into a composition-root, inject the dependency through a port, or annotate the class with `// @chemag-transient` if it carries no instance state.","diagnostic.dry.function_duplicated":"Function \\"{name}\\" is declared in {count} files: {locations}. Consider extracting it into a shared-kernel utility module imported by each call site.","diagnostic.import_bond_violation":"{file}: {src_role} imports {target_role} \\"{names}\\" — dependency rule violation","diagnostic.import_undeclared":"{file}: imports from \\"{target}\\" but it is not in the imports list","diagnostic.import_bypass":"{file}: imports directly from \\"{target}\\" internal file instead of {surface}","diagnostic.cross_language_import":"Cross-language import from {src_id} to {target_id}: {file} imports module {target_compound}, which lives in a different language sub-tree.","diagnostic.unresolvable_placement":"Cannot determine module or role for file \\"{file}\\"","diagnostic.markers_missing_no_overwrite":"Refusing to rewrite \\"{path}\\": chemag markers are missing. Pass --overwrite to replace the existing file.","diagnostic.line_budget_exceeded":"Emitted {tool} block is {actual} lines (budget {budget}). Trim sections or extend the budget.","diagnostic.unknown_emitter_tool":"Unknown --tool value \\"{tool}\\". Supported: {supported}.","diagnostic.mcp_workspace_required":"chemag mcp requires a workspace. Pass --workspace <path> or run from a directory containing workspace.yaml.","diagnostic.mcp_transport_unsupported":"MCP transport \\"{transport}\\" is not supported. Use --transport stdio.","diagnostic.mcp_initialize_failed":"MCP server failed to initialize: {reason}","diagnostic.tool_input_invalid":"Invalid input for MCP tool \\"{tool}\\": {reason}","diagnostic.tool_unknown":"Unknown MCP tool: \\"{tool}\\"","diagnostic.tool_handler_failed":"MCP tool \\"{tool}\\" handler failed: {reason}","diagnostic.mcp_client_unknown":"Unknown --client value \\"{client}\\". Supported: {supported}.","diagnostic.mcp_client_config_invalid_json":"MCP client config is not valid JSON: {path} ({reason})","diagnostic.mcp_client_cli_failed":"Client CLI \\"{cli}\\" exited with code {exitCode}: {stderr}","diagnostic.resource_uri_invalid":"Invalid resource URI \\"{uri}\\": {reason}","diagnostic.resource_compound_not_found":"Compound \\"{name}\\" not found in this workspace.","diagnostic.resource_docs_section_unknown":"Unknown docs section \\"{section}\\". Supported: {supported}.","diagnostic.tool_not_yet_implemented":"Tool \\"{tool}\\" is not yet supported by chemag install-hooks. Currently supported: claude, cursor, codex, aider, cline, copilot.","diagnostic.settings_file_invalid_json":"Settings file is not valid JSON: {path} ({reason})","diagnostic.hooks_already_installed_no_force":"chemag hooks already present in {path}; use --uninstall first or pass --overwrite (reserved).","diagnostic.unknown_scope":"Unknown --scope value \\"{scope}\\". Use user|project.","diagnostic.no_chemag_entries_to_uninstall":"No chemag-tagged hook entries found in {path}; nothing to uninstall.","diagnostic.hook_stdin_unparseable":"Hook stdin could not be parsed ({reason}); falling back to allow.","diagnostic.husky_not_detected":"Husky not detected in {workspace}. Install husky first: `pnpm add -D husky && pnpm husky init` (or your package manager\'s equivalent), then re-run chemag install-hooks.","diagnostic.cursor_precommit_unparseable":"Existing .husky/pre-commit at {path} cannot be safely modified ({reason}). Resolve the conflict by hand or remove the file before re-running.","diagnostic.aider_conf_invalid_yaml":"Existing .aider.conf.yml at {path} is not valid YAML ({reason}). Fix the YAML by hand or remove the file before re-running.","diagnostic.copilot_workflow_exists_no_overwrite":"Refusing to overwrite {path}: file exists without the chemag-managed header. Pass --overwrite to replace it.","cli.help.intro":"chemag v{version} — language-agnostic module architecture toolkit","cli.help.usage":"Usage: chemag [options] [command]\\n       chem-ag [options] [command]   (alias)","cli.help.commands":"Commands:\\n  init         Bootstrap a new workspace\\n  add          Add a module or unit\\n  check        Validate manifests and file structure\\n  analyze      Check real imports against dependency rules\\n  scaffold     Generate stub files from manifests\\n  graph        Output Mermaid dependency diagram\\n  sync         Generate manifests from existing code","cli.help.options":"Options:\\n  --version          Show version number\\n  --help             Show this help text\\n  --vocabulary <v>   standard (default) or chemistry\\n  --no-cache         Disable the manifest/imports cache for this run\\n  --no-telemetry     Disable usage telemetry for this run (config unchanged)","cli.help.no_cache":"--no-cache         Disable the on-disk manifest/imports cache for this run","cli.command.init":"init — bootstrap a new workspace.\\nUsage: chemag init <name> [--path <dir>] [--language typescript|python]","cli.command.add":"add — add a module or unit.\\nUsage: chemag add module <name> [--type module|shared-kernel|infrastructure]\\n       chemag add unit <module> <role> <name> [--export] [--implements <port>]","cli.command.check":"check — validate workspace manifests and filesystem.\\nUsage: chemag check <workspace.yaml> [--manifest-only] [--verbose] [--json]","cli.command.analyze":"analyze — check source imports against dependency rules.\\nUsage: chemag analyze <workspace.yaml> [--json]","cli.command.scaffold":"scaffold — generate stub files from manifests.\\nUsage: chemag scaffold <workspace.yaml> [--dry-run]","cli.command.graph":"graph — output a Mermaid dependency diagram.\\nUsage: chemag graph <workspace.yaml>","cli.command.sync":"sync — generate manifests from existing code.\\nUsage: chemag sync <workspace.yaml> [--dry-run]","cli.command.emit_rules":"emit-rules — generate AI-editor rule files (AGENTS.md, CLAUDE.md, .cursor/rules, .github/copilot-instructions.md, .aider/CONVENTIONS.md, .clinerules) from workspace.yaml.\\nUsage: chemag emit-rules [--tool <name>] [--out-dir <path>] [--include-violations] [--dry-run] [--diff] [--overwrite]","cli.command.mcp":"mcp — run an MCP server exposing chemag tools to MCP-aware clients.\\nUsage: chemag mcp [--workspace <path>] [--transport stdio]","cli.help.mcp.workspace":"--workspace <path>   Workspace directory containing workspace.yaml (defaults to cwd)","cli.help.mcp.transport":"--transport <name>   Transport to expose the server on (stdio; sse is reserved for v1.0.x)","cli.command.install_hooks":"install-hooks — install or uninstall AI-editor hook integrations that call chemag check-edit / analyze around tool edits.\\nUsage: chemag install-hooks --tool <claude|cursor|codex|aider|cline|copilot|all> [--scope user|project] [--mode block|warn|context-only] [--uninstall] [--restore] [--dry-run]","cli.help.install_hooks.tool":"--tool <name>        Editor / agent target (claude, cursor, codex, aider, cline, copilot)","cli.help.install_hooks.scope":"--scope <user|project>  Where to install the hook (defaults to project)","cli.help.install_hooks.mode":"--mode <block|warn|context-only>  block (default), warn (downgrade deny→ask), or context-only (PostToolUse only)","cli.install_hooks.tip.mcp_register":"To register the chemag MCP server with {clientName}, run `chemag mcp install --client {clientId}`.","cli.install_hooks.codex.help":"install-hooks --tool codex — emit AGENTS.md and a husky pre-commit line that runs `chemag check`.","cli.install_hooks.aider.help":"install-hooks --tool aider — emit .aider/CONVENTIONS.md, add a chemag block to .aider.conf.yml, and install a husky pre-commit line that runs `chemag check`.","cli.install_hooks.cline.help":"install-hooks --tool cline — emit .clinerules and a husky pre-commit line that runs `chemag check`. Print a tip pointing at `chemag mcp install --client cline`.","cli.install_hooks.copilot.help":"install-hooks --tool copilot — emit .github/copilot-instructions.md, write a .github/workflows/chemag-pr.yml workflow, and install a husky pre-commit line that runs `chemag check`.","cli.command.mcp_install":"mcp install — register chemag\'s MCP server with one or more MCP clients.\\nUsage: chemag mcp install --client <claude|cursor|cline|continue|all> [--scope user|project] [--workspace <path>] [--no-cli] [--dry-run]","cli.command.mcp_uninstall":"mcp uninstall — remove chemag\'s MCP server registration from one or more MCP clients.\\nUsage: chemag mcp uninstall --client <claude|cursor|cline|continue|all> [--scope user|project] [--no-cli] [--dry-run]","cli.command.mcp_status":"mcp status — show whether chemag is registered with each known MCP client.\\nUsage: chemag mcp status [--format pretty|json]","cli.help.mcp_install.client":"--client <name>      MCP client to target (claude, cursor, cline, continue, or all)","cli.help.mcp_install.scope":"--scope <user|project>  Where to register chemag (defaults to project)","cli.help.mcp_install.no_cli":"--no-cli             Skip the client\'s CLI; write the MCP config file directly","cli.help.mcp_install.dry_run":"--dry-run            Print the planned changes without writing or invoking any CLI","cli.help.mcp_status.format":"--format <pretty|json>  Output format (default: pretty)","claude_md.intro":"# {name} — Module Architecture\\n\\nThis project uses a chemistry-inspired module architecture (presented here in standard vocabulary). Read this entire file before writing any code.\\n\\n## Core Concept\\n\\nCode is organized into **modules** (feature units). Each module contains **units** — source files with assigned **roles**. Roles determine what a unit can depend on. These dependency rules are called **dependency rules**.\\n\\nEvery module has a manifest (`compound.yaml`) declaring its units, exports, and imports. The workspace config (`workspace.yaml`) defines the global rules.\\n\\n**Before writing any code**: read `workspace.yaml`, then the target module\'s `compound.yaml`.","claude_md.roles_table":"## Roles — What Each Unit Type Means\\n\\n| Role | What it is | Examples |\\n|------|-----------|----------|\\n| **value-object** | Immutable value object. The simplest building block. | `UserId`, `Email`, `Money`, `DateRange` |\\n| **entity** | Domain state composed of value-objects/entities. | `UserProfile`, `Order`, `ReportDocument` |\\n| **use-case** | Workflow. Orchestrates state through ports. | `createOrder`, `generateReport`, `processPayment` |\\n| **port** | Contract / port. Defines a capability without implementation. | `OrderRepository`, `PaymentGateway`, `EmailSender` |\\n| **adapter** | Concrete implementation of a port. Touches the outside world. | `PgOrderRepository`, `StripeGateway`, `SmtpEmailSender` |\\n| **middleware** | Wraps use-cases for cross-cutting concerns. | `authGuard`, `rateLimiter`, `validateInput` |","claude_md.bonds_table":"## Dependency Rules — What Can Depend on What\\n\\nThis is the **most important constraint**. Violations are architectural errors.\\n\\n| Role | Can depend on |\\n|------|--------------|\\n| value-object | value-object |\\n| entity | value-object, entity |\\n| use-case | value-object, entity, port |\\n| port | value-object, entity |\\n| adapter | value-object, entity, port, adapter |\\n| middleware | value-object, entity, port |\\n\\n**Key implications:**\\n- Use-cases NEVER depend on adapters — they depend on ports. Adapters are injected.\\n- Value-objects are pure — they depend only on other value-objects.\\n- Adapters are the only role that can touch the outside world (DB, HTTP, filesystem).","claude_md.compound_types":"## Module Types\\n\\n| Type | Purpose | Import rules |\\n|------|---------|-------------|\\n| **module** | Standard feature unit | Can import other modules + shared-kernels |\\n| **shared-kernel** | Shared domain building blocks | Can only import other shared-kernels. Available to all. |\\n| **infrastructure** | Cross-cutting infrastructure (logging, config, auth) | Implicitly available everywhere. Can only import shared-kernels. |\\n| **composition-root** | Wires adapters to ports. | Singleton. Cannot be imported. |","claude_md.workflow":"## Workflow — How to Add a Feature\\n\\n### Adding a new feature module:\\n```bash\\nchemag add module <name>\\nchemag add unit <name> value-object SomeId --export\\nchemag add unit <name> entity SomeEntity --export\\nchemag add unit <name> port SomeRepo --export\\nchemag add unit <name> adapter PgSomeRepo --implements SomeRepo\\nchemag add unit <name> use-case doSomething --export\\n```\\n\\nThen implement each stub file. Run validation:\\n```bash\\nchemag check workspace.yaml      # manifest + filesystem checks\\nchemag analyze workspace.yaml    # verify real imports respect dependency rules\\n```","claude_md.tool_reference":"## Tool Reference\\n\\n| Command | Purpose |\\n|---------|---------|\\n| `chemag check <workspace.yaml>` | Validate manifests and file structure |\\n| `chemag scaffold <workspace.yaml>` | Generate stub files from manifests |\\n| `chemag analyze <workspace.yaml>` | Check real imports against dependency rules |\\n| `chemag graph <workspace.yaml>` | Output Mermaid dependency diagram |\\n| `chemag add module <name>` | Create a new module |\\n| `chemag add unit <module> <role> <name>` | Add a unit (flags: `--export`, `--implements <port>`) |\\n| `chemag sync <workspace.yaml>` | Generate manifests from existing code |","claude_md.ai_rules":"## Rules for AI Assistants\\n\\n1. **Read before write.** Always read `workspace.yaml` and the target `compound.yaml` before touching any code.\\n2. **Use the tool.** Use `chemag add` to create new modules and units — don\'t create files manually.\\n3. **Respect dependency rules.** Never import across role boundaries. If the analyzer fails, fix the violation.\\n4. **Public surface only.** Cross-module imports go through the public surface. Never import internal files.\\n5. **Validate after changes.** Run `chemag check workspace.yaml && chemag analyze workspace.yaml` after every meaningful change.\\n6. **Adapters are leaf nodes.** They implement ports and are only instantiated in the composition-root.\\n7. **Use-cases are the entry points.** They orchestrate the domain logic. External callers invoke use-cases, not entities directly.\\n8. **When in doubt, read the manifest.** The `compound.yaml` is the source of truth for what exists and how it connects."}');
 ;// CONCATENATED MODULE: ../core/dist/vocabulary/chemistry.json
-const chemistry_namespaceObject = /*#__PURE__*/JSON.parse('{"role.element":"element","role.molecule":"molecule","role.reaction":"reaction","role.interface":"interface","role.adapter":"adapter","role.buffer":"buffer","container.compound":"compound","container.reagent":"reagent","container.solvent":"solvent","container.catalyst":"catalyst","concept.bond":"bond","concept.unit":"unit","concept.signal":"signal","concept.assay":"assay","diagnostic.duplicate_compound":"Duplicate compound name \\"{name}\\"","diagnostic.unknown_role":"Unit \\"{unit}\\" has unknown role \\"{role}\\"","diagnostic.file_missing_unit":"Unit \\"{unit}\\" — file not found: {file}","diagnostic.file_missing_assay":"Assay \\"{assay}\\" — file not found: {file}","diagnostic.public_surface_missing":"Compound exports units but has no {surface}","diagnostic.role_folder_mismatch":"Unit \\"{unit}\\" ({role}) path does not contain \\"{expected}/\\"","diagnostic.export_no_unit":"Export \\"{name}\\" ({key}) has no matching unit with role \\"{role}\\"","diagnostic.import_existence":"Imports \\"{compound}\\" which does not exist","diagnostic.import_specificity":"Imports \\"{name}\\" from \\"{compound}\\" but it is not exported","diagnostic.compound_type_cannot_import":"Cannot import \\"{target}\\" ({target_type}) — {self_type} may only import from [{allowed}]","diagnostic.compound_type_target_uniport":"Cannot import \\"{target}\\" — {target_type} compounds are not importable","diagnostic.compound_type_target_same_type":"Cannot import \\"{target}\\" — {target_type} compounds are only importable by other {target_type} compounds","diagnostic.bond_unresolved":"\\"{src_name}\\" depends on \\"{dep}\\" which cannot be resolved","diagnostic.bond_violation":"\\"{src_name}\\" ({src_role}) depends on \\"{dep}\\" ({dep_role}) — bond violation","diagnostic.signal_emitter_not_reaction":"Signal \\"{signal}\\" references emitter \\"{emitter}\\" — not a reaction in this compound","diagnostic.signal_handler_not_reaction":"Signal listener for \\"{signal}\\" references handler \\"{handler}\\" — not a reaction in this compound","diagnostic.signal_orphaned_listener":"Listening for signal \\"{signal}\\" but no compound emits it","diagnostic.wiring_compound_missing":"Wiring references compound \\"{compound}\\" which does not exist","diagnostic.wiring_interface_missing":"Interface \\"{iface}\\" not found in compound \\"{compound}\\"","diagnostic.wiring_adapter_missing":"Adapter \\"{adapter}\\" not found in compound \\"{compound}\\"","diagnostic.wiring_adapter_no_implements":"Adapter \\"{adapter}\\" does not declare that it implements \\"{iface}\\"","diagnostic.singleton_violated":"Type \\"{type}\\" is singleton but has {count} instances: [{names}]","diagnostic.role_not_allowed_for_type":"Unit \\"{unit}\\" has role \\"{role}\\" but {type} only allows [{allowed}]","diagnostic.assay_subject_unknown":"Assay \\"{assay}\\" tests \\"{subject}\\" which is not a unit in this compound","diagnostic.assay_mock_not_interface":"Assay \\"{assay}\\" mocks \\"{mock}\\" which is not an interface in this compound","diagnostic.subtree_paths_overlap":"Sub-trees \\"{id_a}\\" and \\"{id_b}\\" declare overlapping path roots: \\"{path_a}\\" and \\"{path_b}\\"","diagnostic.subtree_id_duplicate":"Duplicate sub-tree id \\"{id}\\" — every entry in `languages:` must use a unique id","diagnostic.invalid_io_module_pattern":"Invalid regex in workspace.yaml rules.io_modules: \\"{pattern}\\" — {error}. The impurity was filtered out.","diagnostic.port_needs_interface":"Compound \\"{compound}\\" has reaction units and adapter units that import I/O modules ({io_modules}) but no interface unit. Extract a port interface and bind the adapter through a catalyst.","diagnostic.import_bond_violation":"{file}: {src_role} imports {target_role} \\"{names}\\" — bond violation","diagnostic.import_undeclared":"{file}: imports from \\"{target}\\" but it is not in the imports list","diagnostic.import_bypass":"{file}: imports directly from \\"{target}\\" internal file instead of {surface}","diagnostic.cross_language_import":"Cross-language bond from {src_id} to {target_id}: {file} imports compound {target_compound}, which crystallizes in a different language sub-tree.","diagnostic.unresolvable_placement":"Cannot determine compound or role for file \\"{file}\\"","diagnostic.markers_missing_no_overwrite":"Refusing to recrystallize \\"{path}\\": chemag markers are missing. Pass --overwrite to replace the existing precipitate.","diagnostic.line_budget_exceeded":"Emitted {tool} block is {actual} lines (budget {budget}). Distill the sections or raise the budget.","diagnostic.unknown_emitter_tool":"Unknown --tool reagent \\"{tool}\\". Supported: {supported}.","diagnostic.mcp_workspace_required":"chemag mcp requires a Chem workspace. Pass --workspace <path> or run from a directory containing workspace.yaml.","diagnostic.mcp_transport_unsupported":"MCP transport \\"{transport}\\" is not supported. Use --transport stdio.","diagnostic.mcp_initialize_failed":"MCP server failed to crystallize: {reason}","diagnostic.tool_input_invalid":"Invalid reagent input for MCP tool \\"{tool}\\": {reason}","diagnostic.tool_unknown":"Unknown MCP reagent: \\"{tool}\\"","diagnostic.tool_handler_failed":"MCP reagent \\"{tool}\\" reaction failed: {reason}","diagnostic.mcp_client_unknown":"Unknown --client reagent \\"{client}\\". Supported: {supported}.","diagnostic.mcp_client_config_invalid_json":"MCP client precipitate is not valid JSON: {path} ({reason})","diagnostic.mcp_client_cli_failed":"Client CLI \\"{cli}\\" exited with code {exitCode}: {stderr}","diagnostic.resource_uri_invalid":"Invalid reagent URI \\"{uri}\\": {reason}","diagnostic.resource_compound_not_found":"Compound \\"{name}\\" not present in this workspace.","diagnostic.resource_docs_section_unknown":"Unknown docs section \\"{section}\\". Supported: {supported}.","diagnostic.tool_not_yet_implemented":"Reagent \\"{tool}\\" is not yet bonded into chemag install-hooks. Currently supported: claude, cursor, codex, aider, cline, copilot.","diagnostic.settings_file_invalid_json":"Settings precipitate is not valid JSON: {path} ({reason})","diagnostic.hooks_already_installed_no_force":"chemag hooks already crystallized in {path}; pass --uninstall first or --overwrite (reserved).","diagnostic.unknown_scope":"Unknown --scope reagent \\"{scope}\\". Use user|project.","diagnostic.no_chemag_entries_to_uninstall":"No chemag-tagged hooks present in {path}; nothing to dissolve.","diagnostic.hook_stdin_unparseable":"Hook stdin could not be distilled ({reason}); falling back to allow.","diagnostic.husky_not_detected":"Husky has not crystallized in {workspace}. Synthesize it first: `pnpm add -D husky && pnpm husky init` (or your package manager\'s equivalent), then re-bond chemag install-hooks.","diagnostic.cursor_precommit_unparseable":"Existing .husky/pre-commit precipitate at {path} cannot be safely transmuted ({reason}). Resolve the impurity by hand or remove the file before re-running.","diagnostic.aider_conf_invalid_yaml":"Existing .aider.conf.yml precipitate at {path} is not valid YAML ({reason}). Purify the YAML by hand or remove the file before re-running.","diagnostic.copilot_workflow_exists_no_overwrite":"Refusing to recrystallize {path}: precipitate exists without the chemag-managed header. Pass --overwrite to replace it.","cli.help.intro":"chemag v{version} — language-agnostic Chem architecture toolkit","cli.help.usage":"Usage: chemag [options] [command]\\n       chem-ag [options] [command]   (alias)","cli.help.commands":"Commands:\\n  init         Bootstrap a new Chem workspace\\n  add          Add a compound or unit\\n  check        Validate manifests and file structure\\n  analyze      Check real imports against bond rules\\n  scaffold     Generate stub files from manifests\\n  graph        Output Mermaid dependency diagram\\n  sync         Generate manifests from existing code","cli.help.options":"Options:\\n  --version          Show version number\\n  --help             Show this help text\\n  --vocabulary <v>   standard or chemistry (default)\\n  --no-cache         Disable the manifest/imports cache for this run\\n  --no-telemetry     Disable usage telemetry for this run (config unchanged)","cli.help.no_cache":"--no-cache         Disable the on-disk manifest/imports cache for this run","cli.command.init":"init — bootstrap a new Chem workspace.\\nUsage: chemag init <name> [--path <dir>] [--language typescript|python]","cli.command.add":"add — add a compound or unit.\\nUsage: chemag add compound <name> [--type compound|reagent|solvent]\\n       chemag add unit <compound> <role> <name> [--export] [--implements <iface>]","cli.command.check":"check — validate workspace manifests and filesystem.\\nUsage: chemag check <workspace.yaml> [--manifest-only] [--verbose] [--json]","cli.command.analyze":"analyze — check source imports against bond rules.\\nUsage: chemag analyze <workspace.yaml> [--json]","cli.command.scaffold":"scaffold — generate stub files from manifests.\\nUsage: chemag scaffold <workspace.yaml> [--dry-run]","cli.command.graph":"graph — output a Mermaid dependency diagram.\\nUsage: chemag graph <workspace.yaml>","cli.command.sync":"sync — generate manifests from existing code.\\nUsage: chemag sync <workspace.yaml> [--dry-run]","cli.command.emit_rules":"emit-rules — synthesize AI-editor rule precipitates (AGENTS.md, CLAUDE.md, .cursor/rules, .github/copilot-instructions.md, .aider/CONVENTIONS.md, .clinerules) from workspace.yaml.\\nUsage: chemag emit-rules [--tool <name>] [--out-dir <path>] [--include-violations] [--dry-run] [--diff] [--overwrite]","cli.command.mcp":"mcp — distill a reactor exposing chemag tools to MCP-aware clients.\\nUsage: chemag mcp [--workspace <path>] [--transport stdio]","cli.help.mcp.workspace":"--workspace <path>   Workspace directory containing workspace.yaml (defaults to cwd)","cli.help.mcp.transport":"--transport <name>   Transport to bond the reactor through (stdio; sse is reserved for v1.0.x)","cli.command.install_hooks":"install-hooks — bond AI-editor hook integrations that catalyze chemag check-edit / analyze around tool edits.\\nUsage: chemag install-hooks --tool <claude|cursor|codex|aider|cline|copilot|all> [--scope user|project] [--mode block|warn|context-only] [--uninstall] [--restore] [--dry-run]","cli.help.install_hooks.tool":"--tool <name>        Editor / agent reagent (claude, cursor, codex, aider, cline, copilot)","cli.help.install_hooks.scope":"--scope <user|project>  Where to crystallize the hook (defaults to project)","cli.help.install_hooks.mode":"--mode <block|warn|context-only>  block (default), warn (downgrade deny→ask), or context-only (PostToolUse only)","cli.install_hooks.tip.mcp_register":"To bond the chemag MCP reactor with {clientName}, catalyze `chemag mcp install --client {clientId}`.","cli.install_hooks.codex.help":"install-hooks --tool codex — synthesize AGENTS.md and a husky pre-commit line that catalyzes `chemag check`.","cli.install_hooks.aider.help":"install-hooks --tool aider — synthesize .aider/CONVENTIONS.md, bond a chemag block into .aider.conf.yml, and crystallize a husky pre-commit line that catalyzes `chemag check`.","cli.install_hooks.cline.help":"install-hooks --tool cline — synthesize .clinerules and a husky pre-commit line that catalyzes `chemag check`. Surface a tip pointing at `chemag mcp install --client cline`.","cli.install_hooks.copilot.help":"install-hooks --tool copilot — synthesize .github/copilot-instructions.md, crystallize a .github/workflows/chemag-pr.yml workflow, and bond a husky pre-commit line that catalyzes `chemag check`.","cli.command.mcp_install":"mcp install — bond chemag\'s MCP reactor into one or more MCP clients.\\nUsage: chemag mcp install --client <claude|cursor|cline|continue|all> [--scope user|project] [--workspace <path>] [--no-cli] [--dry-run]","cli.command.mcp_uninstall":"mcp uninstall — dissolve chemag\'s MCP reactor registration from one or more MCP clients.\\nUsage: chemag mcp uninstall --client <claude|cursor|cline|continue|all> [--scope user|project] [--no-cli] [--dry-run]","cli.command.mcp_status":"mcp status — surface whether chemag is bonded with each known MCP client.\\nUsage: chemag mcp status [--format pretty|json]","cli.help.mcp_install.client":"--client <name>      MCP client reagent (claude, cursor, cline, continue, or all)","cli.help.mcp_install.scope":"--scope <user|project>  Where to crystallize chemag (defaults to project)","cli.help.mcp_install.no_cli":"--no-cli             Skip the client\'s CLI; transmute the MCP config precipitate directly","cli.help.mcp_install.dry_run":"--dry-run            Surface the planned changes without crystallizing or invoking any CLI","cli.help.mcp_status.format":"--format <pretty|json>  Output format (default: pretty)","claude_md.intro":"# {name} — Chem Architecture\\n\\nThis project uses **Chem**, a chemistry-inspired software architecture. Read this entire file before writing any code.\\n\\n## Core Concept\\n\\nCode is organized into **compounds** (feature modules). Each compound contains **units** — source files with assigned **roles**. Roles determine what a unit can depend on. These dependency rules are called **bonds**.\\n\\nEvery compound has a manifest (`compound.yaml`) declaring its units, exports, and imports. The workspace config (`workspace.yaml`) defines the global rules.\\n\\n**Before writing any code**: read `workspace.yaml`, then the target compound\'s `compound.yaml`.","claude_md.roles_table":"## Roles — What Each Unit Type Means\\n\\n| Role | What it is | Examples |\\n|------|-----------|----------|\\n| **element** | Immutable value object. The simplest building block. | `UserId`, `Email`, `Money`, `DateRange` |\\n| **molecule** | Domain state composed of elements/molecules. | `UserProfile`, `Order`, `ReportDocument` |\\n| **reaction** | Workflow or use case. Orchestrates state through interfaces. | `createOrder`, `generateReport`, `processPayment` |\\n| **interface** | Contract / port. Defines a capability without implementation. | `OrderRepository`, `PaymentGateway`, `EmailSender` |\\n| **adapter** | Concrete implementation of an interface. Touches the outside world. | `PgOrderRepository`, `StripeGateway`, `SmtpEmailSender` |\\n| **buffer** | Middleware. Wraps reactions for cross-cutting concerns. | `authGuard`, `rateLimiter`, `validateInput` |","claude_md.bonds_table":"## Bond Rules — What Can Depend on What\\n\\nThis is the **most important constraint**. Violations are architectural errors.\\n\\n| Role | Can depend on |\\n|------|--------------|\\n| element | element |\\n| molecule | element, molecule |\\n| reaction | element, molecule, interface |\\n| interface | element, molecule |\\n| adapter | element, molecule, interface, adapter |\\n| buffer | element, molecule, interface |\\n\\n**Key implications:**\\n- Reactions NEVER depend on adapters — they depend on interfaces. Adapters are injected.\\n- Elements are pure — they depend only on other elements.\\n- Adapters are the only role that can touch the outside world (DB, HTTP, filesystem).","claude_md.compound_types":"## Compound Types\\n\\n| Type | Purpose | Import rules |\\n|------|---------|-------------|\\n| **compound** | Standard feature module | Can import other compounds + reagents |\\n| **reagent** | Shared domain building blocks | Can only import other reagents. Available to all. |\\n| **solvent** | Cross-cutting infrastructure (logging, config, auth) | Implicitly available everywhere. Can only import reagents. |\\n| **catalyst** | Composition root. Wires adapters to interfaces. | Singleton. Cannot be imported. |","claude_md.workflow":"## Workflow — How to Add a Feature\\n\\n### Adding a new feature compound:\\n```bash\\nchemag add compound <name>\\nchemag add unit <name> element SomeId --export\\nchemag add unit <name> molecule SomeEntity --export\\nchemag add unit <name> interface SomeRepo --export\\nchemag add unit <name> adapter PgSomeRepo --implements SomeRepo\\nchemag add unit <name> reaction doSomething --export\\n```\\n\\nThen implement each stub file. Run validation:\\n```bash\\nchemag check workspace.yaml      # manifest + filesystem checks\\nchemag analyze workspace.yaml    # verify real imports respect bonds\\n```","claude_md.tool_reference":"## Tool Reference\\n\\n| Command | Purpose |\\n|---------|---------|\\n| `chemag check <workspace.yaml>` | Validate manifests and file structure |\\n| `chemag scaffold <workspace.yaml>` | Generate stub files from manifests |\\n| `chemag analyze <workspace.yaml>` | Check real imports against bonds |\\n| `chemag graph <workspace.yaml>` | Output Mermaid dependency diagram |\\n| `chemag add compound <name>` | Create a new compound |\\n| `chemag add unit <compound> <role> <name>` | Add a unit (flags: `--export`, `--implements <iface>`) |\\n| `chemag sync <workspace.yaml>` | Generate manifests from existing code |","claude_md.ai_rules":"## Rules for AI Assistants\\n\\n1. **Read before write.** Always read `workspace.yaml` and the target `compound.yaml` before touching any code.\\n2. **Use the tool.** Use `chemag add` to create new compounds and units — don\'t create files manually.\\n3. **Respect bonds.** Never import across role boundaries. If the analyzer fails, fix the violation.\\n4. **Public surface only.** Cross-compound imports go through the public surface. Never import internal files.\\n5. **Validate after changes.** Run `chemag check workspace.yaml && chemag analyze workspace.yaml` after every meaningful change.\\n6. **Adapters are leaf nodes.** They implement interfaces and are only instantiated in the catalyst.\\n7. **Reactions are the entry points.** They orchestrate the domain logic. External callers invoke reactions, not molecules directly.\\n8. **When in doubt, read the manifest.** The `compound.yaml` is the source of truth for what exists and how it connects."}');
+const chemistry_namespaceObject = /*#__PURE__*/JSON.parse('{"role.element":"element","role.molecule":"molecule","role.reaction":"reaction","role.interface":"interface","role.adapter":"adapter","role.buffer":"buffer","container.compound":"compound","container.reagent":"reagent","container.solvent":"solvent","container.catalyst":"catalyst","concept.bond":"bond","concept.unit":"unit","concept.signal":"signal","concept.assay":"assay","diagnostic.duplicate_compound":"Duplicate compound name \\"{name}\\"","diagnostic.unknown_role":"Unit \\"{unit}\\" has unknown role \\"{role}\\"","diagnostic.file_missing_unit":"Unit \\"{unit}\\" — file not found: {file}","diagnostic.file_missing_assay":"Assay \\"{assay}\\" — file not found: {file}","diagnostic.public_surface_missing":"Compound exports units but has no {surface}","diagnostic.role_folder_mismatch":"Unit \\"{unit}\\" ({role}) path does not contain \\"{expected}/\\"","diagnostic.export_no_unit":"Export \\"{name}\\" ({key}) has no matching unit with role \\"{role}\\"","diagnostic.import_existence":"Imports \\"{compound}\\" which does not exist","diagnostic.import_specificity":"Imports \\"{name}\\" from \\"{compound}\\" but it is not exported","diagnostic.compound_type_cannot_import":"Cannot import \\"{target}\\" ({target_type}) — {self_type} may only import from [{allowed}]","diagnostic.compound_type_target_uniport":"Cannot import \\"{target}\\" — {target_type} compounds are not importable","diagnostic.compound_type_target_same_type":"Cannot import \\"{target}\\" — {target_type} compounds are only importable by other {target_type} compounds","diagnostic.bond_unresolved":"\\"{src_name}\\" depends on \\"{dep}\\" which cannot be resolved","diagnostic.bond_violation":"\\"{src_name}\\" ({src_role}) depends on \\"{dep}\\" ({dep_role}) — bond violation","diagnostic.signal_emitter_not_reaction":"Signal \\"{signal}\\" references emitter \\"{emitter}\\" — not a reaction in this compound","diagnostic.signal_handler_not_reaction":"Signal listener for \\"{signal}\\" references handler \\"{handler}\\" — not a reaction in this compound","diagnostic.signal_orphaned_listener":"Listening for signal \\"{signal}\\" but no compound emits it","diagnostic.wiring_compound_missing":"Wiring references compound \\"{compound}\\" which does not exist","diagnostic.wiring_interface_missing":"Interface \\"{iface}\\" not found in compound \\"{compound}\\"","diagnostic.wiring_adapter_missing":"Adapter \\"{adapter}\\" not found in compound \\"{compound}\\"","diagnostic.wiring_adapter_no_implements":"Adapter \\"{adapter}\\" does not declare that it implements \\"{iface}\\"","diagnostic.singleton_violated":"Type \\"{type}\\" is singleton but has {count} instances: [{names}]","diagnostic.role_not_allowed_for_type":"Unit \\"{unit}\\" has role \\"{role}\\" but {type} only allows [{allowed}]","diagnostic.assay_subject_unknown":"Assay \\"{assay}\\" tests \\"{subject}\\" which is not a unit in this compound","diagnostic.assay_mock_not_interface":"Assay \\"{assay}\\" mocks \\"{mock}\\" which is not an interface in this compound","diagnostic.subtree_paths_overlap":"Sub-trees \\"{id_a}\\" and \\"{id_b}\\" declare overlapping path roots: \\"{path_a}\\" and \\"{path_b}\\"","diagnostic.subtree_id_duplicate":"Duplicate sub-tree id \\"{id}\\" — every entry in `languages:` must use a unique id","diagnostic.invalid_io_module_pattern":"Invalid regex in workspace.yaml rules.io_modules: \\"{pattern}\\" — {error}. The impurity was filtered out.","diagnostic.port_needs_interface":"Compound \\"{compound}\\" has reaction units and adapter units that import I/O modules ({io_modules}) but no interface unit. Extract a port interface and bind the adapter through a catalyst.","diagnostic.port_class_cross_compound":"In {file}: imports concrete class \\"{name}\\" from compound \\"{target_compound}\\". Bond to an interface and catalyze the adapter via the catalyst.","diagnostic.port.adapter_instantiation":"In {file}: compound \\"{src_compound}\\" reacts with adapter class \\"{class_name}\\" outside a catalyst. Move the `new` into a catalyst, bond to an interface and inject the adapter, or annotate the class with `// @chemag-transient` when it has no instance state.","diagnostic.dry.function_duplicated":"Reaction \\"{name}\\" precipitates in {count} files: {locations}. Distill into a single reagent unit and bond from each caller.","diagnostic.import_bond_violation":"{file}: {src_role} imports {target_role} \\"{names}\\" — bond violation","diagnostic.import_undeclared":"{file}: imports from \\"{target}\\" but it is not in the imports list","diagnostic.import_bypass":"{file}: imports directly from \\"{target}\\" internal file instead of {surface}","diagnostic.cross_language_import":"Cross-language bond from {src_id} to {target_id}: {file} imports compound {target_compound}, which crystallizes in a different language sub-tree.","diagnostic.unresolvable_placement":"Cannot determine compound or role for file \\"{file}\\"","diagnostic.markers_missing_no_overwrite":"Refusing to recrystallize \\"{path}\\": chemag markers are missing. Pass --overwrite to replace the existing precipitate.","diagnostic.line_budget_exceeded":"Emitted {tool} block is {actual} lines (budget {budget}). Distill the sections or raise the budget.","diagnostic.unknown_emitter_tool":"Unknown --tool reagent \\"{tool}\\". Supported: {supported}.","diagnostic.mcp_workspace_required":"chemag mcp requires a Chem workspace. Pass --workspace <path> or run from a directory containing workspace.yaml.","diagnostic.mcp_transport_unsupported":"MCP transport \\"{transport}\\" is not supported. Use --transport stdio.","diagnostic.mcp_initialize_failed":"MCP server failed to crystallize: {reason}","diagnostic.tool_input_invalid":"Invalid reagent input for MCP tool \\"{tool}\\": {reason}","diagnostic.tool_unknown":"Unknown MCP reagent: \\"{tool}\\"","diagnostic.tool_handler_failed":"MCP reagent \\"{tool}\\" reaction failed: {reason}","diagnostic.mcp_client_unknown":"Unknown --client reagent \\"{client}\\". Supported: {supported}.","diagnostic.mcp_client_config_invalid_json":"MCP client precipitate is not valid JSON: {path} ({reason})","diagnostic.mcp_client_cli_failed":"Client CLI \\"{cli}\\" exited with code {exitCode}: {stderr}","diagnostic.resource_uri_invalid":"Invalid reagent URI \\"{uri}\\": {reason}","diagnostic.resource_compound_not_found":"Compound \\"{name}\\" not present in this workspace.","diagnostic.resource_docs_section_unknown":"Unknown docs section \\"{section}\\". Supported: {supported}.","diagnostic.tool_not_yet_implemented":"Reagent \\"{tool}\\" is not yet bonded into chemag install-hooks. Currently supported: claude, cursor, codex, aider, cline, copilot.","diagnostic.settings_file_invalid_json":"Settings precipitate is not valid JSON: {path} ({reason})","diagnostic.hooks_already_installed_no_force":"chemag hooks already crystallized in {path}; pass --uninstall first or --overwrite (reserved).","diagnostic.unknown_scope":"Unknown --scope reagent \\"{scope}\\". Use user|project.","diagnostic.no_chemag_entries_to_uninstall":"No chemag-tagged hooks present in {path}; nothing to dissolve.","diagnostic.hook_stdin_unparseable":"Hook stdin could not be distilled ({reason}); falling back to allow.","diagnostic.husky_not_detected":"Husky has not crystallized in {workspace}. Synthesize it first: `pnpm add -D husky && pnpm husky init` (or your package manager\'s equivalent), then re-bond chemag install-hooks.","diagnostic.cursor_precommit_unparseable":"Existing .husky/pre-commit precipitate at {path} cannot be safely transmuted ({reason}). Resolve the impurity by hand or remove the file before re-running.","diagnostic.aider_conf_invalid_yaml":"Existing .aider.conf.yml precipitate at {path} is not valid YAML ({reason}). Purify the YAML by hand or remove the file before re-running.","diagnostic.copilot_workflow_exists_no_overwrite":"Refusing to recrystallize {path}: precipitate exists without the chemag-managed header. Pass --overwrite to replace it.","cli.help.intro":"chemag v{version} — language-agnostic Chem architecture toolkit","cli.help.usage":"Usage: chemag [options] [command]\\n       chem-ag [options] [command]   (alias)","cli.help.commands":"Commands:\\n  init         Bootstrap a new Chem workspace\\n  add          Add a compound or unit\\n  check        Validate manifests and file structure\\n  analyze      Check real imports against bond rules\\n  scaffold     Generate stub files from manifests\\n  graph        Output Mermaid dependency diagram\\n  sync         Generate manifests from existing code","cli.help.options":"Options:\\n  --version          Show version number\\n  --help             Show this help text\\n  --vocabulary <v>   standard or chemistry (default)\\n  --no-cache         Disable the manifest/imports cache for this run\\n  --no-telemetry     Disable usage telemetry for this run (config unchanged)","cli.help.no_cache":"--no-cache         Disable the on-disk manifest/imports cache for this run","cli.command.init":"init — bootstrap a new Chem workspace.\\nUsage: chemag init <name> [--path <dir>] [--language typescript|python]","cli.command.add":"add — add a compound or unit.\\nUsage: chemag add compound <name> [--type compound|reagent|solvent]\\n       chemag add unit <compound> <role> <name> [--export] [--implements <iface>]","cli.command.check":"check — validate workspace manifests and filesystem.\\nUsage: chemag check <workspace.yaml> [--manifest-only] [--verbose] [--json]","cli.command.analyze":"analyze — check source imports against bond rules.\\nUsage: chemag analyze <workspace.yaml> [--json]","cli.command.scaffold":"scaffold — generate stub files from manifests.\\nUsage: chemag scaffold <workspace.yaml> [--dry-run]","cli.command.graph":"graph — output a Mermaid dependency diagram.\\nUsage: chemag graph <workspace.yaml>","cli.command.sync":"sync — generate manifests from existing code.\\nUsage: chemag sync <workspace.yaml> [--dry-run]","cli.command.emit_rules":"emit-rules — synthesize AI-editor rule precipitates (AGENTS.md, CLAUDE.md, .cursor/rules, .github/copilot-instructions.md, .aider/CONVENTIONS.md, .clinerules) from workspace.yaml.\\nUsage: chemag emit-rules [--tool <name>] [--out-dir <path>] [--include-violations] [--dry-run] [--diff] [--overwrite]","cli.command.mcp":"mcp — distill a reactor exposing chemag tools to MCP-aware clients.\\nUsage: chemag mcp [--workspace <path>] [--transport stdio]","cli.help.mcp.workspace":"--workspace <path>   Workspace directory containing workspace.yaml (defaults to cwd)","cli.help.mcp.transport":"--transport <name>   Transport to bond the reactor through (stdio; sse is reserved for v1.0.x)","cli.command.install_hooks":"install-hooks — bond AI-editor hook integrations that catalyze chemag check-edit / analyze around tool edits.\\nUsage: chemag install-hooks --tool <claude|cursor|codex|aider|cline|copilot|all> [--scope user|project] [--mode block|warn|context-only] [--uninstall] [--restore] [--dry-run]","cli.help.install_hooks.tool":"--tool <name>        Editor / agent reagent (claude, cursor, codex, aider, cline, copilot)","cli.help.install_hooks.scope":"--scope <user|project>  Where to crystallize the hook (defaults to project)","cli.help.install_hooks.mode":"--mode <block|warn|context-only>  block (default), warn (downgrade deny→ask), or context-only (PostToolUse only)","cli.install_hooks.tip.mcp_register":"To bond the chemag MCP reactor with {clientName}, catalyze `chemag mcp install --client {clientId}`.","cli.install_hooks.codex.help":"install-hooks --tool codex — synthesize AGENTS.md and a husky pre-commit line that catalyzes `chemag check`.","cli.install_hooks.aider.help":"install-hooks --tool aider — synthesize .aider/CONVENTIONS.md, bond a chemag block into .aider.conf.yml, and crystallize a husky pre-commit line that catalyzes `chemag check`.","cli.install_hooks.cline.help":"install-hooks --tool cline — synthesize .clinerules and a husky pre-commit line that catalyzes `chemag check`. Surface a tip pointing at `chemag mcp install --client cline`.","cli.install_hooks.copilot.help":"install-hooks --tool copilot — synthesize .github/copilot-instructions.md, crystallize a .github/workflows/chemag-pr.yml workflow, and bond a husky pre-commit line that catalyzes `chemag check`.","cli.command.mcp_install":"mcp install — bond chemag\'s MCP reactor into one or more MCP clients.\\nUsage: chemag mcp install --client <claude|cursor|cline|continue|all> [--scope user|project] [--workspace <path>] [--no-cli] [--dry-run]","cli.command.mcp_uninstall":"mcp uninstall — dissolve chemag\'s MCP reactor registration from one or more MCP clients.\\nUsage: chemag mcp uninstall --client <claude|cursor|cline|continue|all> [--scope user|project] [--no-cli] [--dry-run]","cli.command.mcp_status":"mcp status — surface whether chemag is bonded with each known MCP client.\\nUsage: chemag mcp status [--format pretty|json]","cli.help.mcp_install.client":"--client <name>      MCP client reagent (claude, cursor, cline, continue, or all)","cli.help.mcp_install.scope":"--scope <user|project>  Where to crystallize chemag (defaults to project)","cli.help.mcp_install.no_cli":"--no-cli             Skip the client\'s CLI; transmute the MCP config precipitate directly","cli.help.mcp_install.dry_run":"--dry-run            Surface the planned changes without crystallizing or invoking any CLI","cli.help.mcp_status.format":"--format <pretty|json>  Output format (default: pretty)","claude_md.intro":"# {name} — Chem Architecture\\n\\nThis project uses **Chem**, a chemistry-inspired software architecture. Read this entire file before writing any code.\\n\\n## Core Concept\\n\\nCode is organized into **compounds** (feature modules). Each compound contains **units** — source files with assigned **roles**. Roles determine what a unit can depend on. These dependency rules are called **bonds**.\\n\\nEvery compound has a manifest (`compound.yaml`) declaring its units, exports, and imports. The workspace config (`workspace.yaml`) defines the global rules.\\n\\n**Before writing any code**: read `workspace.yaml`, then the target compound\'s `compound.yaml`.","claude_md.roles_table":"## Roles — What Each Unit Type Means\\n\\n| Role | What it is | Examples |\\n|------|-----------|----------|\\n| **element** | Immutable value object. The simplest building block. | `UserId`, `Email`, `Money`, `DateRange` |\\n| **molecule** | Domain state composed of elements/molecules. | `UserProfile`, `Order`, `ReportDocument` |\\n| **reaction** | Workflow or use case. Orchestrates state through interfaces. | `createOrder`, `generateReport`, `processPayment` |\\n| **interface** | Contract / port. Defines a capability without implementation. | `OrderRepository`, `PaymentGateway`, `EmailSender` |\\n| **adapter** | Concrete implementation of an interface. Touches the outside world. | `PgOrderRepository`, `StripeGateway`, `SmtpEmailSender` |\\n| **buffer** | Middleware. Wraps reactions for cross-cutting concerns. | `authGuard`, `rateLimiter`, `validateInput` |","claude_md.bonds_table":"## Bond Rules — What Can Depend on What\\n\\nThis is the **most important constraint**. Violations are architectural errors.\\n\\n| Role | Can depend on |\\n|------|--------------|\\n| element | element |\\n| molecule | element, molecule |\\n| reaction | element, molecule, interface |\\n| interface | element, molecule |\\n| adapter | element, molecule, interface, adapter |\\n| buffer | element, molecule, interface |\\n\\n**Key implications:**\\n- Reactions NEVER depend on adapters — they depend on interfaces. Adapters are injected.\\n- Elements are pure — they depend only on other elements.\\n- Adapters are the only role that can touch the outside world (DB, HTTP, filesystem).","claude_md.compound_types":"## Compound Types\\n\\n| Type | Purpose | Import rules |\\n|------|---------|-------------|\\n| **compound** | Standard feature module | Can import other compounds + reagents |\\n| **reagent** | Shared domain building blocks | Can only import other reagents. Available to all. |\\n| **solvent** | Cross-cutting infrastructure (logging, config, auth) | Implicitly available everywhere. Can only import reagents. |\\n| **catalyst** | Composition root. Wires adapters to interfaces. | Singleton. Cannot be imported. |","claude_md.workflow":"## Workflow — How to Add a Feature\\n\\n### Adding a new feature compound:\\n```bash\\nchemag add compound <name>\\nchemag add unit <name> element SomeId --export\\nchemag add unit <name> molecule SomeEntity --export\\nchemag add unit <name> interface SomeRepo --export\\nchemag add unit <name> adapter PgSomeRepo --implements SomeRepo\\nchemag add unit <name> reaction doSomething --export\\n```\\n\\nThen implement each stub file. Run validation:\\n```bash\\nchemag check workspace.yaml      # manifest + filesystem checks\\nchemag analyze workspace.yaml    # verify real imports respect bonds\\n```","claude_md.tool_reference":"## Tool Reference\\n\\n| Command | Purpose |\\n|---------|---------|\\n| `chemag check <workspace.yaml>` | Validate manifests and file structure |\\n| `chemag scaffold <workspace.yaml>` | Generate stub files from manifests |\\n| `chemag analyze <workspace.yaml>` | Check real imports against bonds |\\n| `chemag graph <workspace.yaml>` | Output Mermaid dependency diagram |\\n| `chemag add compound <name>` | Create a new compound |\\n| `chemag add unit <compound> <role> <name>` | Add a unit (flags: `--export`, `--implements <iface>`) |\\n| `chemag sync <workspace.yaml>` | Generate manifests from existing code |","claude_md.ai_rules":"## Rules for AI Assistants\\n\\n1. **Read before write.** Always read `workspace.yaml` and the target `compound.yaml` before touching any code.\\n2. **Use the tool.** Use `chemag add` to create new compounds and units — don\'t create files manually.\\n3. **Respect bonds.** Never import across role boundaries. If the analyzer fails, fix the violation.\\n4. **Public surface only.** Cross-compound imports go through the public surface. Never import internal files.\\n5. **Validate after changes.** Run `chemag check workspace.yaml && chemag analyze workspace.yaml` after every meaningful change.\\n6. **Adapters are leaf nodes.** They implement interfaces and are only instantiated in the catalyst.\\n7. **Reactions are the entry points.** They orchestrate the domain logic. External callers invoke reactions, not molecules directly.\\n8. **When in doubt, read the manifest.** The `compound.yaml` is the source of truth for what exists and how it connects."}');
 ;// CONCATENATED MODULE: ../core/dist/vocabulary/index.js
 // ---------------------------------------------------------------------------
 // Vocabulary system — i18n-style key-based translation for all user-facing
@@ -42929,7 +42929,361 @@ function checkPortNeedsInterface(compound, importsForFile, patterns, subtreeId) 
     return diag;
 }
 //# sourceMappingURL=port-needs-interface.js.map
+;// CONCATENATED MODULE: ../core/dist/checks/port-class-import.js
+// ---------------------------------------------------------------------------
+// CHEM-PORT-003 — cross-compound imports of class declarations.
+//
+// Pure, independently testable check used by the analyze phase
+// (`import-check.ts`). Fires when ALL of the following hold for a single
+// cross-compound `import { X } from "..."` statement:
+//
+//   1. The source file is NOT a test file.
+//   2. The import is NOT `import type { ... }`.
+//   3. The imported statement resolves to a `class` declaration (after
+//      walking `getAliasedSymbol()` chains up to depth 5).
+//   4. The class name is NOT in the effective allowlist
+//      (DEFAULT_CLASS_ALLOWLIST + workspace.rules.import_class_allowlist).
+//   5. The target compound is NOT a reagent (or any compound_types entry
+//      with `implicit: true` — e.g. solvents).
+//
+// Cardinality: 0 or 1 diagnostic per import statement. Multi-named imports
+// (`import { A, B }`) emit one diagnostic citing the first non-allowlisted
+// name, because `declarationKind` is per-statement today; a future WP can
+// promote it to a per-name map without breaking this check's contract.
+//
+// `declarationKind === undefined` → the plugin did not resolve symbols
+// (Python, namespace imports, etc.) → skip entirely (no false positives).
+// `declarationKind === "unresolved"` → the resolver hit the depth cap or
+// dead-ended → also skip (conservative).
+// ---------------------------------------------------------------------------
+
+
+/**
+ * Default allowlist of class names that may cross a compound boundary as
+ * concrete imports. These are framework / standard-library types whose
+ * "implementation" is effectively contract — wrapping them in an interface
+ * would be a maintenance cost with no architectural payoff.
+ *
+ * User-supplied entries via `workspace.rules.import_class_allowlist` EXTEND
+ * this list (matches R02's `compileIoModulePatterns` semantics) — they
+ * never replace it.
+ */
+const DEFAULT_CLASS_ALLOWLIST = Object.freeze([
+    "Date",
+    "URL",
+    "Money",
+    "RegExp",
+]);
+/**
+ * Compile the effective class-name allowlist.
+ *
+ * EXTEND semantics: `[...DEFAULT_CLASS_ALLOWLIST, ...userPatterns ?? []]`.
+ * Names are matched literally (case-sensitive). Returns a fresh `Set` per
+ * call for O(1) lookup; callers cache the result for the duration of one
+ * analyze pass.
+ */
+function compileClassAllowlist(userPatterns) {
+    return new Set([...DEFAULT_CLASS_ALLOWLIST, ...(userPatterns ?? [])]);
+}
+/**
+ * Per-edge PORT-003 check.
+ *
+ * Returns 0 or 1 diagnostic per call. See file header for the full guard
+ * sequence and rationale.
+ */
+function checkPortClassImport(input) {
+    const { srcAbs, srcCompound, targetCompound, imp, workspace, plugin, allowlist, subtreeId } = input;
+    // Guard 1: plugin did not opt into declaration-kind resolution (e.g. Python)
+    // or the resolver explicitly gave up. Either way: skip — never emit a
+    // false positive on a language that hasn't surfaced the data.
+    if (imp.declarationKind === undefined)
+        return [];
+    if (imp.declarationKind === "unresolved")
+        return [];
+    // Guard 2: type-only imports never participate in runtime coupling.
+    // `import type { Foo }` is safe regardless of `Foo`'s declaration kind.
+    if (imp.isTypeOnly)
+        return [];
+    // Guard 3: target compound unknown — defensive; the caller already
+    // filtered to known cross-compound edges, but a future caller might not.
+    if (!targetCompound)
+        return [];
+    // Guard 4: test files are exempt by default. Use the plugin's canonical
+    // basename regex AND directory-component checks for `/tests/` and
+    // `/__tests__/`. Do NOT use `string.includes("tests")` — that would
+    // misfire on paths containing `treats`, `treaty`, ...
+    if (isTestPath(srcAbs, plugin))
+        return [];
+    // Guard 5: reagent (and any implicit compound type) exports are exempt.
+    // Reagents are the shared-kernel layer; their concrete types are part of
+    // the contract by design.
+    const targetType = targetCompound.manifest.type ?? "compound";
+    const typeDef = workspace.compound_types?.[targetType];
+    const isReagent = targetType === "reagent" || typeDef?.implicit === true;
+    if (isReagent)
+        return [];
+    // Guard 6: only `class` declarations are violations under PORT-003.
+    if (imp.declarationKind !== "class")
+        return [];
+    // Find the first non-allowlisted name. `imp.names` may include a
+    // namespace sentinel like `* as foo` (declarationKind would be undefined
+    // for those statements — already filtered out above), so we filter
+    // defensively.
+    const offendingName = imp.names.find((n) => !n.startsWith("* as") && !allowlist.has(n));
+    if (offendingName === undefined)
+        return [];
+    const diag = {
+        level: "error",
+        check: "port-class-import",
+        code: "CHEM-PORT-003",
+        compound: srcCompound.manifest.compound,
+        message: tr("diagnostic.port_class_cross_compound", {
+            file: external_node_path_.basename(srcAbs),
+            name: offendingName,
+            target_compound: targetCompound.manifest.compound,
+        }),
+        hint: "Extract an interface for this class in the exporting compound; import the interface " +
+            "instead, and bind the implementation via the catalyst.",
+        file: srcAbs,
+        remediation: { kind: "use_interface", interface_candidates: [] },
+    };
+    if (subtreeId !== undefined)
+        diag.language_id = subtreeId;
+    return [diag];
+}
+/**
+ * Test-file detection. Uses the plugin's canonical `defaults.testFilePattern`
+ * for basename matching (so e.g. TypeScript's `/\.test\.ts$/` catches
+ * `foo.test.ts`) and supplements with path-component checks for the common
+ * `/tests/` and `/__tests__/` directory placements that aren't covered by a
+ * basename regex.
+ *
+ * Path-component splitting is deliberate: `string.includes("tests")` would
+ * misfire on `treats.ts`, `mistreats.ts`, etc. We split on `path.sep` AND
+ * `/` because `srcAbs` is typically POSIX-style even on Windows when the
+ * caller constructed it via `path.resolve` on a POSIX runner.
+ *
+ * Exported because both CHEM-PORT-003 and CHEM-PORT-004 share this
+ * test-exemption logic; duplicating it would let the two checks drift
+ * silently.
+ */
+function isTestPath(srcAbs, plugin) {
+    const basename = external_node_path_.basename(srcAbs);
+    if (plugin.defaults.testFilePattern.test(basename))
+        return true;
+    const segments = external_node_path_.dirname(srcAbs).split(/[\\/]/);
+    if (segments.includes("tests"))
+        return true;
+    if (segments.includes("__tests__"))
+        return true;
+    return false;
+}
+//# sourceMappingURL=port-class-import.js.map
+;// CONCATENATED MODULE: ../core/dist/checks/port-adapter-instantiation.js
+// ---------------------------------------------------------------------------
+// CHEM-PORT-004 — stateful adapter instantiation must happen in a catalyst.
+//
+// Pure, independently testable check used by the analyze phase
+// (`import-check.ts`). Fires on `new XAdapter()` call sites where:
+//
+//   1. The constructor's declaring file resolves to an `adapter` unit in a
+//      known compound.
+//   2. The call site is NOT a catalyst compound.
+//   3. The class is not annotated with `// @chemag-transient`.
+//   4. The class name is not in the shared CHEM-PORT-003 allowlist.
+//   5. The source file is not a test file.
+//
+// Mirrors `port-class-import.ts` (CHEM-PORT-003) in structure and reuse:
+// the `classAllowlist` Set is built ONCE per analyze pass and threaded in,
+// and `isTestPath` is shared (exported from `port-class-import.ts`).
+//
+// AST data: the caller pre-collects `NewExpressionSite[]` per file via
+// `plugin.scanNewExpressions(filePaths)` — a no-op when the plugin omits
+// the method (e.g. plugin-python), in which case this check emits nothing
+// for that sub-tree.
+// ---------------------------------------------------------------------------
+
+
+
+/**
+ * Per-sub-tree PORT-004 check.
+ *
+ * Returns one diagnostic per offending `new XAdapter()` call site. See file
+ * header for the full guard sequence and rationale.
+ */
+function checkPortAdapterInstantiation(input) {
+    const { sites, fileIndex, compoundMap, plugin, classAllowlist, subtreeId } = input;
+    const diags = [];
+    for (const [, fileSites] of sites) {
+        for (const site of fileSites) {
+            const diag = checkOneSite(site, fileIndex, compoundMap, plugin, classAllowlist, subtreeId);
+            if (diag)
+                diags.push(diag);
+        }
+    }
+    return diags;
+}
+/**
+ * Per-site decision tree. Returns 0 or 1 diagnostic. Branch order matches
+ * the R04 stage spec's decision tree (cheap rejections first).
+ */
+function checkOneSite(site, fileIndex, compoundMap, plugin, classAllowlist, subtreeId) {
+    // 1. Transient annotation — opt-out for stateless value-typed classes.
+    if (site.isTransient)
+        return undefined;
+    // 2. Allowlist (Money, Date, URL, ...). Reuses R03's allowlist.
+    if (classAllowlist.has(site.className))
+        return undefined;
+    // 3. Test file exemption. Shared with PORT-003 via the exported helper.
+    if (isTestPath(site.callerAbsPath, plugin))
+        return undefined;
+    // 4. Resolve the class declaration file → owning unit. Skip when the
+    // class lives outside any known compound (node_modules, stdlib, generated
+    // code, etc.) or when its owning unit is not an adapter.
+    if (site.constructorDeclAbsPath === undefined)
+        return undefined;
+    const targetInfo = fileIndex.get(site.constructorDeclAbsPath);
+    if (targetInfo === undefined)
+        return undefined;
+    if (targetInfo.role !== "adapter")
+        return undefined;
+    // 5. Resolve the caller's owning compound.
+    const srcInfo = fileIndex.get(site.callerAbsPath);
+    if (srcInfo === undefined)
+        return undefined;
+    const srcEntry = compoundMap.get(srcInfo.compound);
+    if (srcEntry === undefined)
+        return undefined;
+    const srcCompound = srcEntry.compound;
+    // 6. Catalyst compounds are exempt — instantiating adapters IS their job.
+    const srcType = srcCompound.manifest.type ?? "compound";
+    if (srcType === "catalyst")
+        return undefined;
+    // 7. Emit.
+    const diag = {
+        level: "error",
+        check: "port-adapter-instantiation",
+        code: "CHEM-PORT-004",
+        compound: srcCompound.manifest.compound,
+        message: tr("diagnostic.port.adapter_instantiation", {
+            file: external_node_path_.basename(site.callerAbsPath),
+            class_name: site.className,
+            src_compound: srcCompound.manifest.compound,
+        }),
+        hint: "Move the `new` into a catalyst, or annotate the class with " +
+            "`// @chemag-transient` if it has no instance state.",
+        file: site.callerAbsPath,
+    };
+    if (subtreeId !== undefined)
+        diag.language_id = subtreeId;
+    return diag;
+}
+//# sourceMappingURL=port-adapter-instantiation.js.map
+;// CONCATENATED MODULE: ../core/dist/checks/duplicated-function.js
+// ---------------------------------------------------------------------------
+// CHEM-DRY-001 — function declared in N+ non-test files.
+//
+// Pure, independently testable check used by the analyze phase
+// (`import-check.ts`). For each function NAME that appears as a top-level
+// `FunctionDeclaration` in N or more distinct non-test files (and that is
+// not in the user-configurable exclude list), emit ONE suggestion-level
+// diagnostic listing every duplicate location.
+//
+// Architectural choice: filtering (test-file exclusion, exclude-list,
+// threshold) lives in CORE so the plugin can stay AST-only. Plugins that
+// can't enumerate top-level function declarations (plugin-python in v1)
+// MAY omit `LanguagePlugin.scanFunctionDeclarations`; the orchestrator in
+// `import-check.ts` then passes an empty sites map and this check emits
+// nothing for that sub-tree.
+// ---------------------------------------------------------------------------
+
+
+
+/**
+ * Default threshold for `CHEM-DRY-001`. A function name must appear in this
+ * many or more distinct non-test files before the rule fires. Overridable
+ * via `workspace.rules.duplicate_function_threshold`.
+ */
+const DEFAULT_DUPLICATE_FUNCTION_THRESHOLD = 3;
+/**
+ * Default exclude list. Names that match a test-framework lifecycle hook are
+ * exempt by default because duplicating them is the expected pattern — one
+ * `beforeEach` per test file is idiomatic. Configurable (and REPLACED, not
+ * extended) by `workspace.rules.duplicate_function_exclude`.
+ */
+const DEFAULT_DUPLICATE_FUNCTION_EXCLUDE = Object.freeze([
+    "setup",
+    "teardown",
+    "beforeEach",
+    "afterEach",
+]);
+/**
+ * Run CHEM-DRY-001 over a single sub-tree's function-declaration scan.
+ *
+ * Emits ONE diagnostic per duplicated name (NOT one per occurrence), with
+ * a single concatenated `locations` parameter listing every duplicate file.
+ */
+function checkDuplicatedFunction(input) {
+    const { sites, workspace, plugin, subtreeId } = input;
+    const threshold = workspace.rules?.duplicate_function_threshold ?? DEFAULT_DUPLICATE_FUNCTION_THRESHOLD;
+    // Replace-semantics: if the user supplies the field, they own the list.
+    const exclude = new Set(workspace.rules?.duplicate_function_exclude ?? DEFAULT_DUPLICATE_FUNCTION_EXCLUDE);
+    // Invert the per-file map into a per-name map of distinct file paths.
+    // Use a Set keyed by absPath so a single file declaring the same function
+    // twice (legal in TS via overload signatures — the second is the impl) is
+    // counted once.
+    const byName = new Map();
+    for (const [absPath, fileSites] of sites) {
+        // Test-file exclusion happens in CORE so the plugin can stay AST-only.
+        if (isTestPath(absPath, plugin))
+            continue;
+        for (const site of fileSites) {
+            if (exclude.has(site.functionName))
+                continue;
+            let bucket = byName.get(site.functionName);
+            if (!bucket) {
+                bucket = new Set();
+                byName.set(site.functionName, bucket);
+            }
+            bucket.add(site.absPath);
+        }
+    }
+    const diags = [];
+    // Sort names for deterministic diagnostic ordering across runs.
+    const names = [...byName.keys()].sort();
+    for (const name of names) {
+        const files = byName.get(name);
+        if (!files || files.size < threshold)
+            continue;
+        // Sort file paths for deterministic message output.
+        const sorted = [...files].sort();
+        const locations = sorted.map((p) => external_node_path_.basename(p)).join(", ");
+        const diag = {
+            level: "suggestion",
+            check: "duplicated-function",
+            code: "CHEM-DRY-001",
+            message: tr("diagnostic.dry.function_duplicated", {
+                name,
+                count: files.size,
+                locations,
+            }),
+            hint: `Consider extracting "${name}" into a shared utility module ` +
+                "and importing it from each call site.",
+            // No `file` field — this is a multi-location finding spanning N files.
+            // Tools that need to highlight individual sites should switch on the
+            // code and surface each path from the message.
+        };
+        if (subtreeId !== undefined)
+            diag.language_id = subtreeId;
+        diags.push(diag);
+    }
+    return diags;
+}
+//# sourceMappingURL=duplicated-function.js.map
 ;// CONCATENATED MODULE: ../core/dist/import-check.js
+
+
+
 
 
 
@@ -42953,11 +43307,24 @@ function checkImports(workspace, scopes, hooks = {}) {
     // emitted CHEM-MANIFEST-005 for them, so `compileIoModulePatterns` runs
     // in its pure (non-throwing) regime here.
     const ioPatterns = compileIoModulePatterns(workspace.rules?.io_modules);
+    // Compile the effective class-name allowlist for CHEM-PORT-003 ONCE per
+    // analyze pass. Matches PORT-001's compile-and-cache pattern. The default
+    // list ["Date","URL","Money","RegExp"] is extended (never replaced) by
+    // workspace.rules.import_class_allowlist.
+    const classAllowlist = compileClassAllowlist(workspace.rules?.import_class_allowlist);
     const fileIndex = new Map();
+    // Public-surface index — keyed by absolute path of each compound's
+    // public.ts (or overridden surface file). Used by PORT-003 to map a
+    // cross-compound `import { X } from "b/public"` back to compound "b" even
+    // when public.ts itself is not declared as a unit (the common case).
+    const surfaceIndex = new Map();
     const compoundMap = new Map();
     // Implicit solvents are a workspace-wide concept (compound type rule).
     const implicitNames = new Set();
-    for (const { scope, compounds } of scopes) {
+    for (const { plugin, scope, compounds } of scopes) {
+        // Compute the effective surface filename for compounds in this scope.
+        // Priority: sub-tree override > workspace.rules.public_surface > plugin default.
+        const surfaceFilename = scope.public_surface ?? workspace.rules?.public_surface ?? plugin.defaults.publicSurface;
         for (const c of compounds) {
             compoundMap.set(c.manifest.compound, { compound: c, subtreeId: scope.id });
             const typeDef = workspace.compound_types?.[c.manifest.type ?? "compound"];
@@ -42972,6 +43339,14 @@ function checkImports(workspace, scopes, hooks = {}) {
                     subtreeId: scope.id,
                 });
             }
+            // Register the public-surface absolute path even when public.ts is not
+            // declared as a unit. Powers PORT-003's compound-resolution for the
+            // canonical "import { X } from 'b/public'" pattern.
+            const surfaceAbs = external_node_path_.resolve(c.dir, surfaceFilename);
+            surfaceIndex.set(surfaceAbs, {
+                compound: c.manifest.compound,
+                subtreeId: scope.id,
+            });
         }
     }
     // -----------------------------------------------------------------
@@ -42995,6 +43370,13 @@ function checkImports(workspace, scopes, hooks = {}) {
         const batchResult = hooks.parseImportsBatch
             ? hooks.parseImportsBatch(allFilePaths, plugin, scope)
             : plugin.parseImportsBatch(allFilePaths);
+        // CHEM-PORT-004 input: scan `new` expressions across the sub-tree
+        // ONCE. Plugins that omit the optional method (plugin-python today)
+        // contribute an empty map — the core check then skips this sub-tree
+        // and emits no diagnostics.
+        const newExprSites = plugin.scanNewExpressions
+            ? plugin.scanNewExpressions(allFilePaths)
+            : new Map();
         for (const { abs, compound: srcCompound } of filesToAnalyze) {
             const imports = batchResult.get(abs);
             if (!imports || imports.length === 0)
@@ -43011,8 +43393,25 @@ function checkImports(workspace, scopes, hooks = {}) {
                 if (resolvedPath === undefined)
                     continue;
                 // Look up the resolved path in the global file index.
-                const targetInfo = fileIndex.get(resolvedPath);
-                // Not a known chem unit — skip.
+                let targetInfo = fileIndex.get(resolvedPath);
+                // Public-surface imports — `b/public.ts` is usually NOT a declared
+                // unit, so `fileIndex` misses it. Fall back to `surfaceIndex` and
+                // synthesize a minimal entry so cross-compound rules (including
+                // PORT-003) can fire on the canonical public-surface import path.
+                // `role` is left as "" because the public surface has no role and
+                // bond-check is guarded on a non-empty allowedRoles below.
+                if (!targetInfo) {
+                    const surfaceHit = surfaceIndex.get(resolvedPath);
+                    if (surfaceHit) {
+                        targetInfo = {
+                            compound: surfaceHit.compound,
+                            unit: "",
+                            role: "",
+                            subtreeId: surfaceHit.subtreeId,
+                        };
+                    }
+                }
+                // Not a known chem unit or public surface — skip.
                 if (!targetInfo)
                     continue;
                 const targetCompound = targetInfo.compound;
@@ -43054,7 +43453,10 @@ function checkImports(workspace, scopes, hooks = {}) {
                     // rules still apply across the boundary.
                 }
                 // --- Check 1: Bond rules ---
-                if (allowedRoles && !allowedRoles.includes(targetRole)) {
+                // Skip when targetRole is empty — that signals a public-surface
+                // synthesized entry (no unit role attached). Bond checking on the
+                // surface itself would emit spurious violations.
+                if (targetRole !== "" && allowedRoles && !allowedRoles.includes(targetRole)) {
                     diags.push({
                         level: "error",
                         check: "import-bonds",
@@ -43129,6 +43531,26 @@ function checkImports(workspace, scopes, hooks = {}) {
                             }
                         }
                     }
+                    // ---- PORT-003: concrete class import across a compound boundary ----
+                    // Runs AFTER the bypass/undeclared checks so PORT-003 only fires on
+                    // imports that have already passed the access-control gate (or on
+                    // workspaces with `cross_compound_imports: unrestricted`). The rule
+                    // itself runs regardless of crossRule mode — a concrete class
+                    // crossing a compound boundary defeats interface-driven architecture
+                    // even when access is unrestricted. The rule is about contract
+                    // granularity, not access control.
+                    const port003 = checkPortClassImport({
+                        srcAbs: abs,
+                        srcCompound,
+                        targetCompound: compoundMap.get(targetCompound)?.compound,
+                        imp,
+                        workspace,
+                        plugin,
+                        allowlist: classAllowlist,
+                        subtreeId: srcInfo.subtreeId,
+                    });
+                    if (port003.length > 0)
+                        diags.push(...port003);
                 }
             }
         }
@@ -43143,6 +43565,38 @@ function checkImports(workspace, scopes, hooks = {}) {
             if (portDiag)
                 diags.push(portDiag);
         }
+        // ---- Check 4 (PORT-004): stateful adapter instantiation outside a
+        // catalyst. Consumes the per-sub-tree `newExprSites` map collected
+        // before the per-file loop and the global fileIndex/compoundMap
+        // already built above. Emits one diagnostic per offending
+        // `new XAdapter()` call site.
+        const port004Diags = checkPortAdapterInstantiation({
+            sites: newExprSites,
+            fileIndex,
+            compoundMap,
+            workspace,
+            plugin,
+            classAllowlist,
+            subtreeId: scope.id,
+        });
+        if (port004Diags.length > 0)
+            diags.push(...port004Diags);
+        // ---- Check 5 (DRY-001): function declared in N+ non-test files.
+        // Plugins that omit `scanFunctionDeclarations` (plugin-python today)
+        // contribute an empty map; the core check then emits nothing for the
+        // sub-tree. Test-file exclusion happens in core so the plugin can stay
+        // AST-only — mirrors PORT-004's separation of concerns.
+        const fnSites = plugin.scanFunctionDeclarations
+            ? plugin.scanFunctionDeclarations(allFilePaths)
+            : new Map();
+        const dry001Diags = checkDuplicatedFunction({
+            sites: fnSites,
+            workspace,
+            plugin,
+            subtreeId: scope.id,
+        });
+        if (dry001Diags.length > 0)
+            diags.push(...dry001Diags);
     }
     return diags;
 }
@@ -44530,12 +44984,35 @@ const DIAGNOSTIC_CODES = {
         helpFragment: "chem-manifest-005-invalid-io-module-pattern",
     },
     // ---- PORT ----
+    // CHEM-PORT-002 is intentionally not registered — RESERVED (Tier 3).
     "CHEM-PORT-001": {
         code: "CHEM-PORT-001",
         category: "PORT",
         level: "warning",
         trKey: "diagnostic.port_needs_interface",
         helpFragment: "chem-port-001-port-needs-interface",
+    },
+    "CHEM-PORT-003": {
+        code: "CHEM-PORT-003",
+        category: "PORT",
+        level: "error",
+        trKey: "diagnostic.port_class_cross_compound",
+        helpFragment: "chem-port-003-port-class-cross-compound",
+    },
+    "CHEM-PORT-004": {
+        code: "CHEM-PORT-004",
+        category: "PORT",
+        level: "error",
+        trKey: "diagnostic.port.adapter_instantiation",
+        helpFragment: "chem-port-004-port-adapter-instantiation",
+    },
+    // ---- DRY ----
+    "CHEM-DRY-001": {
+        code: "CHEM-DRY-001",
+        category: "DRY",
+        level: "suggestion",
+        trKey: "diagnostic.dry.function_duplicated",
+        helpFragment: "chem-dry-001-function-duplicated",
     },
     // ---- ROLE ----
     "CHEM-ROLE-001": {
@@ -44930,6 +45407,20 @@ const DIAGNOSTIC_CODES = {
 function getDiagnosticCodeMeta(code) {
     return DIAGNOSTIC_CODES[code];
 }
+/**
+ * Codes that are intentionally reserved (planned but not yet implemented)
+ * and thus do NOT appear in `DIAGNOSTIC_CODES`. The numbering-monotonicity
+ * registry test consults this set to permit a gap inside a 100-block when
+ * the missing NNN corresponds to a reserved code. Use sparingly — every
+ * entry here is a promise to ship the code in a future WP.
+ *
+ * Reserved entries are documented in `docs/master-plan/` (e.g.
+ * `11-track-r-rule-remediation.md` § proposed-rules for the PORT family).
+ */
+const RESERVED_CODES = new Set([
+    // PORT-002 — Tier 3 rule (see proposed-rules.md), shipped in a future WP.
+    "CHEM-PORT-002",
+]);
 //# sourceMappingURL=codes.js.map
 ;// CONCATENATED MODULE: ../core/dist/diagnostics/explain.js
 // ---------------------------------------------------------------------------

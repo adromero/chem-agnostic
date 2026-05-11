@@ -25,6 +25,11 @@ import {
   toSnakeCase,
 } from "./generator.js";
 
+// Note: `scanNewExpressions` (used by CHEM-PORT-004) is intentionally
+// omitted — the Python plugin does not perform symbol-level resolution,
+// so it cannot reliably map `Foo()` call sites back to a class declaration
+// file. Core treats the absence of `scanNewExpressions` as "skip this
+// sub-tree for CHEM-PORT-004" and emits no diagnostics.
 export const pythonPlugin: LanguagePlugin = {
   name: "python",
   fileExtensions: [".py"],

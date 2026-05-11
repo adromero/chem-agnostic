@@ -1,0 +1,8 @@
+compound: vendors
+type: compound
+exports:
+  adapters: [VendorRepo]
+units:
+  - role: adapter
+    name: VendorRepo
+    file: ./adapters/VendorRepo.ts

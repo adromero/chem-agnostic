@@ -64,6 +64,8 @@ export type TrKey =
   | "diagnostic.invalid_io_module_pattern" // params: { pattern, error }
   | "diagnostic.port_needs_interface" // params: { compound, io_modules }
   | "diagnostic.port_class_cross_compound" // params: { file, name, target_compound }
+  | "diagnostic.port.adapter_instantiation" // params: { file, class_name, src_compound }
+  | "diagnostic.dry.function_duplicated" // params: { name, count, locations }
   // import-check.ts
   | "diagnostic.import_bond_violation" // params: { file, src_role, target_role, names, allowed }
   | "diagnostic.import_undeclared" // params: { file, target, src_compound }
@@ -193,6 +195,8 @@ export const ALL_TR_KEYS: readonly TrKey[] = [
   "diagnostic.invalid_io_module_pattern",
   "diagnostic.port_needs_interface",
   "diagnostic.port_class_cross_compound",
+  "diagnostic.port.adapter_instantiation",
+  "diagnostic.dry.function_duplicated",
   "diagnostic.import_bond_violation",
   "diagnostic.import_undeclared",
   "diagnostic.import_bypass",

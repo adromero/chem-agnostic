@@ -1,0 +1,6 @@
+compound: users
+type: compound
+units:
+  - role: reaction
+    name: handlers
+    file: ./reactions/handlers.ts

@@ -36,6 +36,7 @@ export function cmdCheck(argv: string[]): void {
       "\x1b[1mOptions:\x1b[0m\n" +
         "  --manifest-only       Skip filesystem checks\n" +
         "  --verbose, -v         Show warning details\n" +
+        "  --suggestions         Surface suggestion-level diagnostics (e.g. CHEM-DRY-001)\n" +
         "  --format <fmt>        Output format: human|json|sarif|junit (default: human)\n" +
         "  --json                DEPRECATED. Alias for --format json that preserves the legacy ad-hoc shape. Use --format json instead.\n" +
         "  --explain CHEM-XXX-NNN  Print metadata for a diagnostic code and exit\n",
@@ -66,6 +67,10 @@ export function cmdCheck(argv: string[]): void {
   const verbose = argv.includes("--verbose") || argv.includes("-v");
   const legacyJson = argv.includes("--json");
   const manifestOnly = argv.includes("--manifest-only");
+  // --suggestions (default off): when absent, suggestion-level diagnostics
+  // (e.g. CHEM-DRY-001) are filtered out before any downstream consumer —
+  // formatters, telemetry, legacy-JSON, and exit-code accounting.
+  const suggestionsFlag = argv.includes("--suggestions");
 
   // Resolve --format (mutually exclusive with --json).
   const format = parseFormatFlag(argv);
@@ -238,6 +243,30 @@ export function cmdCheck(argv: string[]): void {
     }
   }
 
+  // --suggestions filter — applied at the diagnostic-list level BEFORE any
+  // downstream consumer (legacy JSON, formatters, emitViolations, totals).
+  // Hides `level: "suggestion"` rows unless the user opts in. Exit codes
+  // are unaffected — `totalErrors` only counts `"error"` and suggestions
+  // match neither error nor warning, so this is purely a visibility filter.
+  if (!suggestionsFlag) {
+    for (const r of results) {
+      r.diagnostics = r.diagnostics.filter((d) => d.level !== "suggestion");
+    }
+    // Rebuild allDiags from filtered per-check rows to stay consistent.
+    allDiags.length = 0;
+    for (const r of results) allDiags.push(...r.diagnostics);
+    // Recompute totals so any future per-totals consumer sees consistent
+    // numbers. (Currently `totalErrors` / `totalWarnings` are unaffected
+    // because suggestions never match `"error"` / `"warning"`, but doing
+    // the recompute here keeps the invariant explicit for the next reader.)
+    totalErrors = 0;
+    totalWarnings = 0;
+    for (const r of results) {
+      totalErrors += r.diagnostics.filter((d) => d.level === "error").length;
+      totalWarnings += r.diagnostics.filter((d) => d.level === "warning").length;
+    }
+  }
+
   // Legacy --json emits the EXISTING ad-hoc shape for backward compatibility.
   // The new schema-validated shape is only emitted under --format json.
   if (legacyJson) {
@@ -358,6 +387,7 @@ function stripFlags(argv: string[]): string[] {
     if (a === "--json") continue;
     if (a === "--verbose" || a === "-v") continue;
     if (a === "--manifest-only") continue;
+    if (a === "--suggestions") continue;
     out.push(a);
   }
   return out;

@@ -79,8 +79,13 @@ export function pathToUri(p: string): string {
 // Severity mapping
 // ---------------------------------------------------------------------------
 
-function mapSeverity(level: "error" | "warning"): DiagnosticSeverity {
-  return level === "error" ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning;
+function mapSeverity(level: "error" | "warning" | "suggestion"): DiagnosticSeverity {
+  if (level === "error") return DiagnosticSeverity.Error;
+  if (level === "warning") return DiagnosticSeverity.Warning;
+  // "suggestion" → Hint (LSP's lowest-severity bucket; renders as a soft
+  // dotted underline in VS Code). Intentionally chosen over Information,
+  // which is too prominent for "suggestion, not a problem".
+  return DiagnosticSeverity.Hint;
 }
 
 // ---------------------------------------------------------------------------

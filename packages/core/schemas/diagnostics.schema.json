@@ -61,7 +61,7 @@
       "properties": {
         "level": {
           "type": "string",
-          "enum": ["error", "warning"]
+          "enum": ["error", "warning", "suggestion"]
         },
         "code": {
           "type": "string",

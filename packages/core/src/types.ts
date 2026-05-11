@@ -116,6 +116,20 @@ export interface WorkspaceRules {
    * Matching is literal and case-sensitive.
    */
   import_class_allowlist?: string[];
+  /**
+   * Threshold for `CHEM-DRY-001` (function duplicated across N+ non-test
+   * files). Default 3. Names that appear in fewer than this many distinct
+   * files do not fire the rule.
+   */
+  duplicate_function_threshold?: number;
+  /**
+   * List of top-level function names that are EXEMPT from `CHEM-DRY-001`.
+   * REPLACES the default exclude list `["setup", "teardown", "beforeEach",
+   * "afterEach"]` — entries here supplant the defaults rather than extend
+   * them (typical configuration semantics: if you set the field, you own
+   * the full list).
+   */
+  duplicate_function_exclude?: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -189,7 +203,7 @@ export interface LoadedCompound {
 }
 
 export interface Diagnostic {
-  level: "error" | "warning";
+  level: "error" | "warning" | "suggestion";
   check: string;
   /**
    * Stable diagnostic code (CHEM-CATEGORY-NNN). Bijective with the
@@ -283,6 +297,52 @@ export interface ParsedImport {
    * multi-name imports the kind reflects the first resolvable name.
    */
   declarationKind?: DeclarationKind;
+}
+
+/**
+ * A single `new X(...)` call site discovered by a language plugin's
+ * `scanNewExpressions` method. Carries ONLY AST-extractable facts — the
+ * plugin must NOT consult workspace data when populating this struct.
+ *
+ * Consumed by `checkPortAdapterInstantiation` (CHEM-PORT-004), which maps
+ * the call site and constructor-declaration file to compounds/roles using
+ * the workspace-side `fileIndex` and `compoundMap`.
+ */
+export interface NewExpressionSite {
+  /** Absolute path of the file containing the `new` expression. */
+  callerAbsPath: string;
+  /** Identifier text used in `new X(...)` (e.g. "StripeGateway"). */
+  className: string;
+  /**
+   * Absolute path of the file declaring the class, after walking
+   * `getAliasedSymbol()` chains up to ALIAS_DEPTH_CAP. `undefined` when
+   * the plugin could not resolve the constructor symbol (treat as skip).
+   */
+  constructorDeclAbsPath: string | undefined;
+  /**
+   * `true` iff the class declaration is preceded by a `// @chemag-transient`
+   * single-line comment in its leading trivia. Matched as a substring of
+   * the trimmed comment text — DO NOT interpret as a JSDoc tag.
+   */
+  isTransient: boolean;
+}
+
+/**
+ * A single top-level `function` declaration discovered by a language plugin's
+ * `scanFunctionDeclarations` method. Carries ONLY AST-extractable facts — the
+ * plugin must NOT consult workspace state when populating this struct.
+ *
+ * Consumed by `checkDuplicatedFunction` (CHEM-DRY-001), which aggregates
+ * declarations by name across non-test files and emits a suggestion when a
+ * name appears in N or more files.
+ */
+export interface FunctionDeclarationSite {
+  /** Identifier text of the declared function (e.g. "fieldErrorsFromZod"). */
+  functionName: string;
+  /** Absolute path of the file containing the declaration. */
+  absPath: string;
+  /** 1-based line number of the `function` keyword. Optional. */
+  line?: number;
 }
 
 /** An import resolved to a specific compound and unit. */

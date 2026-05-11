@@ -92,14 +92,14 @@ function buildRule(meta: DiagnosticCodeMeta): SarifRule {
     name: pascalCaseCode(meta.code),
     shortDescription: { text: meta.trKey },
     helpUri: docLinkFor(meta),
-    defaultConfiguration: { level: meta.level === "warning" ? "warning" : "error" },
+    defaultConfiguration: { level: toSarifLevel(meta.level) },
   };
 }
 
 function buildResult(d: Diagnostic, context: FormatContext): SarifResult {
   const result: SarifResult = {
     ruleId: d.code,
-    level: d.level === "warning" ? "warning" : "error",
+    level: toSarifLevel(d.level),
     message: { text: d.message },
     locations: buildLocations(d, context),
     properties: {
@@ -144,6 +144,19 @@ function artifactUri(file: string, workspacePath: string): string {
   return file.split(path.sep).join("/");
 }
 
+/**
+ * Map a chemag diagnostic level to a SARIF 2.1.0 level. Per the SARIF spec,
+ * `"note"` denotes informational findings that do not affect run pass/fail —
+ * the correct codomain for `"suggestion"`. Note that the previous binary
+ * mapping (`level === "warning" ? "warning" : "error"`) would have silently
+ * elevated `"suggestion"` to SARIF `"error"` — replaced.
+ */
+function toSarifLevel(level: "error" | "warning" | "suggestion"): "error" | "warning" | "note" {
+  if (level === "error") return "error";
+  if (level === "warning") return "warning";
+  return "note";
+}
+
 /** "CHEM-BOND-001" -> "ChemBond001". */
 function pascalCaseCode(code: DiagnosticCode): string {
   return code
@@ -181,12 +194,12 @@ export interface SarifRule {
   name: string;
   shortDescription: { text: string };
   helpUri: string;
-  defaultConfiguration: { level: "error" | "warning" };
+  defaultConfiguration: { level: "error" | "warning" | "note" };
 }
 
 export interface SarifResult {
   ruleId: string;
-  level: "error" | "warning";
+  level: "error" | "warning" | "note";
   message: { text: string };
   locations: SarifLocation[];
   properties: Record<string, unknown>;

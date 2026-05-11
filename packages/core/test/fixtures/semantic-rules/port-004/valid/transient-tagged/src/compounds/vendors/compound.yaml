@@ -1,0 +1,9 @@
+compound: vendors
+type: compound
+units:
+  - role: reaction
+    name: handlers
+    file: ./reactions/handlers.ts
+  - role: adapter
+    name: HttpClient
+    file: ./adapters/HttpClient.ts
