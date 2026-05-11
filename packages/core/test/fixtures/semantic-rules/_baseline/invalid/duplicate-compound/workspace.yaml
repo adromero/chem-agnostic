@@ -1,0 +1,30 @@
+workspace: baseline-duplicate
+language: typescript
+roles:
+  element:
+    description: Value
+    folder: elements
+  molecule:
+    description: State
+    folder: molecules
+  reaction:
+    description: Workflow
+    folder: reactions
+  interface:
+    description: Contract
+    folder: interfaces
+  adapter:
+    description: Implementation
+    folder: adapters
+bonds:
+  element: [element]
+  molecule: [element, molecule]
+  reaction: [element, molecule, interface]
+  interface: [element, molecule]
+  adapter: [element, molecule, interface, adapter]
+paths:
+  compounds: ./src/compounds
+rules:
+  cross_compound_imports: public_only
+  role_from_path: true
+  public_surface: public.ts

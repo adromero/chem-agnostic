@@ -8,6 +8,8 @@ import type {
 } from "./types.js";
 import type { LanguagePlugin } from "./plugin-interface.js";
 import { tr } from "./vocabulary/index.js";
+import { checkPortNeedsInterface, compileIoModulePatterns } from "./checks/port-needs-interface.js";
+import { checkPortClassImport, compileClassAllowlist } from "./checks/port-class-import.js";
 
 /**
  * One per-language sub-tree slice fed into `checkImports`. The CLI / MCP
@@ -65,6 +67,18 @@ export function checkImports(
 ): Diagnostic[] {
   const diags: Diagnostic[] = [];
 
+  // Compile the effective I/O-module allowlist ONCE per analyze pass. The
+  // loader has already pruned invalid `rules.io_modules` regex strings and
+  // emitted CHEM-MANIFEST-005 for them, so `compileIoModulePatterns` runs
+  // in its pure (non-throwing) regime here.
+  const ioPatterns = compileIoModulePatterns(workspace.rules?.io_modules);
+
+  // Compile the effective class-name allowlist for CHEM-PORT-003 ONCE per
+  // analyze pass. Matches PORT-001's compile-and-cache pattern. The default
+  // list ["Date","URL","Money","RegExp"] is extended (never replaced) by
+  // workspace.rules.import_class_allowlist.
+  const classAllowlist = compileClassAllowlist(workspace.rules?.import_class_allowlist);
+
   // -----------------------------------------------------------------
   // Build a GLOBAL file index that spans every sub-tree. This lets us
   // detect cross-sub-tree imports (a TS file resolving into a Python
@@ -80,6 +94,12 @@ export function checkImports(
   };
   const fileIndex = new Map<string, FileEntry>();
 
+  // Public-surface index — keyed by absolute path of each compound's
+  // public.ts (or overridden surface file). Used by PORT-003 to map a
+  // cross-compound `import { X } from "b/public"` back to compound "b" even
+  // when public.ts itself is not declared as a unit (the common case).
+  const surfaceIndex = new Map<string, { compound: string; subtreeId: string }>();
+
   // Compound name -> { loaded compound, sub-tree id } across all scopes.
   type CompoundEntry = { compound: LoadedCompound; subtreeId: string };
   const compoundMap = new Map<string, CompoundEntry>();
@@ -87,7 +107,12 @@ export function checkImports(
   // Implicit solvents are a workspace-wide concept (compound type rule).
   const implicitNames = new Set<string>();
 
-  for (const { scope, compounds } of scopes) {
+  for (const { plugin, scope, compounds } of scopes) {
+    // Compute the effective surface filename for compounds in this scope.
+    // Priority: sub-tree override > workspace.rules.public_surface > plugin default.
+    const surfaceFilename =
+      scope.public_surface ?? workspace.rules?.public_surface ?? plugin.defaults.publicSurface;
+
     for (const c of compounds) {
       compoundMap.set(c.manifest.compound, { compound: c, subtreeId: scope.id });
       const typeDef = workspace.compound_types?.[c.manifest.type ?? "compound"];
@@ -102,6 +127,15 @@ export function checkImports(
           subtreeId: scope.id,
         });
       }
+
+      // Register the public-surface absolute path even when public.ts is not
+      // declared as a unit. Powers PORT-003's compound-resolution for the
+      // canonical "import { X } from 'b/public'" pattern.
+      const surfaceAbs = path.resolve(c.dir, surfaceFilename);
+      surfaceIndex.set(surfaceAbs, {
+        compound: c.manifest.compound,
+        subtreeId: scope.id,
+      });
     }
   }
 
@@ -146,9 +180,27 @@ export function checkImports(
         if (resolvedPath === undefined) continue;
 
         // Look up the resolved path in the global file index.
-        const targetInfo = fileIndex.get(resolvedPath);
+        let targetInfo = fileIndex.get(resolvedPath);
 
-        // Not a known chem unit — skip.
+        // Public-surface imports — `b/public.ts` is usually NOT a declared
+        // unit, so `fileIndex` misses it. Fall back to `surfaceIndex` and
+        // synthesize a minimal entry so cross-compound rules (including
+        // PORT-003) can fire on the canonical public-surface import path.
+        // `role` is left as "" because the public surface has no role and
+        // bond-check is guarded on a non-empty allowedRoles below.
+        if (!targetInfo) {
+          const surfaceHit = surfaceIndex.get(resolvedPath);
+          if (surfaceHit) {
+            targetInfo = {
+              compound: surfaceHit.compound,
+              unit: "",
+              role: "",
+              subtreeId: surfaceHit.subtreeId,
+            };
+          }
+        }
+
+        // Not a known chem unit or public surface — skip.
         if (!targetInfo) continue;
 
         const targetCompound = targetInfo.compound;
@@ -193,7 +245,10 @@ export function checkImports(
         }
 
         // --- Check 1: Bond rules ---
-        if (allowedRoles && !allowedRoles.includes(targetRole)) {
+        // Skip when targetRole is empty — that signals a public-surface
+        // synthesized entry (no unit role attached). Bond checking on the
+        // surface itself would emit spurious violations.
+        if (targetRole !== "" && allowedRoles && !allowedRoles.includes(targetRole)) {
           diags.push({
             level: "error",
             check: "import-bonds",
@@ -277,8 +332,44 @@ export function checkImports(
               }
             }
           }
+
+          // ---- PORT-003: concrete class import across a compound boundary ----
+          // Runs AFTER the bypass/undeclared checks so PORT-003 only fires on
+          // imports that have already passed the access-control gate (or on
+          // workspaces with `cross_compound_imports: unrestricted`). The rule
+          // itself runs regardless of crossRule mode — a concrete class
+          // crossing a compound boundary defeats interface-driven architecture
+          // even when access is unrestricted. The rule is about contract
+          // granularity, not access control.
+          const port003 = checkPortClassImport({
+            srcAbs: abs,
+            srcCompound,
+            targetCompound: compoundMap.get(targetCompound)?.compound,
+            imp,
+            workspace,
+            plugin,
+            allowlist: classAllowlist,
+            subtreeId: srcInfo.subtreeId,
+          });
+          if (port003.length > 0) diags.push(...port003);
         }
       }
+    }
+
+    // ---- Check 3 (PORT-001): per-compound "needs interface" check ----
+    // Run AFTER the per-file diagnostic loop completes for this scope so
+    // batchResult is fully populated. The check is per-compound — one
+    // diagnostic at most per compound — and consumes the same parsed-import
+    // map already built above via a closure that hides batchResult from the
+    // pure check function.
+    for (const c of compounds) {
+      const portDiag = checkPortNeedsInterface(
+        c,
+        (abs: string) => batchResult.get(abs),
+        ioPatterns,
+        scope.id,
+      );
+      if (portDiag) diags.push(portDiag);
     }
   }
 

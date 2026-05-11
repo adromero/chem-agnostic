@@ -1,0 +1,32 @@
+workspace: port-003-reagent-exemption
+language: typescript
+roles:
+  reaction:
+    description: Workflow
+    folder: reactions
+  interface:
+    description: Contract
+    folder: interfaces
+  adapter:
+    description: Implementation
+    folder: adapters
+bonds:
+  reaction: [interface]
+  interface: []
+  adapter: [interface]
+paths:
+  compounds: ./src/compounds
+  reagents: ./src/reagents
+compound_types:
+  compound:
+    allowed_roles: [reaction, interface, adapter]
+    can_import: [compound, reagent]
+  reagent:
+    description: Shared kernel
+    allowed_roles: [reaction, interface, adapter]
+    importable_by: all
+    can_import: [reagent]
+rules:
+  cross_compound_imports: public_only
+  role_from_path: true
+  public_surface: public.ts

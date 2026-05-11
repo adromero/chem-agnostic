@@ -1,0 +1,8 @@
+compound: a
+type: compound
+imports:
+  - compound: b
+units:
+  - role: adapter
+    name: useStore
+    file: ./adapters/useStore.test.ts

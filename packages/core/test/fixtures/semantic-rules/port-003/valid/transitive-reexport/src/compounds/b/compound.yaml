@@ -1,0 +1,10 @@
+compound: b
+type: compound
+imports:
+  - compound: c
+exports:
+  interfaces: [VendorStore]
+units:
+  - role: interface
+    name: BPort
+    file: ./interfaces/BPort.ts

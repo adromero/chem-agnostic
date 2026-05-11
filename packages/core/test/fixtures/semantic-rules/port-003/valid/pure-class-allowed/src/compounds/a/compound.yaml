@@ -1,0 +1,11 @@
+compound: a
+type: compound
+imports:
+  - compound: b
+units:
+  - role: reaction
+    name: useMoney
+    file: ./reactions/useMoney.ts
+  - role: reaction
+    name: useBigNum
+    file: ./reactions/useBigNum.ts

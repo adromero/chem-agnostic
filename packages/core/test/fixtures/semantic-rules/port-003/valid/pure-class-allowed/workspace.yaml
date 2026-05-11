@@ -1,0 +1,27 @@
+workspace: port-003-pure-class-allowed
+language: typescript
+roles:
+  reaction:
+    description: Workflow
+    folder: reactions
+  interface:
+    description: Contract
+    folder: interfaces
+  adapter:
+    description: Implementation
+    folder: adapters
+bonds:
+  reaction: [interface]
+  interface: []
+  adapter: [interface]
+paths:
+  compounds: ./src/compounds
+compound_types:
+  compound:
+    allowed_roles: [reaction, interface, adapter]
+rules:
+  cross_compound_imports: public_only
+  role_from_path: true
+  public_surface: public.ts
+  import_class_allowlist:
+    - CustomBigNum

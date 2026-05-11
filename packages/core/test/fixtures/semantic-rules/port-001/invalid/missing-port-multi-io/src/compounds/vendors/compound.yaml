@@ -1,0 +1,12 @@
+compound: vendors
+type: compound
+units:
+  - role: reaction
+    name: handlers
+    file: ./reactions/handlers.ts
+  - role: adapter
+    name: store-sqlite
+    file: ./adapters/store-sqlite.ts
+  - role: adapter
+    name: store-pg
+    file: ./adapters/store-pg.ts

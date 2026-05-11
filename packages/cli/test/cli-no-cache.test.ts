@@ -5,7 +5,12 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { runCli, stripCacheFlag } from "../src/cli.js";
-import { __resetCacheStateForTesting, isCacheEnabled, setCacheEnabled } from "@chemag/core/cache";
+import {
+  CACHE_SCHEMA_VERSION,
+  __resetCacheStateForTesting,
+  isCacheEnabled,
+  setCacheEnabled,
+} from "@chemag/core/cache";
 import * as checkCmd from "../src/commands/check.js";
 import { __resetForTesting } from "@chemag/core/vocabulary";
 
@@ -165,7 +170,7 @@ describe("--no-cache prevents disk writes", () => {
 
     expect(fs.existsSync(cacheDir)).toBe(true);
     // Version stamp written
-    expect(fs.readFileSync(path.join(cacheDir, "version"), "utf-8")).toBe("1");
+    expect(fs.readFileSync(path.join(cacheDir, "version"), "utf-8")).toBe(CACHE_SCHEMA_VERSION);
   });
 });
 

@@ -1,0 +1,8 @@
+compound: shared
+type: reagent
+exports:
+  interfaces: [Forecast]
+units:
+  - role: interface
+    name: Forecast
+    file: ./interfaces/Forecast.ts

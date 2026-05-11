@@ -1,0 +1,6 @@
+compound: vendors
+type: compound
+units:
+  - role: adapter
+    name: store
+    file: ./adapters/store.ts

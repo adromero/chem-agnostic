@@ -43,6 +43,9 @@
   "diagnostic.assay_mock_not_interface": "Test \"{assay}\" mocks \"{mock}\" which is not a port in this module",
   "diagnostic.subtree_paths_overlap": "Sub-trees \"{id_a}\" and \"{id_b}\" declare overlapping path roots: \"{path_a}\" and \"{path_b}\"",
   "diagnostic.subtree_id_duplicate": "Duplicate sub-tree id \"{id}\" — every entry in `languages:` must use a unique id",
+  "diagnostic.invalid_io_module_pattern": "Invalid regex in workspace.yaml rules.io_modules: \"{pattern}\" — {error}. The entry was ignored.",
+  "diagnostic.port_needs_interface": "Module \"{compound}\" has use-case units and adapter units that import I/O modules ({io_modules}) but no port unit. Extract a port and bind the adapter through a composition-root.",
+  "diagnostic.port_class_cross_compound": "In {file}: imports concrete class \"{name}\" from module \"{target_compound}\". Depend on a port and bind the implementation via the composition-root.",
 
   "diagnostic.import_bond_violation": "{file}: {src_role} imports {target_role} \"{names}\" — dependency rule violation",
   "diagnostic.import_undeclared": "{file}: imports from \"{target}\" but it is not in the imports list",

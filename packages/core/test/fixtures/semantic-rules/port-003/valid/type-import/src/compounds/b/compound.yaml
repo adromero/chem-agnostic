@@ -1,0 +1,8 @@
+compound: b
+type: compound
+exports:
+  interfaces: [Vendor]
+units:
+  - role: interface
+    name: Vendor
+    file: ./interfaces/Vendor.ts

@@ -102,6 +102,20 @@ export interface WorkspaceRules {
   public_surface?: string;
   manifest_filename?: string;
   python_packages?: string[];
+  /**
+   * Optional list of regex source strings appended to the default I/O-module
+   * allowlist used by `CHEM-PORT-001`. Validated and compiled by the loader;
+   * invalid patterns are pruned and surface as `CHEM-MANIFEST-005` diagnostics
+   * at workspace-load time (never thrown).
+   */
+  io_modules?: string[];
+  /**
+   * Optional list of class names exempt from `CHEM-PORT-003` (concrete
+   * cross-compound class imports). EXTENDS the default allowlist
+   * `["Date", "URL", "Money", "RegExp"]` — entries supplement, never replace.
+   * Matching is literal and case-sensitive.
+   */
+  import_class_allowlist?: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -246,11 +260,29 @@ export interface CheckOptions {
 // Language plugin types
 // ---------------------------------------------------------------------------
 
+/**
+ * Resolution outcome for an imported symbol's final declaration.
+ * Populated by language plugins that can perform symbol resolution
+ * (TypeScript via ts-morph); left undefined by plugins that cannot
+ * (Python). Used by CHEM-PORT-003 and any future rule that needs to
+ * distinguish "this import resolves to a class" from "this import
+ * resolves to an interface/type/function".
+ */
+export type DeclarationKind = "class" | "interface" | "type" | "function" | "value" | "unresolved";
+
 /** A single import statement parsed from a source file. */
 export interface ParsedImport {
   moduleSpecifier: string;
   names: string[];
   isTypeOnly: boolean;
+  /**
+   * Final-declaration kind of the imported symbol after following any
+   * number of `export { X } from "..."` re-export chains (depth cap 5).
+   * Undefined when the plugin cannot resolve symbols (Python) or when
+   * resolution failed / was skipped. Per-statement, not per-name — for
+   * multi-name imports the kind reflects the first resolvable name.
+   */
+  declarationKind?: DeclarationKind;
 }
 
 /** An import resolved to a specific compound and unit. */

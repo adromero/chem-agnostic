@@ -1,0 +1,8 @@
+compound: a
+type: compound
+imports:
+  - compound: shared
+units:
+  - role: reaction
+    name: useForecast
+    file: ./reactions/useForecast.ts

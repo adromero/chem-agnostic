@@ -1,7 +1,11 @@
 import * as path from "node:path";
 import { allChecks } from "@chemag/core/checks";
 import { explainCode } from "@chemag/core/diagnostics";
-import { discoverCompoundsBySubtree, loadCompound, loadWorkspace } from "@chemag/core/loader";
+import {
+  discoverCompoundsBySubtree,
+  loadCompound,
+  loadWorkspaceWithDiagnostics,
+} from "@chemag/core/loader";
 import type {
   CheckOptions,
   Diagnostic,
@@ -95,15 +99,23 @@ export function cmdCheck(argv: string[]): void {
   const cache = createManifestCache(wsDir);
 
   let ws: Workspace;
+  // Loader diagnostics (CHEM-MANIFEST-005 today; reserved for future
+  // recoverable manifest-shape diagnostics) surface alongside the
+  // `allChecks` output. They're cached alongside the workspace by content
+  // hash so cache hits replay them.
+  let loaderDiagnostics: Diagnostic[] = [];
   try {
     const raw = readFileSync(wsPath, "utf-8");
     const hash = contentHash(raw);
-    const cached = cache.getWorkspace(wsPath, hash);
+    const cached = cache.getWorkspaceWithDiagnostics(wsPath, hash);
     if (cached !== null) {
-      ws = cached;
+      ws = cached.workspace;
+      loaderDiagnostics = cached.diagnostics;
     } else {
-      ws = loadWorkspace(wsPath);
-      cache.setWorkspace(wsPath, ws, hash);
+      const result = loadWorkspaceWithDiagnostics(wsPath);
+      ws = result.workspace;
+      loaderDiagnostics = result.diagnostics;
+      cache.setWorkspaceWithDiagnostics(wsPath, ws, loaderDiagnostics, hash);
     }
   } catch (e: unknown) {
     console.error(`${RED}Failed to load workspace:${R} ${e instanceof Error ? e.message : e}`);
@@ -168,6 +180,19 @@ export function cmdCheck(argv: string[]): void {
   let failed = 0;
   const results: { check: string; diagnostics: Diagnostic[] }[] = [];
   const allDiags: Diagnostic[] = [];
+
+  // Loader-phase diagnostics are folded in as a virtual "manifest-loader"
+  // check entry so the per-check summary and totals reflect them.
+  if (loaderDiagnostics.length > 0) {
+    results.push({ check: "manifest-loader", diagnostics: loaderDiagnostics });
+    allDiags.push(...loaderDiagnostics);
+    const lErrs = loaderDiagnostics.filter((d) => d.level === "error").length;
+    const lWarns = loaderDiagnostics.filter((d) => d.level === "warning").length;
+    totalErrors += lErrs;
+    totalWarnings += lWarns;
+    if (lErrs > 0) failed++;
+    else passed++;
+  }
 
   for (const { name, fn } of allChecks) {
     const diags = fn(ws, compounds, baseOpts);

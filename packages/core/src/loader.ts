@@ -1,7 +1,89 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parse as parseYaml } from "yaml";
-import type { Workspace, LoadedCompound, Compound, LanguageSubtree } from "./types.js";
+import type { Workspace, LoadedCompound, Compound, LanguageSubtree, Diagnostic } from "./types.js";
+import { tr } from "./vocabulary/index.js";
+
+/**
+ * Result of `loadWorkspaceWithDiagnostics`: the parsed (and, where the
+ * loader recovered from a soft error, normalized) workspace plus any
+ * non-fatal diagnostics produced during load.
+ *
+ * Today the only diagnostics surfaced through this channel are
+ * `CHEM-MANIFEST-005` (invalid `rules.io_modules` regex), but the API
+ * is intentionally general so future "recoverable manifest-shape"
+ * diagnostics can fold in without breaking callers.
+ *
+ * Hard schema errors (missing `workspace:`, invalid `vocabulary:`, ...)
+ * still throw from the underlying `loadWorkspace` call.
+ */
+export interface LoadWorkspaceResult {
+  workspace: Workspace;
+  diagnostics: Diagnostic[];
+}
+
+/**
+ * Companion to `loadWorkspace` that surfaces non-fatal manifest-shape
+ * diagnostics through a return value instead of throwing. CLI/MCP entry
+ * points and the R02 test fixture harness use this to fold loader
+ * diagnostics into their normal output path.
+ *
+ * Specifically: when `rules.io_modules` contains a string that fails to
+ * compile as a `RegExp`, the offending entry is REMOVED from the in-memory
+ * workspace and a `CHEM-MANIFEST-005` diagnostic is appended. By the time
+ * `checkImports` reads `ws.rules?.io_modules`, every survivor is guaranteed
+ * to compile.
+ */
+export function loadWorkspaceWithDiagnostics(workspacePath: string): LoadWorkspaceResult {
+  const workspace = loadWorkspace(workspacePath);
+  const diagnostics: Diagnostic[] = [];
+
+  const raw = workspace.rules?.io_modules;
+  if (Array.isArray(raw) && raw.length > 0) {
+    const kept: string[] = [];
+    for (const pattern of raw) {
+      // Defensive: a YAML payload could put non-strings in the array.
+      if (typeof pattern !== "string") {
+        diagnostics.push({
+          level: "error",
+          check: "manifest-io-modules",
+          code: "CHEM-MANIFEST-005",
+          message: tr("diagnostic.invalid_io_module_pattern", {
+            pattern: String(pattern),
+            error: "expected a string regex source",
+          }),
+          file: workspacePath,
+        });
+        continue;
+      }
+      try {
+        // Validate by compilation only; the analyze phase re-compiles via
+        // `compileIoModulePatterns` for purity.
+        new RegExp(pattern);
+        kept.push(pattern);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        diagnostics.push({
+          level: "error",
+          check: "manifest-io-modules",
+          code: "CHEM-MANIFEST-005",
+          message: tr("diagnostic.invalid_io_module_pattern", {
+            pattern,
+            error: msg,
+          }),
+          file: workspacePath,
+        });
+      }
+    }
+    // Mutate in place — the workspace shape is preserved, only the offending
+    // entries are pruned.
+    if (workspace.rules) {
+      workspace.rules.io_modules = kept;
+    }
+  }
+
+  return { workspace, diagnostics };
+}
 
 export function loadWorkspace(workspacePath: string): Workspace {
   const content = fs.readFileSync(workspacePath, "utf-8");

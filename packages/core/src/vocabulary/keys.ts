@@ -61,6 +61,9 @@ export type TrKey =
   | "diagnostic.assay_mock_not_interface" // params: { assay, mock }
   | "diagnostic.subtree_paths_overlap" // params: { id_a, id_b, path_a, path_b }
   | "diagnostic.subtree_id_duplicate" // params: { id }
+  | "diagnostic.invalid_io_module_pattern" // params: { pattern, error }
+  | "diagnostic.port_needs_interface" // params: { compound, io_modules }
+  | "diagnostic.port_class_cross_compound" // params: { file, name, target_compound }
   // import-check.ts
   | "diagnostic.import_bond_violation" // params: { file, src_role, target_role, names, allowed }
   | "diagnostic.import_undeclared" // params: { file, target, src_compound }
@@ -187,6 +190,9 @@ export const ALL_TR_KEYS: readonly TrKey[] = [
   "diagnostic.assay_mock_not_interface",
   "diagnostic.subtree_paths_overlap",
   "diagnostic.subtree_id_duplicate",
+  "diagnostic.invalid_io_module_pattern",
+  "diagnostic.port_needs_interface",
+  "diagnostic.port_class_cross_compound",
   "diagnostic.import_bond_violation",
   "diagnostic.import_undeclared",
   "diagnostic.import_bypass",

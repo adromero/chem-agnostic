@@ -43,6 +43,9 @@
   "diagnostic.assay_mock_not_interface": "Assay \"{assay}\" mocks \"{mock}\" which is not an interface in this compound",
   "diagnostic.subtree_paths_overlap": "Sub-trees \"{id_a}\" and \"{id_b}\" declare overlapping path roots: \"{path_a}\" and \"{path_b}\"",
   "diagnostic.subtree_id_duplicate": "Duplicate sub-tree id \"{id}\" — every entry in `languages:` must use a unique id",
+  "diagnostic.invalid_io_module_pattern": "Invalid regex in workspace.yaml rules.io_modules: \"{pattern}\" — {error}. The impurity was filtered out.",
+  "diagnostic.port_needs_interface": "Compound \"{compound}\" has reaction units and adapter units that import I/O modules ({io_modules}) but no interface unit. Extract a port interface and bind the adapter through a catalyst.",
+  "diagnostic.port_class_cross_compound": "In {file}: imports concrete class \"{name}\" from compound \"{target_compound}\". Bond to an interface and catalyze the adapter via the catalyst.",
 
   "diagnostic.import_bond_violation": "{file}: {src_role} imports {target_role} \"{names}\" — bond violation",
   "diagnostic.import_undeclared": "{file}: imports from \"{target}\" but it is not in the imports list",

@@ -9,6 +9,7 @@
 import { describe, it, expect } from "vitest";
 import {
   DIAGNOSTIC_CODES,
+  RESERVED_CODES,
   type DiagnosticCode,
   type DiagnosticCodeMeta,
 } from "../src/diagnostics/codes.js";
@@ -93,17 +94,29 @@ describe("DIAGNOSTIC_CODES — numbering monotonicity", () => {
         .filter((e) => e.deprecated !== undefined)
         .map((e) => Number(e.code.match(/-(\d{3})$/)![1]));
 
+      // Reserved codes for this category — codes that are planned but not yet
+      // registered. Extracted from RESERVED_CODES whose CATEGORY segment
+      // matches `category`. A NNN missing from `nums` is permitted when the
+      // synthesized code "CHEM-<CATEGORY>-NNN" appears in RESERVED_CODES.
+      const reservedNumsForCategory = new Set<number>();
+      for (const reserved of RESERVED_CODES) {
+        const m = reserved.match(/^CHEM-(.+)-(\d{3})$/);
+        if (!m) continue;
+        if (m[1] === category) reservedNumsForCategory.add(Number(m[2]));
+      }
+
       for (const [blockLow, blockNums] of blocks) {
         const sorted = [...blockNums].sort((a, b) => a - b);
         const max = sorted[sorted.length - 1];
         for (let want = blockLow; want <= max; want++) {
           const present = sorted.includes(want);
           const isReservedDeprecation = deprecatedNums.includes(want);
+          const isReservedFuture = reservedNumsForCategory.has(want);
           expect(
-            present || isReservedDeprecation,
+            present || isReservedDeprecation || isReservedFuture,
             `category ${category}: NNN ${String(want).padStart(3, "0")} is missing in block starting at ${String(
               blockLow,
-            ).padStart(3, "0")} and not reserved by a deprecation`,
+            ).padStart(3, "0")} and not reserved by a deprecation or RESERVED_CODES`,
           ).toBe(true);
         }
       }

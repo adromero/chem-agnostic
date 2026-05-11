@@ -37,17 +37,33 @@
 
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import type { LoadedCompound, Workspace } from "../types.js";
+import type { Diagnostic, LoadedCompound, Workspace } from "../types.js";
 import { isCacheEnabled } from "./cache-state.js";
 import { resolveCacheDir } from "./cache-dir.js";
 import { contentHash } from "./content-hash.js";
 
-/** Bump when the on-disk cache JSON shape changes. */
-export const CACHE_SCHEMA_VERSION = "1";
+/**
+ * Bump when the on-disk cache JSON shape changes.
+ *
+ * Version history:
+ *   - "1": initial release.
+ *   - "2": added `loaderDiagnostics` to WorkspaceCacheRecord so cache hits
+ *     can replay diagnostics surfaced by `loadWorkspaceWithDiagnostics`
+ *     (CHEM-MANIFEST-005 today; reserved for future recoverable
+ *     manifest-shape diagnostics).
+ */
+export const CACHE_SCHEMA_VERSION = "2";
 
 interface WorkspaceCacheRecord {
   contentHash: string;
   workspace: Workspace;
+  /**
+   * Loader-phase diagnostics produced when the workspace was first parsed
+   * (currently CHEM-MANIFEST-005 invalid regex entries pruned from
+   * `rules.io_modules`). Older v1 cache entries don't carry this field;
+   * the schema version bump wipes them on first access.
+   */
+  loaderDiagnostics?: Diagnostic[];
 }
 
 interface CompoundCacheRecord {
@@ -63,8 +79,36 @@ export interface ManifestCache {
    */
   getWorkspace(workspacePath: string, sourceHash: string): Workspace | null;
 
+  /**
+   * Like `getWorkspace` but also returns the loader-phase diagnostics that
+   * accompanied the workspace at parse time (CHEM-MANIFEST-005, ...).
+   * Returns `null` on miss / hash mismatch / cache disabled.
+   *
+   * Cache hits from an older cache entry that predates the diagnostics
+   * field (or that was populated via the legacy `setWorkspace` path) return
+   * an empty `diagnostics` array — which is correct: a workspace without
+   * any invalid `rules.io_modules` entries genuinely has no loader
+   * diagnostics to replay.
+   */
+  getWorkspaceWithDiagnostics(
+    workspacePath: string,
+    sourceHash: string,
+  ): { workspace: Workspace; diagnostics: Diagnostic[] } | null;
+
   /** Persist a parsed workspace alongside its content hash. */
   setWorkspace(workspacePath: string, workspace: Workspace, sourceHash: string): void;
+
+  /**
+   * Like `setWorkspace` but also persists the loader-phase diagnostics so
+   * subsequent cache hits can replay them. Use this whenever the workspace
+   * was loaded via `loadWorkspaceWithDiagnostics`.
+   */
+  setWorkspaceWithDiagnostics(
+    workspacePath: string,
+    workspace: Workspace,
+    diagnostics: Diagnostic[],
+    sourceHash: string,
+  ): void;
 
   /**
    * Look up a cached LoadedCompound by its absolute manifest path. Returns
@@ -120,6 +164,41 @@ class DiskManifestCache implements ManifestCache {
     this.ensureSchemaCurrent();
     const file = this.workspaceCacheFile(workspacePath);
     const record: WorkspaceCacheRecord = { contentHash: sourceHash, workspace };
+    atomicWriteJson(file, record);
+  }
+
+  getWorkspaceWithDiagnostics(
+    workspacePath: string,
+    sourceHash: string,
+  ): { workspace: Workspace; diagnostics: Diagnostic[] } | null {
+    if (!isCacheEnabled()) return null;
+    this.ensureSchemaCurrent();
+    const file = this.workspaceCacheFile(workspacePath);
+    const record = readJsonSafe<WorkspaceCacheRecord>(file);
+    if (record === null) return null;
+    if (record.contentHash !== sourceHash) return null;
+    return {
+      workspace: record.workspace,
+      // Older v1 entries get wiped on schema bump; defensively coalesce
+      // anyway so a non-extended writer path can't break readers.
+      diagnostics: record.loaderDiagnostics ?? [],
+    };
+  }
+
+  setWorkspaceWithDiagnostics(
+    workspacePath: string,
+    workspace: Workspace,
+    diagnostics: Diagnostic[],
+    sourceHash: string,
+  ): void {
+    if (!isCacheEnabled()) return;
+    this.ensureSchemaCurrent();
+    const file = this.workspaceCacheFile(workspacePath);
+    const record: WorkspaceCacheRecord = {
+      contentHash: sourceHash,
+      workspace,
+      loaderDiagnostics: diagnostics,
+    };
     atomicWriteJson(file, record);
   }
 

@@ -1,6 +1,10 @@
 import * as path from "node:path";
 import { existsSync, readFileSync, statSync } from "node:fs";
-import { discoverCompoundsBySubtree, loadCompound, loadWorkspace } from "@chemag/core/loader";
+import {
+  discoverCompoundsBySubtree,
+  loadCompound,
+  loadWorkspaceWithDiagnostics,
+} from "@chemag/core/loader";
 import { checkImports, type ImportCheckScope } from "@chemag/core/import-check";
 import type { LanguagePlugin } from "@chemag/core/plugin-interface";
 import type {
@@ -102,15 +106,24 @@ export function cmdAnalyze(argv: string[]): void {
   const importCache = createImportCache(wsDir);
 
   let ws: Workspace;
+  // Loader-phase diagnostics (e.g. CHEM-MANIFEST-005 for invalid
+  // rules.io_modules regexes) flow into the analyze output stream so a user
+  // running `chemag analyze` sees them too. They are also surfaced through
+  // `chemag check`; both paths use the same cache record so a hit on either
+  // side replays the diagnostics.
+  let loaderDiagnostics: Diagnostic[] = [];
   try {
     const raw = readFileSync(wsPath, "utf-8");
     const hash = contentHash(raw);
-    const cached = manifestCache.getWorkspace(wsPath, hash);
+    const cached = manifestCache.getWorkspaceWithDiagnostics(wsPath, hash);
     if (cached !== null) {
-      ws = cached;
+      ws = cached.workspace;
+      loaderDiagnostics = cached.diagnostics;
     } else {
-      ws = loadWorkspace(wsPath);
-      manifestCache.setWorkspace(wsPath, ws, hash);
+      const result = loadWorkspaceWithDiagnostics(wsPath);
+      ws = result.workspace;
+      loaderDiagnostics = result.diagnostics;
+      manifestCache.setWorkspaceWithDiagnostics(wsPath, ws, loaderDiagnostics, hash);
     }
   } catch (e: unknown) {
     console.error(`${RED}Failed to load workspace:${R} ${e instanceof Error ? e.message : e}`);
@@ -152,7 +165,7 @@ export function cmdAnalyze(argv: string[]): void {
     0,
   );
 
-  const diags = checkImports(ws, scopes, {
+  const importDiags = checkImports(ws, scopes, {
     parseImportsBatch: (filePaths: string[], p: LanguagePlugin, _scope: LanguageSubtree) => {
       // The hook is invoked once per sub-tree (wp-020). The per-file content
       // cache is keyed by absolute path, which remains unique across
@@ -190,6 +203,10 @@ export function cmdAnalyze(argv: string[]): void {
     },
   });
 
+  // Loader diagnostics surface alongside source-import diagnostics. They
+  // appear first so the user sees workspace-config errors before per-file
+  // findings.
+  const diags: Diagnostic[] = [...loaderDiagnostics, ...importDiags];
   const errors = diags.filter((d) => d.level === "error");
   const warnings = diags.filter((d) => d.level === "warning");
 
@@ -462,12 +479,16 @@ function runWorkspaceAnalyze(wsPath: string): Diagnostic[] {
   const raw = readFileSync(wsPath, "utf-8");
   const hash = contentHash(raw);
   let ws: Workspace;
-  const cached = manifestCache.getWorkspace(wsPath, hash);
+  let loaderDiagnostics: Diagnostic[] = [];
+  const cached = manifestCache.getWorkspaceWithDiagnostics(wsPath, hash);
   if (cached !== null) {
-    ws = cached;
+    ws = cached.workspace;
+    loaderDiagnostics = cached.diagnostics;
   } else {
-    ws = loadWorkspace(wsPath);
-    manifestCache.setWorkspace(wsPath, ws, hash);
+    const result = loadWorkspaceWithDiagnostics(wsPath);
+    ws = result.workspace;
+    loaderDiagnostics = result.diagnostics;
+    manifestCache.setWorkspaceWithDiagnostics(wsPath, ws, loaderDiagnostics, hash);
   }
 
   applyWorkspaceVocabulary(ws);
@@ -491,7 +512,7 @@ function runWorkspaceAnalyze(wsPath: string): Diagnostic[] {
     compounds: g.compounds,
   }));
 
-  return checkImports(ws, scopes, {
+  const importDiags = checkImports(ws, scopes, {
     parseImportsBatch: (filePaths: string[], p: LanguagePlugin, _scope: LanguageSubtree) => {
       const result = new Map<string, ParsedImport[]>();
       const misses: { abs: string; hash: string }[] = [];
@@ -521,6 +542,8 @@ function runWorkspaceAnalyze(wsPath: string): Diagnostic[] {
       return result;
     },
   });
+
+  return [...loaderDiagnostics, ...importDiags];
 }
 
 /** Compose the additionalContext string shown to the model. */

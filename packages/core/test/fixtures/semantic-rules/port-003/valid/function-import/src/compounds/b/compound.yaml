@@ -1,0 +1,8 @@
+compound: b
+type: compound
+exports:
+  interfaces: [formatMoney]
+units:
+  - role: interface
+    name: formatMoney
+    file: ./interfaces/formatMoney.ts

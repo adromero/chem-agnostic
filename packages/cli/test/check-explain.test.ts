@@ -89,6 +89,7 @@ describe("chemag check --explain", () => {
   it("works for codes from every category sampled here", () => {
     for (const code of [
       "CHEM-MANIFEST-001",
+      "CHEM-MANIFEST-005",
       "CHEM-ROLE-001",
       "CHEM-PLACEMENT-003",
       "CHEM-PUBLIC-001",
@@ -99,6 +100,8 @@ describe("chemag check --explain", () => {
       "CHEM-SIGNAL-001",
       "CHEM-WIRING-004",
       "CHEM-ASSAY-002",
+      "CHEM-PORT-001",
+      "CHEM-PORT-003",
     ]) {
       // Each iteration needs its own spy/output reset.
       stdout = [];

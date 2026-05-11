@@ -1,0 +1,7 @@
+compound: lonely
+exports:
+  elements: [X]
+units:
+  - role: element
+    name: X
+    file: ./elements/X.ts

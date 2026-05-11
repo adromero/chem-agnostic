@@ -1,0 +1,8 @@
+compound: c
+type: compound
+exports:
+  interfaces: [VendorStore]
+units:
+  - role: interface
+    name: VendorStore
+    file: ./interfaces/VendorStore.ts

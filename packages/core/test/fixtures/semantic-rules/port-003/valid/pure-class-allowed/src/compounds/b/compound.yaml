@@ -1,0 +1,11 @@
+compound: b
+type: compound
+exports:
+  interfaces: [Money, CustomBigNum]
+units:
+  - role: interface
+    name: Money
+    file: ./interfaces/Money.ts
+  - role: interface
+    name: CustomBigNum
+    file: ./interfaces/CustomBigNum.ts

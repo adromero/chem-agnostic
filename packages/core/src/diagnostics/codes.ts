@@ -38,7 +38,8 @@ export type DiagnosticCategory =
   | "PLACEMENT"
   | "EMIT-RULES"
   | "MCP"
-  | "INSTALL-HOOKS";
+  | "INSTALL-HOOKS"
+  | "PORT";
 
 /**
  * String-literal union of every emitted diagnostic code. Adding a new code
@@ -51,6 +52,11 @@ export type DiagnosticCode =
   | "CHEM-MANIFEST-002"
   | "CHEM-MANIFEST-003"
   | "CHEM-MANIFEST-004"
+  | "CHEM-MANIFEST-005"
+  // ---- PORT ----
+  // NOTE: CHEM-PORT-002 is RESERVED (Tier 3, see proposed-rules.md) — no entry.
+  | "CHEM-PORT-001"
+  | "CHEM-PORT-003"
   // ---- ROLE ----
   | "CHEM-ROLE-001"
   | "CHEM-ROLE-002"
@@ -169,6 +175,30 @@ export const DIAGNOSTIC_CODES: Record<DiagnosticCode, DiagnosticCodeMeta> = {
     level: "error",
     trKey: "diagnostic.subtree_id_duplicate",
     helpFragment: "chem-manifest-004-subtree-id-duplicate",
+  },
+  "CHEM-MANIFEST-005": {
+    code: "CHEM-MANIFEST-005",
+    category: "MANIFEST",
+    level: "error",
+    trKey: "diagnostic.invalid_io_module_pattern",
+    helpFragment: "chem-manifest-005-invalid-io-module-pattern",
+  },
+
+  // ---- PORT ----
+  // CHEM-PORT-002 is intentionally not registered — RESERVED (Tier 3).
+  "CHEM-PORT-001": {
+    code: "CHEM-PORT-001",
+    category: "PORT",
+    level: "warning",
+    trKey: "diagnostic.port_needs_interface",
+    helpFragment: "chem-port-001-port-needs-interface",
+  },
+  "CHEM-PORT-003": {
+    code: "CHEM-PORT-003",
+    category: "PORT",
+    level: "error",
+    trKey: "diagnostic.port_class_cross_compound",
+    helpFragment: "chem-port-003-port-class-cross-compound",
   },
 
   // ---- ROLE ----
@@ -578,3 +608,18 @@ export const DIAGNOSTIC_CODES: Record<DiagnosticCode, DiagnosticCodeMeta> = {
 export function getDiagnosticCodeMeta(code: string): DiagnosticCodeMeta | undefined {
   return (DIAGNOSTIC_CODES as Record<string, DiagnosticCodeMeta>)[code];
 }
+
+/**
+ * Codes that are intentionally reserved (planned but not yet implemented)
+ * and thus do NOT appear in `DIAGNOSTIC_CODES`. The numbering-monotonicity
+ * registry test consults this set to permit a gap inside a 100-block when
+ * the missing NNN corresponds to a reserved code. Use sparingly — every
+ * entry here is a promise to ship the code in a future WP.
+ *
+ * Reserved entries are documented in `docs/master-plan/` (e.g.
+ * `11-track-r-rule-remediation.md` § proposed-rules for the PORT family).
+ */
+export const RESERVED_CODES: ReadonlySet<string> = new Set<string>([
+  // PORT-002 — Tier 3 rule (see proposed-rules.md), shipped in a future WP.
+  "CHEM-PORT-002",
+]);
