@@ -43267,8 +43267,7 @@ function checkDuplicatedFunction(input) {
                 count: files.size,
                 locations,
             }),
-            hint: `Consider extracting "${name}" into a shared utility module ` +
-                "and importing it from each call site.",
+            hint: `Consider extracting "${name}" into a shared utility module and importing it from each call site.`,
             // No `file` field — this is a multi-location finding spanning N files.
             // Tools that need to highlight individual sites should switch on the
             // code and surface each path from the message.
