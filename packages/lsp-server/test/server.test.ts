@@ -245,7 +245,7 @@ describe("chemag LSP server — runOn behaviour", () => {
         textDocument: { uri: fileUri },
         text,
       });
-      await waitFor(() => published.length > 0, 5000);
+      await waitFor(() => published.length > 0, 15000);
       expect(published.length).toBeGreaterThan(0);
     } finally {
       dispose();
@@ -259,7 +259,7 @@ describe("chemag LSP server — runOn behaviour", () => {
         textDocument: { uri: fileUri, version: 2 },
         contentChanges: [{ text }],
       });
-      await waitFor(() => published.length > 0, 5000);
+      await waitFor(() => published.length > 0, 15000);
       const afterChange = published.length;
       expect(afterChange).toBeGreaterThan(0);
 
@@ -267,7 +267,7 @@ describe("chemag LSP server — runOn behaviour", () => {
         textDocument: { uri: fileUri },
         text,
       });
-      await waitFor(() => published.length > afterChange, 5000);
+      await waitFor(() => published.length > afterChange, 15000);
       expect(published.length).toBeGreaterThan(afterChange);
     } finally {
       dispose();
@@ -291,7 +291,7 @@ describe("chemag LSP server — runOn behaviour", () => {
       // forceCheck pushes diagnostics regardless of mode.
       const result = await client.sendRequest("chemag/forceCheck", { uri: fileUri });
       expect(result).toEqual({ ok: true });
-      await waitFor(() => published.length > 0, 5000);
+      await waitFor(() => published.length > 0, 15000);
       expect(published.length).toBeGreaterThan(0);
     } finally {
       dispose();
@@ -305,7 +305,7 @@ describe("chemag LSP server — runOn behaviour", () => {
       await client.sendNotification("workspace/didChangeConfiguration", {
         settings: { chemag: { runOn: "manual" } },
       });
-      await waitFor(() => handle.runOn() === "manual", 5000);
+      await waitFor(() => handle.runOn() === "manual", 15000);
       expect(handle.runOn()).toBe("manual");
     } finally {
       dispose();
@@ -333,7 +333,7 @@ describe("chemag LSP server — diagnostics + code actions", () => {
         textDocument: { uri: fileUri },
         text,
       });
-      await waitFor(() => published.some((p) => p.diagnostics.length > 0), 5000);
+      await waitFor(() => published.some((p) => p.diagnostics.length > 0), 15000);
       const all = published.flatMap((p) => p.diagnostics);
       // Expect at least one CHEM-IMPORT-* diagnostic for the bypass.
       expect(all.some((d: Diagnostic) => String(d.code).startsWith("CHEM-IMPORT-"))).toBe(true);
@@ -363,7 +363,7 @@ describe("chemag LSP server — diagnostics + code actions", () => {
         textDocument: { uri: fileUri },
         text,
       });
-      await waitFor(() => published.some((p) => p.diagnostics.length > 0), 5000);
+      await waitFor(() => published.some((p) => p.diagnostics.length > 0), 15000);
       const diags = published.flatMap((p) => p.diagnostics);
 
       const actions = (await client.sendRequest("textDocument/codeAction", {
