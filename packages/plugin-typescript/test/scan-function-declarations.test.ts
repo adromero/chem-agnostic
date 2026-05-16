@@ -94,7 +94,12 @@ describe("scanFunctionDeclarationsBatch", () => {
     );
     const fb = write("b/y.ts", "export function shared(): void {}\n");
     const out = scanFunctionDeclarationsBatch([fa, fb]);
-    expect(out.get(fa)!.map((s) => s.functionName).sort()).toEqual(["only_a", "shared"]);
+    expect(
+      out
+        .get(fa)!
+        .map((s) => s.functionName)
+        .sort(),
+    ).toEqual(["only_a", "shared"]);
     expect(out.get(fb)!.map((s) => s.functionName)).toEqual(["shared"]);
   });
 
