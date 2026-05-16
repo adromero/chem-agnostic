@@ -9,6 +9,9 @@ dist/
 .cache/
 .turbo/
 **/.turbo/
+# chemag CLI cache (per-workspace runtime artifact; leaks into vscode-extension
+# test fixtures when those tests run against the sample-workspace).
+**/.chemag/
 *.tsbuildinfo
 .env
 .env.local

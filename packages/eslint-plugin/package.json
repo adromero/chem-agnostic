@@ -1,0 +1,43 @@
+{
+  "name": "eslint-plugin-port-discipline",
+  "version": "1.0.0",
+  "description": "Three ESLint rules that catch hexagonal/ports-and-adapters violations TypeScript can't",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map",
+    "dist/**/*.js.map",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@typescript-eslint/utils": "^8"
+  },
+  "peerDependencies": {
+    "eslint": ">=9",
+    "typescript": ">=4.8.4",
+    "@typescript-eslint/parser": "^8"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@typescript-eslint/parser": "^8",
+    "eslint": "^9",
+    "typescript": "^5.7",
+    "vitest": "^3.1"
+  }
+}
