@@ -2,6 +2,7 @@
   "name": "@chemag/telemetry",
   "version": "0.1.0",
   "description": "Opt-in usage analytics for the Chem toolkit. Privacy-first: default off, anonymous UUID generated only on consent, no file paths in payloads.",
+  "deprecated": "chemag-the-framework has been wound down; the three semantic rules now ship as eslint-plugin-port-discipline. This package is preserved for history. See https://github.com/adromero/chem-agnostic#readme for the full story.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",

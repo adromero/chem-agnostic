@@ -3,6 +3,7 @@
   "displayName": "chemag",
   "version": "0.2.2",
   "description": "VS Code extension for chemag — surfaces architecture diagnostics inline, shows the active file's compound/role in the status bar, and brokers an MCP connection to the chemag CLI.",
+  "deprecated": "chemag-the-framework has been wound down; the three semantic rules now ship as eslint-plugin-port-discipline. This package is preserved for history. See https://github.com/adromero/chem-agnostic#readme for the full story.",
   "publisher": "chemag",
   "license": "MIT",
   "private": true,

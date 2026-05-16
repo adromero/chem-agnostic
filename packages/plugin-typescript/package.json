@@ -2,6 +2,7 @@
   "name": "@chemag/plugin-typescript",
   "version": "0.1.1",
   "description": "TypeScript language plugin for the Chem toolkit — uses ts-morph to analyze imports and generate stubs.",
+  "deprecated": "chemag-the-framework has been wound down; the three semantic rules now ship as eslint-plugin-port-discipline. This package is preserved for history. See https://github.com/adromero/chem-agnostic#readme for the full story.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",

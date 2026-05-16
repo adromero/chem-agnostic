@@ -2,6 +2,7 @@
   "name": "@chemag/cli",
   "version": "0.3.0",
   "description": "Language-agnostic Chem architecture toolkit — analyze, scaffold, and validate chemistry-inspired software architectures.",
+  "deprecated": "chemag-the-framework has been wound down; the three semantic rules now ship as eslint-plugin-port-discipline. This package is preserved for history. See https://github.com/adromero/chem-agnostic#readme for the full story.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/cli.js",

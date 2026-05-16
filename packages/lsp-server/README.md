@@ -1,3 +1,16 @@
+> ## ⚠️ Deprecated
+>
+> This package is part of the original chemag framework experiment,
+> which has been wound down. The three semantic rules from Track R
+> now ship as [eslint-plugin-port-discipline](https://www.npmjs.com/package/eslint-plugin-port-discipline)
+> — see the [top-level README](../../README.md) for the full story.
+>
+> This package is preserved as a historical artifact. It still
+> builds and its existing tests pass, but no further development
+> is planned.
+
+---
+
 # @chemag/lsp-server
 
 Language Server Protocol (LSP) server for [chemag](https://www.npmjs.com/package/@chemag/cli) — surfaces architecture diagnostics inline (bond violations, public-surface bypasses, role-folder mismatches, ...) and emits LSP `CodeAction[]` quick-fixes for every remediation produced by `@chemag/core`'s `runCheckEdit` engine.

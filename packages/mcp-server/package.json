@@ -2,6 +2,7 @@
   "name": "@chemag/mcp-server",
   "version": "0.0.1",
   "description": "Model Context Protocol server for the Chem toolkit — exposes chemag tooling to MCP-aware clients (Claude Desktop, Cursor, IDE plugins) over stdio. Per-session vocabulary + manifest cache; never depends on @chemag/cli to keep the dep graph acyclic.",
+  "deprecated": "chemag-the-framework has been wound down; the three semantic rules now ship as eslint-plugin-port-discipline. This package is preserved for history. See https://github.com/adromero/chem-agnostic#readme for the full story.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",

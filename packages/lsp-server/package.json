@@ -2,6 +2,7 @@
   "name": "@chemag/lsp-server",
   "version": "0.3.0",
   "description": "Chemag Language Server Protocol server — wraps @chemag/core's check-edit engine and serves architecture diagnostics + quick-fix code actions over LSP. Bundled inside the chemag-vscode extension and spawned by the `chemag lsp` CLI subcommand; can also be invoked directly by non-VS Code editors (Zed/Helix/Neovim) via `node node_modules/@chemag/lsp-server/dist/server.js` over stdio.",
+  "deprecated": "chemag-the-framework has been wound down; the three semantic rules now ship as eslint-plugin-port-discipline. This package is preserved for history. See https://github.com/adromero/chem-agnostic#readme for the full story.",
   "license": "MIT",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
