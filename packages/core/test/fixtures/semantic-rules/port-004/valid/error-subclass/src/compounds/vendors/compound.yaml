@@ -1,0 +1,12 @@
+compound: vendors
+type: compound
+units:
+  - role: reaction
+    name: handlers
+    file: ./reactions/handlers.ts
+  - role: adapter
+    name: BaseError
+    file: ./adapters/BaseError.ts
+  - role: adapter
+    name: FooError
+    file: ./adapters/FooError.ts
