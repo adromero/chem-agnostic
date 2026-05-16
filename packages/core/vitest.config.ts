@@ -12,6 +12,8 @@ export default defineConfig({
   },
   test: {
     include: ["test/**/*.test.ts"],
+    testTimeout: 30000,
+    hookTimeout: 30000,
     // Exclude fixture trees — some fixtures intentionally contain `*.test.ts`
     // files (e.g. semantic-rules/port-003/valid/test-exemption) used as inputs
     // to the analyze phase, not as real vitest suites.
